@@ -20,5 +20,29 @@
   "diagnostics": {
     "systematic_difference_vol_points": 0.5,
     "minimum_mark_comparisons": 6
+  },
+  "svi": {
+    "n_starts": 10,
+    "seed": 1729,
+    "spread_floor_iv": 0.005,
+    "maximum_weight_share": 0.2,
+    "minimum_variance": 1e-10,
+    "maximum_minimum_variance": 10.0,
+    "minimum_b_fraction": 1e-8,
+    "rho_limit": 0.999,
+    "minimum_s": 0.0001,
+    "maximum_s": 5.0,
+    "maximum_abs_m": 5.0,
+    "lee_margin": 0.000001,
+    "max_nfev": 2000,
+    "optimiser_tolerance": 1e-12,
+    "butterfly_tolerance": 1e-8,
+    "calendar_tolerance": 1e-8,
+    "grid_standard_deviations": 6.0,
+    "grid_points": 1201,
+    "local_grid_points": 401,
+    "local_grid_scales": 8.0,
+    "candidate_selection": "lowest_weighted_error",
+    "primary_acceptance": "butterfly_and_calendar_clear"
   }
 }
