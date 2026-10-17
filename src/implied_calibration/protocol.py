@@ -6,6 +6,7 @@ import math
 from pathlib import Path
 from typing import Any
 
+from .density import CDFSettings
 from .store import digest
 
 
@@ -23,6 +24,7 @@ def validate_protocol(content: dict[str, Any]) -> Protocol:
         'inversion': {'lower_iv', 'upper_iv', 'absolute_tolerance', 'relative_tolerance',
                       'max_iterations', 'max_relative_price_error'},
         'diagnostics': {'systematic_difference_vol_points', 'minimum_mark_comparisons'},
+        'cdf': set(CDFSettings.__dataclass_fields__),
         'svi': {'n_starts', 'seed', 'spread_floor_iv', 'maximum_weight_share', 'minimum_variance',
                 'maximum_minimum_variance', 'minimum_b_fraction', 'rho_limit', 'minimum_s', 'maximum_s',
                 'maximum_abs_m', 'lee_margin', 'max_nfev', 'optimiser_tolerance', 'butterfly_tolerance',
@@ -71,6 +73,7 @@ def validate_protocol(content: dict[str, Any]) -> Protocol:
             or svi['optimiser_tolerance'] <= math.ulp(1.0)
             or min(svi['grid_points'], svi['local_grid_points']) < 3):
         raise ValueError('Invalid coupled SVI settings')
+    CDFSettings(**content['cdf'])
     return Protocol(json.loads(json.dumps(content)), digest(content))
 
 

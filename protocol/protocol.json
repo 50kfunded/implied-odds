@@ -44,5 +44,15 @@
     "local_grid_scales": 8.0,
     "candidate_selection": "lowest_weighted_error",
     "primary_acceptance": "butterfly_and_calendar_clear"
+  },
+  "cdf": {
+    "initial_log_extent": 8.0,
+    "maximum_log_extent": 64.0,
+    "grid_points": 8193,
+    "local_grid_points": 1001,
+    "local_grid_scales": 8.0,
+    "tail_probability_tolerance": 1e-10,
+    "tail_mean_relative_tolerance": 1e-08,
+    "forward_relative_tolerance": 2e-06
   }
 }

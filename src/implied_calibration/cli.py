@@ -11,6 +11,7 @@ import subprocess
 from .coverage import coverage_report
 from .cleaning import clean_database
 from .fitting import fit_database
+from .distributions import cdf_database
 from .ingest import ingest
 from .protocol import load_protocol
 from .recorder import record
@@ -65,6 +66,11 @@ def main() -> int:
     fitter.add_argument("--as-of-ms", type=int)
     fitter.add_argument("--protocol", type=Path, default=Path("protocol/protocol.json"))
     fitter.add_argument("--output", type=Path)
+    cdf = commands.add_parser("cdf", help="I extract risk-neutral distributions from accepted fits")
+    cdf.add_argument("--db", type=Path, required=True)
+    cdf.add_argument("--as-of-ms", type=int)
+    cdf.add_argument("--protocol", type=Path, default=Path("protocol/protocol.json"))
+    cdf.add_argument("--output", type=Path)
     args = parser.parse_args()
     logging.basicConfig(level=getattr(logging, args.log_level), format="%(levelname)s %(name)s %(message)s")
     try:
@@ -83,12 +89,14 @@ def main() -> int:
             result = coverage_report(args.db, args.as_of_ms)
         elif args.command == "clean":
             result = clean_database(args.db, load_protocol(args.protocol), args.as_of_ms)
-        else:
+        elif args.command == "fit":
             result = fit_database(args.db, load_protocol(args.protocol), args.as_of_ms)
+        else:
+            result = cdf_database(args.db, load_protocol(args.protocol), args.as_of_ms)
         result["provenance"] = provenance()
         emit(result, args.output)
         return 2 if (args.command == "clean" and not result["phase4_ready"]
-                     or args.command == "fit" and result["status"] != "ok") else 0
+                     or args.command in ("fit", "cdf") and result["status"] != "ok") else 0
     except KeyboardInterrupt:
         print(json.dumps({"status": "interrupted", "exit_code": 130}))
         return 130

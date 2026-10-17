@@ -4,6 +4,7 @@ import numpy as np
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
 
+from .density import ImpliedCDF
 from .svi import FitResult, total_variance
 
 
@@ -27,5 +28,30 @@ def smile_figure(k: list[float] | np.ndarray, iv_bid: list[float] | np.ndarray,
     axes.text(0.02, 0.02, f'Status: {result.status}; min g: {min_g}',
               transform=axes.transAxes, fontsize=8)
     axes.legend()
+    axes.grid(alpha=0.2)
+    return figure
+
+
+def cdf_figure(distribution: ImpliedCDF, *, synthetic: bool, label: str) -> Figure:
+    record = distribution.to_record()
+    extent = max(0.8, abs(distribution.observed_k_min) + 0.3, abs(distribution.observed_k_max) + 0.3)
+    k = np.linspace(-extent, extent, 1201)
+    price = distribution.forward_usd * np.exp(k)
+    cdf, _ = distribution.probabilities(k)
+    figure = Figure(figsize=(8, 5), layout='constrained')
+    FigureCanvasAgg(figure)
+    axes = figure.subplots()
+    axes.plot(price, cdf, color='#195b80', label='SVI risk-neutral CDF')
+    lower, upper = distribution.forward_usd * np.exp([distribution.observed_k_min, distribution.observed_k_max])
+    axes.axvspan(price[0], lower, color='#dfac5c', alpha=0.2, label='Extrapolated SVI wings')
+    axes.axvspan(upper, price[-1], color='#dfac5c', alpha=0.2)
+    for boundary in (lower, upper):
+        axes.axvline(boundary, color='#97732e', linestyle=':', linewidth=1)
+    axes.set(xlabel='Terminal price, USD', ylabel='Risk-neutral probability below price', ylim=(0, 1),
+             xlim=(price[0], price[-1]), title=('Synthetic: ' if synthetic else '') + label)
+    diagnostics = record['diagnostics']
+    axes.text(0.02, 0.02, f"Extrapolated mass: {diagnostics['extrapolated_probability_mass']:.2%}; "
+              f"max correction: {diagnostics['maximum_correction']:.3g}", transform=axes.transAxes, fontsize=8)
+    axes.legend(loc='upper left')
     axes.grid(alpha=0.2)
     return figure
