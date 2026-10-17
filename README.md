@@ -4,10 +4,10 @@ I'm building a study of BTC option probabilities. When options imply a given
 risk-neutral probability of settling below a strike, I want to compare it with
 the realised frequency and see how that changes across expiries.
 
-I'm starting with the recorder. I've added the API client, raw files,
-heartbeat records, scheduling, and offline tests.
-I've checked a ten-minute live recording with no failed requests or missed slots.
-The distribution fitting and scoring are planned for later phases.
+I've built the recorder, instrument parser, SQLite ingestion, and coverage report.
+I've checked a ten-minute live run with no failures or gaps,
+then re-imported it without adding rows.
+The offline tests cover both phases. Fitting and scoring are planned for later.
 
 ## Run it
 
@@ -19,6 +19,8 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 .\.venv\Scripts\python.exe -m implied_calibration.cli record --output data/smoke-01 --interval 60 --seconds 600
 .\.venv\Scripts\python.exe scripts/estimate_disk.py data/smoke-01
+.\.venv\Scripts\python.exe -m implied_calibration.cli ingest --input data/smoke-01 --db data/research.sqlite
+.\.venv\Scripts\python.exe -m implied_calibration.cli coverage --db data/research.sqlite
 ```
 
 On macOS or Linux, I use these commands:
@@ -29,6 +31,8 @@ python3 -m venv .venv
 .venv/bin/python -m unittest discover -s tests -v
 .venv/bin/python -m implied_calibration.cli record --output data/smoke-01 --interval 60 --seconds 600
 .venv/bin/python scripts/estimate_disk.py data/smoke-01
+.venv/bin/python -m implied_calibration.cli ingest --input data/smoke-01 --db data/research.sqlite
+.venv/bin/python -m implied_calibration.cli coverage --db data/research.sqlite
 ```
 
 I omit `--seconds` for continuous recording. The default interval is 300 seconds;
@@ -55,28 +59,40 @@ The reader reports and discards an incomplete final member, retaining earlier on
 I refuse to append behind a damaged member. After a crash or stale lock, I use a
 fresh output path such as `data/smoke-02` and keep the old files.
 
-I reject schema changes explicitly. Optional quote fields stay untouched here;
-instrument parsing and ingestion belong to the next phase.
+I reject schema changes explicitly and preserve missing quote fields as nulls.
 I retry network errors, HTTP 429/5xx, and JSON-RPC errors up to three times.
 Schema failures and testnet responses stop that endpoint's attempt sequence.
 The other endpoints still run, and each failure stays visible.
 After a backward clock correction, I keep the next unused UTC slot. Recording
 can pause until the clock catches up; I record that correction in the heartbeat.
 
+## SQLite and coverage
+
+I keep BTC prices, percent mark IVs, and nulls without converting their units.
+Instrument identities use an English month map and 08:00 UTC expiries. Metadata
+and index joins only use observations fetched by the quote snapshot's timestamp.
+My first snapshot has no earlier metadata or index, so it's marked partial;
+its parsed quotes stay stored but are excluded from verified reads.
+
+I ingest an unchanged recording with a fixed `--max-days-to-expiry`, default 400.
+I use a new database to change that limit or rebuild earlier metadata joins.
+I ingest folders in time order; later imports don't revise earlier snapshot joins.
+Corrupt JSON lines and truncated tails get counted; a bad gzip CRC stops import.
+Coverage uses declared session windows, shows incomplete sessions and downtime,
+and flags counts below half the prior 20-snapshot median after 3 observations.
+Source counts precede the expiry filter; per-expiry counts use the latest retained
+snapshot. The schema and as-of reads live in [store.py](src/implied_calibration/store.py).
+
 ## Files
 
-- `src/implied_calibration/client.py`: my public client and response checks.
-- `src/implied_calibration/recorder.py`: my polling loop and heartbeat records.
-- `src/implied_calibration/raw.py`: my gzip writer and crash-tolerant reader.
-- `src/implied_calibration/schedule.py`: my clock-independent slot arithmetic.
-- `src/implied_calibration/cli.py`: my command entry point.
-- `tests/test_phase1.py`: my offline checks using synthetic responses and clocks.
+- `src/implied_calibration/`: my client, recorder, parser, database, ingestion, and coverage commands.
+- `tests/`: my offline checks using synthetic responses, clocks, and temporary databases.
 - `scripts/estimate_disk.py`: my disk estimate from observed recording time.
 
 ## Next
 
-I'll add instrument parsing and SQLite ingestion in Phase 2, then quote cleaning,
-smile fitting, distributions, frozen forecasts, scoring, baselines, and reporting.
+I'll add quote cleaning in Phase 3, then smile fitting, distributions,
+frozen forecasts, scoring, baselines, and reporting.
 I won't draw calibration conclusions before I have enough recorded expiries.
 Risk-neutral probabilities can differ from realised frequencies because of risk premia.
 
