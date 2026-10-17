@@ -10,7 +10,7 @@ the realised frequency and see how that changes across expiries.
 
 3 of 8 phases complete. Phase 4 next: SVI smile fitting.
 I've built recording, ingestion, coverage, Black-76 pricing, and quote cleaning.
-I've checked these on a ten-minute capture; one thin expiry group stays flagged.
+I've checked these on a ten-minute capture; its Phase 4 data gate stays closed.
 I haven't fitted distributions, frozen forecasts, or measured calibration yet.
 
 ## Run it
