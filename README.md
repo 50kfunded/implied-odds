@@ -1,13 +1,17 @@
 # Implied odds
 
+[![tests](https://github.com/50kfunded/implied-odds/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/50kfunded/implied-odds/actions/workflows/tests.yml)
+
 I'm building a study of BTC option probabilities. When options imply a given
 risk-neutral probability of settling below a strike, I want to compare it with
 the realised frequency and see how that changes across expiries.
 
+## Status
+
+2 of 8 phases complete. Phase 3 next: quote cleaning and implied-volatility checks.
 I've built the recorder, instrument parser, SQLite ingestion, and coverage report.
-I've checked a ten-minute live run with no failures or gaps,
-then re-imported it without adding rows.
-The offline tests cover both phases. Fitting and scoring are planned for later.
+I've checked recording and re-importing on a ten-minute live sample.
+I haven't fitted distributions, frozen forecasts, or measured calibration yet.
 
 ## Run it
 
@@ -53,18 +57,8 @@ Network failures have a null body and HTTP status; invalid JSON also keeps its t
 I follow the [Deribit JSON-RPC response format](https://docs.deribit.com/articles/json-rpc-overview).
 The request and schema rules live in [client.py](src/implied_calibration/client.py).
 
-I append each line as a complete gzip member and flush the write. Heartbeat JSONL
-records show attempts, cycles, skipped slots, clock changes, and session outcomes.
-The reader reports and discards an incomplete final member, retaining earlier ones.
-I refuse to append behind a damaged member. After a crash or stale lock, I use a
-fresh output path such as `data/smoke-02` and keep the old files.
-
-I reject schema changes explicitly and preserve missing quote fields as nulls.
-I retry network errors, HTTP 429/5xx, and JSON-RPC errors up to three times.
-Schema failures and testnet responses stop that endpoint's attempt sequence.
-The other endpoints still run, and each failure stays visible.
-After a backward clock correction, I keep the next unused UTC slot. Recording
-can pause until the clock catches up; I record that correction in the heartbeat.
+I keep heartbeat JSONL beside the raw files. My retry, crash recovery, clock,
+and validation details are in the [research note](report/research-note.md).
 
 ## SQLite and coverage
 
@@ -88,12 +82,13 @@ snapshot. The schema and as-of reads live in [store.py](src/implied_calibration/
 - `src/implied_calibration/`: my client, recorder, parser, database, ingestion, and coverage commands.
 - `tests/`: my offline checks using synthetic responses, clocks, and temporary databases.
 - `scripts/estimate_disk.py`: my disk estimate from observed recording time.
+- `report/research-note.md`: my research question, data checks, and limits so far.
+- `.github/workflows/tests.yml`: my offline tests on Windows and Linux, Python 3.11 and 3.12.
 
 ## Next
 
 I'll add quote cleaning in Phase 3, then smile fitting, distributions,
 frozen forecasts, scoring, baselines, and reporting.
-I won't draw calibration conclusions before I have enough recorded expiries.
-Risk-neutral probabilities can differ from realised frequencies because of risk premia.
+I'll update the research note as I complete each phase.
 
 I haven't picked a licence yet.
