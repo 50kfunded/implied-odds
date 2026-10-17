@@ -8,9 +8,9 @@ the realised frequency and see how that changes across expiries.
 
 ## Status
 
-2 of 8 phases complete. Phase 3 next: quote cleaning and implied-volatility checks.
-I've built the recorder, instrument parser, SQLite ingestion, and coverage report.
-I've checked recording and re-importing on a ten-minute live sample.
+3 of 8 phases complete. Phase 4 next: SVI smile fitting.
+I've built recording, ingestion, coverage, Black-76 pricing, and quote cleaning.
+I've checked these on a ten-minute capture; one thin expiry group stays flagged.
 I haven't fitted distributions, frozen forecasts, or measured calibration yet.
 
 ## Run it
@@ -25,6 +25,7 @@ python -m venv .venv
 .\.venv\Scripts\python.exe scripts/estimate_disk.py data/smoke-01
 .\.venv\Scripts\python.exe -m implied_calibration.cli ingest --input data/smoke-01 --db data/research.sqlite
 .\.venv\Scripts\python.exe -m implied_calibration.cli coverage --db data/research.sqlite
+.\.venv\Scripts\python.exe -m implied_calibration.cli clean --db data/research.sqlite --output results/clean.json
 ```
 
 On macOS or Linux, I use these commands:
@@ -37,6 +38,7 @@ python3 -m venv .venv
 .venv/bin/python scripts/estimate_disk.py data/smoke-01
 .venv/bin/python -m implied_calibration.cli ingest --input data/smoke-01 --db data/research.sqlite
 .venv/bin/python -m implied_calibration.cli coverage --db data/research.sqlite
+.venv/bin/python -m implied_calibration.cli clean --db data/research.sqlite --output results/clean.json
 ```
 
 I omit `--seconds` for continuous recording. The default interval is 300 seconds;
@@ -65,8 +67,6 @@ and validation details are in the [research note](report/research-note.md).
 I keep BTC prices, percent mark IVs, and nulls without converting their units.
 Instrument identities use an English month map and 08:00 UTC expiries. Metadata
 and index joins only use observations fetched by the quote snapshot's timestamp.
-My first snapshot has no earlier metadata or index, so it's marked partial;
-its parsed quotes stay stored but are excluded from verified reads.
 
 I ingest an unchanged recording with a fixed `--max-days-to-expiry`, default 400.
 I use a new database to change that limit or rebuild earlier metadata joins.
@@ -77,17 +77,22 @@ and flags counts below half the prior 20-snapshot median after 3 observations.
 Source counts precede the expiry filter; per-expiry counts use the latest retained
 snapshot. The schema and as-of reads live in [store.py](src/implied_calibration/store.py).
 
+I clean through the latest capture, or pass `--as-of-ms` for an earlier cutoff.
+The JSON keeps every stored quote and its reasons. Exit 2 keeps an IV investigation
+or missing comparison visible. My [research note](report/research-note.md) explains the flagged sample.
+
 ## Files
 
-- `src/implied_calibration/`: my client, recorder, parser, database, ingestion, and coverage commands.
+- `src/implied_calibration/`: my recording, database, Black-76, cleaning, and CLI code.
 - `tests/`: my offline checks using synthetic responses, clocks, and temporary databases.
 - `scripts/estimate_disk.py`: my disk estimate from observed recording time.
 - `report/research-note.md`: my research question, data checks, and limits so far.
 - `.github/workflows/tests.yml`: my offline tests on Windows and Linux, Python 3.11 and 3.12.
+- `protocol/protocol.json`: my draft cleaning and diagnostic thresholds, with no evaluation lock yet.
 
 ## Next
 
-I'll add quote cleaning in Phase 3, then smile fitting, distributions,
+I'll add SVI smile fitting in Phase 4, then distributions,
 frozen forecasts, scoring, baselines, and reporting.
 I'll update the research note as I complete each phase.
 
