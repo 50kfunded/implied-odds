@@ -6,7 +6,7 @@ the realised frequency and see how that changes across expiries.
 
 I'm starting with the recorder. I've added the API client, raw files,
 heartbeat records, scheduling, and offline tests.
-I haven't validated a live recording yet.
+I've checked a ten-minute live recording with no failed requests or missed slots.
 The distribution fitting and scoring are planned for later phases.
 
 ## Run it
