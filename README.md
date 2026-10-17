@@ -8,10 +8,10 @@ the realised frequency and see how that changes across expiries.
 
 ## Status
 
-3 of 8 phases complete. Phase 4 next: SVI smile fitting.
-I've built recording, ingestion, coverage, Black-76 pricing, and quote cleaning.
-I've checked these on a ten-minute capture; its Phase 4 data gate stays closed.
-I haven't fitted distributions, frozen forecasts, or measured calibration yet.
+4 of 8 phases complete. Phase 5 next: implied distributions.
+I've checked SVI fitting on synthetic smiles, including bad fits and calendar crossings.
+My ten-minute capture still has a closed data gate, so I haven't fitted its smiles.
+I haven't extracted distributions, frozen forecasts, or measured calibration yet.
 
 ## Run it
 
@@ -26,6 +26,8 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m implied_calibration.cli ingest --input data/smoke-01 --db data/research.sqlite
 .\.venv\Scripts\python.exe -m implied_calibration.cli coverage --db data/research.sqlite
 .\.venv\Scripts\python.exe -m implied_calibration.cli clean --db data/research.sqlite --output results/clean.json
+.\.venv\Scripts\python.exe -m implied_calibration.cli fit --db data/research.sqlite --output results/fit.json
+.\.venv\Scripts\python.exe scripts/synthetic_svi.py --output results/synthetic-svi.json --plot results/synthetic-svi.png
 ```
 
 On macOS or Linux, I use these commands:
@@ -39,6 +41,8 @@ python3 -m venv .venv
 .venv/bin/python -m implied_calibration.cli ingest --input data/smoke-01 --db data/research.sqlite
 .venv/bin/python -m implied_calibration.cli coverage --db data/research.sqlite
 .venv/bin/python -m implied_calibration.cli clean --db data/research.sqlite --output results/clean.json
+.venv/bin/python -m implied_calibration.cli fit --db data/research.sqlite --output results/fit.json
+.venv/bin/python scripts/synthetic_svi.py --output results/synthetic-svi.json --plot results/synthetic-svi.png
 ```
 
 I omit `--seconds` for continuous recording. The default interval is 300 seconds;
@@ -68,32 +72,27 @@ I keep BTC prices, percent mark IVs, and nulls without converting their units.
 Instrument identities use an English month map and 08:00 UTC expiries. Metadata
 and index joins only use observations fetched by the quote snapshot's timestamp.
 
-I ingest an unchanged recording with a fixed `--max-days-to-expiry`, default 400.
-I use a new database to change that limit or rebuild earlier metadata joins.
-I ingest folders in time order; later imports don't revise earlier snapshot joins.
-Corrupt JSON lines and truncated tails get counted; a bad gzip CRC stops import.
-Coverage uses declared session windows, shows incomplete sessions and downtime,
-and flags counts below half the prior 20-snapshot median after 3 observations.
-Source counts precede the expiry filter; per-expiry counts use the latest retained
-snapshot. The schema and as-of reads live in [store.py](src/implied_calibration/store.py).
+I use a fixed ingestion horizon and report declared-session coverage, missing slots,
+and low instrument counts. My [research note](report/research-note.md) gives the limits and counting rules.
+The schema and as-of reads live in [store.py](src/implied_calibration/store.py).
 
 I clean through the latest capture, or pass `--as-of-ms` for an earlier cutoff.
-The JSON keeps every stored quote and its reasons. Exit 2 keeps an IV investigation
-or missing comparison visible. My [research note](report/research-note.md) explains the flagged sample.
+The cleaning JSON keeps every stored quote and its reasons. Exit 2 from `clean` or
+`fit` keeps the data gate visible. The synthetic example runs independently of that gate.
 
 ## Files
 
-- `src/implied_calibration/`: my recording, database, Black-76, cleaning, and CLI code.
+- `src/implied_calibration/`: my recording, database, pricing, cleaning, SVI, and CLI code.
 - `tests/`: my offline checks using synthetic responses, clocks, and temporary databases.
-- `scripts/estimate_disk.py`: my disk estimate from observed recording time.
+- `scripts/`: my disk estimate and labelled synthetic SVI example.
 - `report/research-note.md`: my research question, data checks, and limits so far.
 - `.github/workflows/tests.yml`: my offline tests on Windows and Linux, Python 3.11 and 3.12.
-- `protocol/protocol.json`: my draft cleaning and diagnostic thresholds, with no evaluation lock yet.
+- `protocol/protocol.json`: my draft cleaning and fitting choices, with no evaluation lock yet.
 
 ## Next
 
-I'll add SVI smile fitting in Phase 4, then distributions,
-frozen forecasts, scoring, baselines, and reporting.
+I'll add implied distributions in Phase 5, then frozen forecasts,
+scoring, baselines, and reporting.
 I'll update the research note as I complete each phase.
 
 I haven't picked a licence yet.

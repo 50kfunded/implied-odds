@@ -36,6 +36,14 @@ I fetched its quotes before the first metadata and index observations arrived,
 so I keep the quotes but exclude them from verified reads. I don't join later
 observations back into that snapshot. Later imports don't revise earlier joins.
 
+I ingest unchanged recordings in time order with a fixed `--max-days-to-expiry`,
+default 400. I use a new database to change that limit or rebuild metadata joins.
+Corrupt JSON lines and truncated tails get counted; a bad gzip CRC stops import.
+Coverage uses declared session windows, shows incomplete sessions and downtime,
+and flags counts below half the prior 20-snapshot median after 3 observations.
+Source counts precede the expiry filter; per-expiry counts use the latest retained
+snapshot.
+
 ## Recording rules
 
 I append each raw line as a complete gzip member and flush the write. Heartbeat
@@ -98,9 +106,44 @@ midpoint was 0.0024. This supports a midpoint-versus-mark price gap in that capt
 I keep the flag and `phase4_ready=false`; I haven't relaxed the filters to clear it.
 The full row-level diagnostic stays local with the unpublished capture.
 
+## SVI fitting
+
+I fit raw SVI total variance, w(k) = a + b(rho(k-m) + sqrt((k-m)^2 + s^2)).
+I use analytic first and second derivatives in the butterfly diagnostic, following
+[Gatheral and Jacquier](https://arxiv.org/html/1204.0646). My bounded transform fits
+the positive minimum variance, a slope fraction, rho, m and s. It allows negative a
+and keeps both wing slopes below 2 with a 1e-6 margin. Passing the parameter bounds
+alone doesn't establish that the fitted smile passes the butterfly check.
+
+I run 10 seeded TRF starts and fit IV residuals. Weights start at inverse squared
+bid/ask IV spread, with a 0.005 decimal-IV floor, then get capped so one quote has
+at most 20% of the total weight. I select the lowest weighted error among converged
+constraint-valid starts before checking butterflies; I don't select a different
+start just to hide a failed check. Failed starts stay in the result message.
+
+I check g(k) against -1e-8 over at least 6 ATM standard deviations, observed strikes,
+and local grids around m and the variance minimum. I compare all butterfly-eligible
+expiry pairs within a snapshot on one shared grid. Calendar crossings get flags;
+I don't repair them. My draft primary rule requires both checks to pass. A single
+eligible expiry has zero calendar pairs, which isn't evidence about a term structure.
+Finite grids can miss violations between nodes or beyond the checked range.
+
+My labelled synthetic example has 41 strikes, T=0.5 years and raw parameters
+a=0.02, b=0.15, rho=-0.35, m=0.03, s=0.25. I recovered its noiseless smile with
+RMSE below 1e-10 vol points, all fitted strikes inside the generated bid/ask spread,
+and min g about 0.260893 on the check grid. Separate tests cover seeded noise,
+negative a, narrow s bounds, deliberate butterfly violations and calendar crossings.
+These checks don't establish performance on recorded market quotes.
+
+The `fit` command re-cleans captured rows as of the requested cutoff before fitting.
+It keeps every expiry group in its output, including rejected or failed fits.
+My ten-minute capture still has `phase4_ready=false`, so its groups remain blocked
+before the optimiser is called. I haven't fitted those recorded smiles or changed
+the Phase 3 thresholds. The synthetic example runs without that capture.
+
 ## Research still to do
 
-I plan to fit SVI smiles in Phase 4 and extract risk-neutral distributions in Phase 5.
+I plan to extract risk-neutral distributions in Phase 5.
 I plan to lock the protocol and freeze forecasts in Phase 6, compare baselines
 and uncertainty in Phase 7, then finish the report and reproduction work in
 Phase 8. I've brought offline CI forward for this release.
