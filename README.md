@@ -8,10 +8,10 @@ the realised frequency and see how that changes across expiries.
 
 ## Status
 
-4 of 8 phases complete. Phase 5 next: implied distributions.
-I've checked SVI fitting on synthetic smiles, including bad fits and calendar crossings.
-My ten-minute capture still has a closed data gate, so I haven't fitted its smiles.
-I haven't extracted distributions, frozen forecasts, or measured calibration yet.
+5 of 8 phases complete. Phase 6 next: frozen forecasts and scoring.
+I've checked SVI fits and implied CDFs on synthetic slices, including repairs and tails.
+My ten-minute capture still has a closed data gate, so I haven't extracted its distributions.
+I haven't frozen forecasts or measured calibration yet.
 
 ## Run it
 
@@ -27,7 +27,8 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m implied_calibration.cli coverage --db data/research.sqlite
 .\.venv\Scripts\python.exe -m implied_calibration.cli clean --db data/research.sqlite --output results/clean.json
 .\.venv\Scripts\python.exe -m implied_calibration.cli fit --db data/research.sqlite --output results/fit.json
-.\.venv\Scripts\python.exe scripts/synthetic_svi.py --output results/synthetic-svi.json --plot results/synthetic-svi.png
+.\.venv\Scripts\python.exe -m implied_calibration.cli cdf --db data/research.sqlite --output results/cdf.json
+.\.venv\Scripts\python.exe scripts/synthetic_cdf.py --output results/synthetic-cdf.json --plot results/synthetic-cdf.png
 ```
 
 On macOS or Linux, I use these commands:
@@ -42,7 +43,8 @@ python3 -m venv .venv
 .venv/bin/python -m implied_calibration.cli coverage --db data/research.sqlite
 .venv/bin/python -m implied_calibration.cli clean --db data/research.sqlite --output results/clean.json
 .venv/bin/python -m implied_calibration.cli fit --db data/research.sqlite --output results/fit.json
-.venv/bin/python scripts/synthetic_svi.py --output results/synthetic-svi.json --plot results/synthetic-svi.png
+.venv/bin/python -m implied_calibration.cli cdf --db data/research.sqlite --output results/cdf.json
+.venv/bin/python scripts/synthetic_cdf.py --output results/synthetic-cdf.json --plot results/synthetic-cdf.png
 ```
 
 I omit `--seconds` for continuous recording. The default interval is 300 seconds;
@@ -78,21 +80,21 @@ The schema and as-of reads live in [store.py](src/implied_calibration/store.py).
 
 I clean through the latest capture, or pass `--as-of-ms` for an earlier cutoff.
 The cleaning JSON keeps every stored quote and its reasons. Exit 2 from `clean` or
-`fit` keeps the data gate visible. The synthetic example runs independently of that gate.
+`fit` or `cdf` keeps the data gate visible. The synthetic example runs independently.
+I store CDF parameters and report repairs and extrapolated mass; the [research note](report/research-note.md#implied-cdf) explains how.
 
 ## Files
 
-- `src/implied_calibration/`: my recording, database, pricing, cleaning, SVI, and CLI code.
+- `src/implied_calibration/`: my recording, database, pricing, cleaning, SVI, CDF, and CLI code.
 - `tests/`: my offline checks using synthetic responses, clocks, and temporary databases.
-- `scripts/`: my disk estimate and labelled synthetic SVI example.
+- `scripts/`: my disk estimate and labelled synthetic SVI and CDF examples.
 - `report/research-note.md`: my research question, data checks, and limits so far.
 - `.github/workflows/tests.yml`: my offline tests on Windows and Linux, Python 3.11 and 3.12.
-- `protocol/protocol.json`: my draft cleaning and fitting choices, with no evaluation lock yet.
+- `protocol/protocol.json`: my draft research choices, with no evaluation lock yet.
 
 ## Next
 
-I'll add implied distributions in Phase 5, then frozen forecasts,
-scoring, baselines, and reporting.
+I'll add frozen forecasts and scoring in Phase 6, then baselines and reporting.
 I'll update the research note as I complete each phase.
 
 I haven't picked a licence yet.

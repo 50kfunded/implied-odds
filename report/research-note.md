@@ -141,9 +141,63 @@ My ten-minute capture still has `phase4_ready=false`, so its groups remain block
 before the optimiser is called. I haven't fitted those recorded smiles or changed
 the Phase 3 thresholds. The synthetic example runs without that capture.
 
+## Implied CDF
+
+I differentiate the undiscounted Black call across strikes while keeping the SVI
+slice and forward fixed. With k=ln(K/F), w from SVI and d2=(-k-w/2)/sqrt(w), I use
+survival = N(d2) - phi(d2) w'(k)/(2 sqrt(w)). I compute both tails directly with
+signed log sums, then take the larger probability as the smaller tail's complement.
+That keeps tiny survival probabilities when the CDF rounds to one. Total variance
+already contains T; I store T for the slice and don't multiply w by T again.
+My tests compare the digital with finite differences of Black calls at three step
+sizes and check the exact flat-vol lognormal limit.
+
+I store SVI parameters, F, T, observed log-strike bounds, settings and diagnostics.
+`ImpliedCDF.from_record(record).cdf_at(price)` rebuilds the same curve. I keep the
+numerical grid in memory. I don't save it in the distribution record. Each query
+reports whether its price is outside the observed usable strike range.
+Extrapolated mass is CDF at the lowest observed strike plus survival at the highest.
+I don't claim calibration in the extrapolated wings or inside the observed range.
+
+My draft grid starts at k=-8 to 8 and doubles to at most -64 to 64, including local
+nodes around m and the variance minimum. I coalesce nearly identical floating-point
+nodes. I require each raw boundary tail below 1e-10 and each omitted mean contribution
+below 1e-8 of F. I integrate survival with the price Jacobian F exp(k) and check the
+mean against F within 2e-6 relative error. For the analytic curve, I also compare the
+truncated integral with C(L)-C(U) and report omitted contributions F-C(L) and C(U).
+The implementation uses L-Put(L) for the left contribution to avoid cancellation.
+These tail identities assume a valid slice with the required endpoint limits.
+
+If I detect a decreasing CDF, increasing survival or out-of-range probability,
+I apply equal-weight PAVA on the fixed nodes and project its values onto [0,1].
+I record isotonic, bounds and endpoint corrections, their total maximum, pooling
+and changed-point counts. I anchor repaired endpoints to zero and one, use linear
+interpolation in log-moneyness, and report that finite support explicitly.
+I integrate this repaired curve exactly per segment and check its mean again.
+I don't rescale it to force the mean to F. Repaired or unresolved curves stay
+visible in the output and aren't counted in `n_cdf_ok`.
+
+My synthetic CDF example uses a=0.02, b=0.15, rho=-0.35, m=0.03, s=0.25,
+F=80,000, T=0.5 and an observed k range of -0.3 to 0.3. It needs no repair.
+Its mean check differs from F by about 6.63e-7 relatively, with raw truncated
+probability about 5.06e-30 and extrapolated mass about 20.57%. These are generated
+inputs and numerical checks. A separate synthetic test near the Lee slope limit
+leaves more than half the mean beyond k=64 and correctly reports unresolved tails.
+Tiny tail probability alone doesn't establish that the omitted mean is small.
+
+The `cdf` command reuses the as-of cleaning and fit gates, retains every group and
+returns exit 2 when no CDF passes. My saved capture produces zero distributions;
+its 120 groups remain blocked before fitting. Finite grids can miss violations,
+and PAVA doesn't preserve option prices or the martingale mean. I haven't added
+density evaluation or log scores in this phase.
+
+I can still run the synthetic smile plot from Phase 4 with
+`.venv/bin/python scripts/synthetic_svi.py --output results/synthetic-svi.json --plot results/synthetic-svi.png`
+on macOS or Linux, or replace the interpreter with `.\.venv\Scripts\python.exe`
+in PowerShell. The README gives the equivalent CDF example commands.
+
 ## Research still to do
 
-I plan to extract risk-neutral distributions in Phase 5.
 I plan to lock the protocol and freeze forecasts in Phase 6, compare baselines
 and uncertainty in Phase 7, then finish the report and reproduction work in
 Phase 8. I've brought offline CI forward for this release.
