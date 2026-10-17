@@ -1,12 +1,38 @@
-"""I expose the Phase 1 recorder through python -m implied_calibration.cli."""
+"""I record, ingest, and inspect my captured BTC option data."""
 
 import argparse
 from dataclasses import asdict
 import json
 import logging
 from pathlib import Path
+import sqlite3
+import subprocess
 
+from .coverage import coverage_report
+from .ingest import ingest
 from .recorder import record
+from .store import Store
+
+
+def provenance() -> dict[str, str | bool | None]:
+    root = Path(__file__).resolve().parents[2]
+    try:
+        commit = subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"],
+                                capture_output=True, text=True, check=False)
+        status = subprocess.run(["git", "-C", str(root), "status", "--porcelain"],
+                                capture_output=True, text=True, check=False)
+    except FileNotFoundError:
+        return {"git_commit": None, "working_tree_dirty": None}
+    return {"git_commit": commit.stdout.strip() if commit.returncode == 0 else None,
+            "working_tree_dirty": bool(status.stdout.strip()) if status.returncode == 0 else None}
+
+
+def emit(result: dict, output: Path | None) -> None:
+    rendered = json.dumps(result, indent=2, sort_keys=True) + "\n"
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8", newline="\n")
+    print(rendered, end="")
 
 
 def main() -> int:
@@ -17,19 +43,40 @@ def main() -> int:
     recorder.add_argument("--output", type=Path, required=True)
     recorder.add_argument("--interval", type=int, default=300)
     recorder.add_argument("--seconds", type=int)
+    importer = commands.add_parser("ingest", help="Ingest an unchanged local recording into SQLite")
+    importer.add_argument("--input", type=Path, required=True)
+    importer.add_argument("--db", type=Path, required=True)
+    importer.add_argument("--max-days-to-expiry", type=int, default=400)
+    importer.add_argument("--output", type=Path)
+    coverage = commands.add_parser("coverage", help="Inspect declared polling windows and quote counts")
+    coverage.add_argument("--db", type=Path, required=True)
+    coverage.add_argument("--as-of-ms", type=int)
+    coverage.add_argument("--output", type=Path)
     args = parser.parse_args()
     logging.basicConfig(level=getattr(logging, args.log_level), format="%(levelname)s %(name)s %(message)s")
     try:
-        summary = record(args.output, args.interval, args.seconds)
+        if args.command == "record":
+            summary = record(args.output, args.interval, args.seconds)
+            emit(asdict(summary), None)
+            return int(summary.cycles == 0 or summary.failed_attempts > 0
+                       or summary.skipped_slots > 0 or summary.clock_changes > 0)
+        if args.command == "ingest":
+            store = Store(args.db, args.max_days_to_expiry)
+            try:
+                result = ingest(args.input, store)
+            finally:
+                store.close()
+        else:
+            result = coverage_report(args.db, args.as_of_ms)
+        result["provenance"] = provenance()
+        emit(result, args.output)
+        return 0
     except KeyboardInterrupt:
         print(json.dumps({"status": "interrupted", "exit_code": 130}))
         return 130
-    except (OSError, ValueError) as exc:
-        logging.getLogger(__name__).exception("Recording stopped: %s", exc)
+    except (OSError, ValueError, sqlite3.Error) as exc:
+        logging.getLogger(__name__).exception("Command stopped: %s", exc)
         return 1
-    print(json.dumps(asdict(summary), indent=2, sort_keys=True))
-    return int(summary.cycles == 0 or summary.failed_attempts > 0
-               or summary.skipped_slots > 0 or summary.clock_changes > 0)
 
 
 if __name__ == "__main__":
