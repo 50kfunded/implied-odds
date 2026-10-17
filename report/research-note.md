@@ -56,11 +56,12 @@ My response envelope follows the [Deribit JSON-RPC format](https://docs.deribit.
 
 I plan to clean quotes and check Black-76 implied volatilities in Phase 3,
 fit SVI smiles in Phase 4, and extract risk-neutral distributions in Phase 5.
-I plan to freeze the evaluation protocol and forecasts before scoring settlements
-in Phase 6, compare baselines and uncertainty in Phase 7, then finish the report
-and reproduction work in Phase 8. I've brought offline CI forward for this release.
+I plan to lock the protocol and freeze forecasts in Phase 6, compare baselines
+and uncertainty in Phase 7, then finish the report and reproduction work in
+Phase 8. I've brought offline CI forward for this release.
 
 I haven't fixed the protocol choices or collected a set of settled forecasts.
-I'll record those choices before evaluation and keep the forecasts as they were
-at their decision timestamps. I won't draw calibration conclusions before I have
-enough recorded expiries.
+I'll commit the locked protocol and its hash before the first evaluated expiry
+occurs. I'll freeze each forecast using only information available at its decision
+timestamp, then score it after the official delivery price exists. I won't draw
+calibration conclusions before I have enough recorded expiries.
