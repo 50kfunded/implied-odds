@@ -8,3 +8,7 @@ data/
 results/
 .env
 .env.*
+*.sqlite*
+*.db
+*.db-wal
+*.db-shm
