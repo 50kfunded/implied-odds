@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 import gzip
+import hashlib
 import json
 import logging
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any, Callable, Iterator
 import zlib
 
 
@@ -42,20 +43,32 @@ def _members(path: Path) -> Iterator[bytes]:
                     raise TruncatedTail(f"Truncated final gzip member in {path}")
 
 
-def read_raw(path: Path) -> Iterator[dict[str, Any]]:
+def read_raw(path: Path, *, on_issue: Callable[[dict[str, Any]], None] | None = None) -> Iterator[dict[str, Any]]:
+    member_number = 0
+    source_prefix = None
     try:
-        for member in _members(Path(path)):
-            for line in member.splitlines():
+        for member_number, member in enumerate(_members(Path(path)), 1):
+            if source_prefix is None:
+                source_prefix = hashlib.sha256(member).hexdigest()
+            for line_number, line in enumerate(member.splitlines(), 1):
                 try:
                     record = json.loads(line)
                     if not isinstance(record, dict):
                         raise ValueError("expected a JSON object")
                 except (ValueError, UnicodeDecodeError) as exc:
                     LOGGER.warning("corrupt_json_line path=%s reason=%s", path, exc)
+                    if on_issue is not None:
+                        on_issue({"reason": "corrupt_json_line", "member": member_number,
+                                  "line": line_number, "detail": str(exc), "source_prefix": source_prefix,
+                                  "line_hash": hashlib.sha256(line).hexdigest()})
                     continue
                 yield record
     except TruncatedTail as exc:
         LOGGER.warning("truncated_tail reason=%s; I discarded the incomplete member", exc)
+        if on_issue is not None:
+            on_issue({"reason": "truncated_tail", "member": member_number + 1,
+                      "line": None, "detail": "I discarded the incomplete final gzip member",
+                      "source_prefix": source_prefix or hashlib.sha256(Path(path).read_bytes()).hexdigest()})
 
 
 class RawWriter:

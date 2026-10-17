@@ -103,7 +103,7 @@ def record(
         interval_ms = interval * 1000
         slot = boundary_ms(wall, interval_ms, inclusive=True)
         sink.event("session_start", ok=True, reason="started", interval_ms=interval_ms,
-                   seconds=seconds, first_slot_ms=slot)
+                   seconds=seconds, first_slot_ms=slot, anchor_wall_ms=wall)
         sink.raw.preflight(wall)
         client = client_factory(on_attempt=sink.attempt, now_ms=clock.now_ms,
                                 monotonic=clock.monotonic, sleep=clock.sleep)
