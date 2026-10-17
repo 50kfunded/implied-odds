@@ -9,7 +9,9 @@ import sqlite3
 import subprocess
 
 from .coverage import coverage_report
+from .cleaning import clean_database
 from .ingest import ingest
+from .protocol import load_protocol
 from .recorder import record
 from .store import Store
 
@@ -52,6 +54,11 @@ def main() -> int:
     coverage.add_argument("--db", type=Path, required=True)
     coverage.add_argument("--as-of-ms", type=int)
     coverage.add_argument("--output", type=Path)
+    cleaner = commands.add_parser("clean", help="I classify captured quotes and check IV conventions")
+    cleaner.add_argument("--db", type=Path, required=True)
+    cleaner.add_argument("--as-of-ms", type=int)
+    cleaner.add_argument("--protocol", type=Path, default=Path("protocol/protocol.json"))
+    cleaner.add_argument("--output", type=Path)
     args = parser.parse_args()
     logging.basicConfig(level=getattr(logging, args.log_level), format="%(levelname)s %(name)s %(message)s")
     try:
@@ -66,11 +73,13 @@ def main() -> int:
                 result = ingest(args.input, store)
             finally:
                 store.close()
-        else:
+        elif args.command == "coverage":
             result = coverage_report(args.db, args.as_of_ms)
+        else:
+            result = clean_database(args.db, load_protocol(args.protocol), args.as_of_ms)
         result["provenance"] = provenance()
         emit(result, args.output)
-        return 0
+        return 2 if args.command == "clean" and not result["phase4_ready"] else 0
     except KeyboardInterrupt:
         print(json.dumps({"status": "interrupted", "exit_code": 130}))
         return 130

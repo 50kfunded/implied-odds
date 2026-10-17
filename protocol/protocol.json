@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "status": "draft",
+  "cleaning": {
+    "minimum_maturity_hours": 6.0,
+    "minimum_mid_ticks": 2.0,
+    "maximum_spread_to_mid": 0.5,
+    "minimum_unique_strikes": 6,
+    "minimum_strikes_each_side": 2,
+    "maximum_forward_relative_deviation": 0.001
+  },
+  "inversion": {
+    "lower_iv": 0.0001,
+    "upper_iv": 10.0,
+    "absolute_tolerance": 5e-324,
+    "relative_tolerance": 8.881784197001252e-16,
+    "max_iterations": 512,
+    "max_relative_price_error": 1e-10
+  },
+  "diagnostics": {
+    "systematic_difference_vol_points": 0.5,
+    "minimum_mark_comparisons": 6
+  }
+}
