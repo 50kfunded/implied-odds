@@ -23,7 +23,7 @@ my local validation. The repo's offline tests use synthetic data.
 | Missing fields | 617 missing bids stayed SQL NULL |
 | Re-import | No new rows in any table |
 | Storage | Foreign keys, integrity, WAL, and required quote indexes passed |
-| Coverage | No missing slots, inferred downtime, or low-count warnings in this capture |
+| Coverage | No missing slots, inferred slot assignments, or low-count warnings in this capture |
 | Future results | No delivery prices, frozen predictions, or scores yet |
 
 I recorded with commit `b04d316144a642a867000e701d6e085c4293f63e` and checked
