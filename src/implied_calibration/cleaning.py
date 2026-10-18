@@ -237,7 +237,8 @@ def clean_expiry(rows: list[dict[str, Any]], protocol: Protocol) -> dict[str, An
             'iv_diagnostic': diagnostic, 'quotes': [asdict(row) for row in cleaned]}
 
 
-def clean_database(path: Path, protocol: Protocol, as_of_ms: int | None = None) -> dict[str, Any]:
+def clean_database(path: Path, protocol: Protocol, as_of_ms: int | None = None,
+                   *, snapshot_id: str | None = None) -> dict[str, Any]:
     if validate_protocol(protocol.content).content_hash != protocol.content_hash:
         raise ValueError('Protocol content changed after hashing')
     if as_of_ms is not None and (type(as_of_ms) is not int or not 0 <= as_of_ms <= 9223372036854775807):
@@ -249,6 +250,8 @@ def clean_database(path: Path, protocol: Protocol, as_of_ms: int | None = None) 
             raise ValueError('Unsupported database schema')
         if as_of_ms is None:
             as_of_ms = connection.execute('SELECT COALESCE(MAX(fetched_at_ms), 0) FROM snapshots').fetchone()[0]
+        selection = '' if snapshot_id is None else ' AND q.snapshot_id=?'
+        parameters = (as_of_ms,) if snapshot_id is None else (as_of_ms, snapshot_id)
         rows = connection.execute(
             'SELECT q.*, s.fetched_at_ms, i.fetched_at_ms AS metadata_time, i.tick_size, '
             'i.tick_size_steps, i.is_active, i.expiry_ms AS metadata_expiry_ms, '
@@ -256,9 +259,11 @@ def clean_database(path: Path, protocol: Protocol, as_of_ms: int | None = None) 
             'FROM quotes q JOIN snapshots s USING(snapshot_id) '
             'LEFT JOIN instruments i ON i.instrument_name=q.instrument_name '
             'AND i.fetched_at_ms=q.metadata_fetched_at_ms AND i.fetched_at_ms<=s.fetched_at_ms '
-            'WHERE s.fetched_at_ms<=? ORDER BY s.fetched_at_ms, q.snapshot_id, q.expiry_ms, q.instrument_name',
-            (as_of_ms,)).fetchall()
+            'WHERE s.fetched_at_ms<=?' + selection +
+            ' ORDER BY s.fetched_at_ms, q.snapshot_id, q.expiry_ms, q.instrument_name',
+            parameters).fetchall()
         assert all(r['fetched_at_ms'] <= as_of_ms for r in rows)
+        assert all(snapshot_id is None or r['snapshot_id'] == snapshot_id for r in rows)
         assert all(r['metadata_time'] is None or r['metadata_time'] <= r['fetched_at_ms'] for r in rows)
         groups = defaultdict(list)
         for row in rows:
@@ -270,8 +275,7 @@ def clean_database(path: Path, protocol: Protocol, as_of_ms: int | None = None) 
     eligible = [row for row in quotes if row['status'] == 'usable']
     candidates = [CleanQuote(**row) for row in quotes if row['quote_status'] == 'candidate']
     diagnostic = _diagnostic(candidates, protocol)
-    investigations = sum(group['status'] == 'investigate' for group in output)
-    ready = bool(eligible) and diagnostic['status'] == 'ok' and investigations == 0
+    ready = any(group['status'] == 'ok' for group in output)
     return {'as_of_ms': as_of_ms, 'protocol_hash': protocol.content_hash,
             'protocol_status': protocol.content['status'], 'protocol': protocol.content,
             'n_quotes': len(quotes), 'n_candidate_quotes': len(candidates),

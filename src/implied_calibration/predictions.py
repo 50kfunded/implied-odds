@@ -80,6 +80,7 @@ def freeze_predictions(db: Path, locked: LockedProtocol, as_of_ms: int, created_
     store = evaluation_store(db)
     added, existing_count, not_due, ineligible = 0, 0, 0, 0
     output, baseline_output = [], []
+    snapshot_reports: dict[str, dict[str, Any]] = {}
     if baseline_extension is not None:
         baseline_extension.validate(locked)
     try:
@@ -125,7 +126,10 @@ def freeze_predictions(db: Path, locked: LockedProtocol, as_of_ms: int, created_
                             prediction = replace(prediction, snapshot_id=snapshot['snapshot_id'],
                                                  fetched_at_ms=snapshot['fetched_at_ms'], gap_ms=gap)
                             if gap <= choices['snapshot_tolerance_ms']:
-                                report = cdf_database(db, locked.protocol, target, snapshot_id=snapshot['snapshot_id'])
+                                if snapshot['snapshot_id'] not in snapshot_reports:
+                                    snapshot_reports[snapshot['snapshot_id']] = cdf_database(
+                                        db, locked.protocol, target, snapshot_id=snapshot['snapshot_id'])
+                                report = snapshot_reports[snapshot['snapshot_id']]
                                 groups = [group for group in report['groups'] if group['expiry_ms'] == expiry]
                                 if not groups:
                                     prediction = replace(prediction, status='expiry_absent', message='The selected snapshot has no rows for this expiry')

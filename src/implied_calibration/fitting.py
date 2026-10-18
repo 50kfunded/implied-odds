@@ -20,7 +20,7 @@ def svi_settings(protocol: Protocol) -> SVISettings:
 
 def fit_database(path: Path, protocol: Protocol, as_of_ms: int | None = None,
                  *, snapshot_id: str | None = None) -> dict[str, Any]:
-    cleaned = clean_database(path, protocol, as_of_ms)
+    cleaned = clean_database(path, protocol, as_of_ms, snapshot_id=snapshot_id)
     settings = svi_settings(protocol)
     slices = []
     groups = [group for group in cleaned['groups'] if snapshot_id is None or group['snapshot_id'] == snapshot_id]
@@ -28,7 +28,7 @@ def fit_database(path: Path, protocol: Protocol, as_of_ms: int | None = None,
         rows = [row for row in group['quotes'] if row['status'] == 'usable']
         assert all(row['fetched_at_ms'] <= cleaned['as_of_ms'] for row in group['quotes'])
         k = tuple(row['k'] for row in rows)
-        if not cleaned['phase4_ready']:
+        if group['status'] == 'investigate' or not cleaned['phase4_ready']:
             result = FitResult('blocked_upstream', n_strikes=len(rows),
                                message='The captured-data IV gate is closed; I have not attempted an SVI fit')
         elif group['status'] != 'ok':
