@@ -56,6 +56,16 @@ def main() -> int:
     recorder.add_argument("--output", type=Path, required=True)
     recorder.add_argument("--interval", type=int, default=300)
     recorder.add_argument("--seconds", type=int)
+    collector = commands.add_parser('collect', help='I collect inputs, freeze due forecasts and score deliveries')
+    collector.add_argument('--output', type=Path, required=True)
+    collector.add_argument('--db', type=Path, required=True)
+    collector.add_argument('--report-output', type=Path, default=Path('results/live'))
+    collector.add_argument('--protocol', type=Path, default=Path('protocol/protocol.json'))
+    collector.add_argument('--baselines', type=Path, default=Path('protocol/baselines.json'))
+    collector.add_argument('--interval', type=int, default=300)
+    collector.add_argument('--seconds', type=int)
+    stopper = commands.add_parser('collect-stop', help='I ask the collection job to stop after its current cycle')
+    stopper.add_argument('--output', type=Path, required=True)
     importer = commands.add_parser("ingest", help="Ingest an unchanged local recording into SQLite")
     importer.add_argument("--input", type=Path, required=True)
     importer.add_argument("--db", type=Path, required=True)
@@ -111,9 +121,24 @@ def main() -> int:
     reporter.add_argument('--protocol',type=Path,default=Path('protocol/protocol.json'))
     reporter.add_argument('--baselines',type=Path,default=Path('protocol/baselines.json'))
     reporter.add_argument('--output',type=Path,required=True)
+    snapshot = commands.add_parser('snapshot-report', help='I inspect a real snapshot without freezing forecasts')
+    snapshot.add_argument('--db', type=Path, required=True)
+    snapshot.add_argument('--protocol', type=Path, default=Path('protocol/protocol.json'))
+    snapshot.add_argument('--as-of-ms', type=int)
+    snapshot.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     logging.basicConfig(level=getattr(logging, args.log_level), format="%(levelname)s %(name)s %(message)s")
     try:
+        if args.command in ('collect', 'collect-stop'):
+            from .collection import CollectionConfig, collect, request_stop
+            if args.command == 'collect-stop':
+                result = request_stop(args.output)
+            else:
+                result = collect(CollectionConfig(args.output, args.db, args.report_output,
+                                                  args.protocol, args.baselines, args.interval, args.seconds))
+            emit(result, None)
+            return int(args.command == 'collect' and (result['cycles'] == 0 or result['failed_cycles'] > 0
+                       or result['failed_attempts'] > 0 or result['skipped_slots'] > 0 or result['clock_changes'] > 0))
         if args.command == "record":
             summary = record(args.output, args.interval, args.seconds)
             emit(asdict(summary), None)
@@ -133,6 +158,13 @@ def main() -> int:
             result = fit_database(args.db, load_protocol(args.protocol), args.as_of_ms)
         elif args.command == 'cdf':
             result = cdf_database(args.db, load_protocol(args.protocol), args.as_of_ms)
+        elif args.command == 'snapshot-report':
+            from .snapshot_report import snapshot_report
+            details = provenance()
+            result = snapshot_report(args.db, load_protocol(args.protocol), args.output,
+                                     details['git_commit'], args.as_of_ms, working_tree_dirty=details['working_tree_dirty'])
+            emit({k: v for k, v in result.items() if k != 'groups'}, None)
+            return 0 if result['n_accepted_cdfs'] else 2
         elif args.command == 'report':
             details = provenance()
             parent = load_locked_protocol(args.protocol)
