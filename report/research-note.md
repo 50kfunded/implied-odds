@@ -10,8 +10,9 @@ as evidence of a trading edge.
 I've checked the recording and ingestion pipeline on a local ten-minute capture
 from 16 October 2026. These are engineering checks. Repeated quotes aren't
 independent outcomes, and this capture doesn't establish calibration.
-I haven't published the raw recording or database, so the numbers below describe
-my local validation. The repo's offline tests use synthetic data.
+I include the unchanged raw recording and heartbeat under `recordings/`, with
+source hashes in the [manifest](../recordings/manifest.json). I rebuild the database
+locally. The repo's offline tests use synthetic data.
 
 | Check | What I observed |
 | --- | --- |
@@ -45,6 +46,21 @@ Source counts precede the expiry filter; per-expiry counts use the latest retain
 snapshot.
 
 ## Recording rules
+
+I call the BTC option summary and `btc_usd` index each cycle, plus instruments
+on the first cycle and once per UTC hour. I only use the production API.
+The index response isn't a settlement price. Each raw JSON-lines record keeps
+the parsed body unchanged, endpoint, parameters, HTTP status, local UTC millisecond
+request/response/fetch times, latency and attempt outcome. Deribit's microsecond
+timings stay inside the body. A network failure has a null body and HTTP status;
+invalid JSON also keeps its response text. My schema rules live in
+[client.py](../src/implied_calibration/client.py), and my timestamped joins live in
+[store.py](../src/implied_calibration/store.py).
+
+My default interval is 300 seconds, with a minimum of 10. Polls start on UTC
+epoch-aligned boundaries. I omit `--seconds` for continuous recording; an in-flight
+request can finish after a duration expires. Ctrl+C records an interruption.
+Recording returns 1 for failed attempts, gaps, clock changes or no cycles.
 
 I append each raw line as a complete gzip member and flush the write. Heartbeat
 records show attempts, cycles, skipped slots, clock changes, and session outcomes.
@@ -104,7 +120,7 @@ changed midpoint IV by at most 0.01823 vol points, so the common F doesn't expla
 the breach. The 81,500 put's mark was 0.00267248 BTC, above its 0.0025 ask; its
 midpoint was 0.0024. This supports a midpoint-versus-mark price gap in that capture.
 I keep the flag and `phase4_ready=false`; I haven't relaxed the filters to clear it.
-The full row-level diagnostic stays local with the unpublished capture.
+I can rebuild the full row-level diagnostic from the included capture.
 
 ## SVI fitting
 
@@ -197,7 +213,7 @@ for accepted analytic CDFs is below.
 I can still run the synthetic smile plot from Phase 4 with
 `.venv/bin/python scripts/synthetic_svi.py --output results/synthetic-svi.json --plot results/synthetic-svi.png`
 on macOS or Linux, or replace the interpreter with `.\.venv\Scripts\python.exe`
-in PowerShell. The README gives the equivalent CDF example commands.
+in PowerShell. I keep the equivalent CDF example commands in the pipeline section below.
 
 ## Frozen forecasts and scoring
 
@@ -275,29 +291,9 @@ future-row invariance, immutable payloads, pending delivery then scoring, confli
 settlement prices, PIT simulation and score identities. These use synthetic inputs.
 I haven't created research forecasts or scores from the saved market capture.
 
-I can run the earlier inspection commands with either interpreter from the README:
-
-```powershell
-.\.venv\Scripts\python.exe scripts/estimate_disk.py data/smoke-01
-.\.venv\Scripts\python.exe -m implied_calibration.cli coverage --db data/research.sqlite
-.\.venv\Scripts\python.exe -m implied_calibration.cli clean --db data/research.sqlite --output results/clean.json
-.\.venv\Scripts\python.exe -m implied_calibration.cli fit --db data/research.sqlite --output results/fit.json
-.\.venv\Scripts\python.exe -m implied_calibration.cli cdf --db data/research.sqlite --output results/cdf.json
-.\.venv\Scripts\python.exe -m implied_calibration.cli settle --db data/research.sqlite --input data/delivery-01
-```
-
-```sh
-.venv/bin/python scripts/estimate_disk.py data/smoke-01
-.venv/bin/python -m implied_calibration.cli coverage --db data/research.sqlite
-.venv/bin/python -m implied_calibration.cli clean --db data/research.sqlite --output results/clean.json
-.venv/bin/python -m implied_calibration.cli fit --db data/research.sqlite --output results/fit.json
-.venv/bin/python -m implied_calibration.cli cdf --db data/research.sqlite --output results/cdf.json
-.venv/bin/python -m implied_calibration.cli settle --db data/research.sqlite --input data/delivery-01
-```
-
 ## Research still to do
 
-I'll finish the report and reproduction work in Phase 8. I've brought offline CI forward.
+I've completed the implementation and offline reporting. I still need qualifying market observations.
 
 I haven't collected a set of settled research forecasts. I'll freeze each forecast
 using only information available at its decision timestamp, then score it after
@@ -422,3 +418,99 @@ hourly gaps, future-row invariance, immutable failures, historical previews and
 Git witnesses. I check stationary-bootstrap coverage across 60 AR(1) simulations,
 DM and vector HAC against hand calculations, delayed-lag ESS, and calibrated
 correlated PITs. These are synthetic checks, not evidence of market calibration.
+
+## Reproducing the reports
+
+`scripts/reproduce.py` verifies every included sample hash and rejects unlisted
+files. The raw gzip and heartbeat total 420,802 bytes, below 5 MB. I ingest them
+into a temporary SQLite database, rebuild the report, then remove that temporary
+database. I don't create research forecasts during reproduction or change the
+working research database. I keep generated files under ignored `results/`.
+
+I write `results/reproduction/market/report.html` and `report.json`, plus six PNG
+panels: smile against bid/ask, CDF against baselines, PIT, tail reliability,
+cumulative paired CRPS differences and coverage. The included sample retains
+its closed IV gate and zero research scores, so unavailable panels show
+"insufficient data". Reporting never refits or replaces a frozen forecast.
+
+I write a separate `synthetic/` report with 240 generated independent lognormal
+outcomes, fixed seed 314159 and generated hourly GARCH history. It uses one fixed
+fitted distribution and baseline set to exercise the figures. It isn't a rolling
+market study, and its generated dates and scores aren't registered as research
+records. Every synthetic panel and report carries that label.
+
+The PIT histogram uses raw PITs with ten equal bins. Its 95% binomial iid reference
+range is `binom.ppf([.025,.975], n, .1)`, using the
+[SciPy binomial distribution](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.binom.html).
+That range is pointwise under an independent uniform null. I don't treat it as
+a confidence band or calibration test for overlapping research outcomes.
+
+For reliability I use fixed 1%, 5%, 10% and 25% lower and upper quantiles from
+frozen SVI forecasts at the primary lead. I count delivery <= lower quantile and
+delivery >= upper quantile. Inclusive boundary atoms can exceed the nominal
+probability. Each event series needs ESS >= 60 before I show a stationary-bootstrap
+interval. Raw frequencies remain descriptive, with "insufficient data" visible.
+
+For CRPS I plot cumulative SVI-minus-ATM paired means at up to 32 display prefixes.
+Every prefix gets its own overlap-aware bootstrap and ESS gate. I label the
+intervals pointwise; they aren't simultaneous bands or extra headline tests.
+Coverage stays split by model, lead and expiry class, and I retain infinite or
+undefined log-loss counts. I only show a smile and CDF from one hash-linked frozen
+forecast, its exact quote snapshot and its own baseline records.
+
+Reports record the Git commit, working-tree state, dependency versions and figure
+hashes. I use fixed seeds, Matplotlib defaults and fixed PNG metadata. Repeated
+builds in the same checkout and software environment should reproduce the same
+report and figure bytes. Fonts, platform and dependency versions can change
+rendering across environments. HTML reports embed their PNGs and need no network.
+
+My final checklist lives in each report JSON. I check both committed locks before
+their first eligible decisions, verify retained sample hashes during reproduction,
+and count reasons for rejected quotes. A standalone SQLite report can't prove
+raw retention, so it says that explicitly. Undated ingestion issues only enter an
+as-of report when their retained source has a bounded fetch timestamp.
+
+## Running the pipeline
+
+I use the environment setup in the README. These commands include live capture
+steps for future research; the offline reproducer doesn't call an API.
+
+```powershell
+.\.venv\Scripts\python.exe -m implied_calibration.cli record --output data/smoke-01 --interval 60 --seconds 600
+.\.venv\Scripts\python.exe -m implied_calibration.cli ingest --input data/smoke-01 --db data/research.sqlite
+.\.venv\Scripts\python.exe scripts/estimate_disk.py data/smoke-01
+.\.venv\Scripts\python.exe -m implied_calibration.cli coverage --db data/research.sqlite
+.\.venv\Scripts\python.exe -m implied_calibration.cli clean --db data/research.sqlite --output results/clean.json
+.\.venv\Scripts\python.exe -m implied_calibration.cli fit --db data/research.sqlite --output results/fit.json
+.\.venv\Scripts\python.exe -m implied_calibration.cli cdf --db data/research.sqlite --output results/cdf.json
+.\.venv\Scripts\python.exe -m implied_calibration.cli history --db data/research.sqlite --input data/hourly-01
+.\.venv\Scripts\python.exe -m implied_calibration.cli predict --db data/research.sqlite --output results/predictions.json
+.\.venv\Scripts\python.exe -m implied_calibration.cli settle --db data/research.sqlite --fetch --raw-output data/delivery-01
+.\.venv\Scripts\python.exe -m implied_calibration.cli settle --db data/research.sqlite --input data/delivery-01
+.\.venv\Scripts\python.exe -m implied_calibration.cli score --db data/research.sqlite --output results/scores.json
+.\.venv\Scripts\python.exe -m implied_calibration.cli infer --db data/research.sqlite --output results/inference.json
+.\.venv\Scripts\python.exe -m implied_calibration.cli report --db data/research.sqlite --output results/report
+.\.venv\Scripts\python.exe scripts/synthetic_cdf.py --output results/synthetic-cdf.json --plot results/synthetic-cdf.png
+```
+
+```sh
+.venv/bin/python -m implied_calibration.cli record --output data/smoke-01 --interval 60 --seconds 600
+.venv/bin/python -m implied_calibration.cli ingest --input data/smoke-01 --db data/research.sqlite
+.venv/bin/python scripts/estimate_disk.py data/smoke-01
+.venv/bin/python -m implied_calibration.cli coverage --db data/research.sqlite
+.venv/bin/python -m implied_calibration.cli clean --db data/research.sqlite --output results/clean.json
+.venv/bin/python -m implied_calibration.cli fit --db data/research.sqlite --output results/fit.json
+.venv/bin/python -m implied_calibration.cli cdf --db data/research.sqlite --output results/cdf.json
+.venv/bin/python -m implied_calibration.cli history --db data/research.sqlite --input data/hourly-01
+.venv/bin/python -m implied_calibration.cli predict --db data/research.sqlite --output results/predictions.json
+.venv/bin/python -m implied_calibration.cli settle --db data/research.sqlite --fetch --raw-output data/delivery-01
+.venv/bin/python -m implied_calibration.cli settle --db data/research.sqlite --input data/delivery-01
+.venv/bin/python -m implied_calibration.cli score --db data/research.sqlite --output results/scores.json
+.venv/bin/python -m implied_calibration.cli infer --db data/research.sqlite --output results/inference.json
+.venv/bin/python -m implied_calibration.cli report --db data/research.sqlite --output results/report
+.venv/bin/python scripts/synthetic_cdf.py --output results/synthetic-cdf.json --plot results/synthetic-cdf.png
+```
+
+`clean`, `fit`, `cdf`, `predict`, `score`, `infer` and `report` return 2 when their
+gate is closed or nothing qualifies. I run `predict` within ten minutes of a due
+lead, after retaining the option snapshot and any required hourly history.

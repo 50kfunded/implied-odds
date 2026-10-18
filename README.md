@@ -8,92 +8,77 @@ the realised frequency and see how that changes across expiries.
 
 ## Status
 
-7 of 8 phases complete. Phase 8 next: reporting and reproduction.
-I've tested baselines, frozen scoring and dependence checks on synthetic data.
-My ten-minute capture still has a closed data gate, so I haven't extracted its distributions.
-I haven't collected settled research forecasts or measured calibration yet.
+8 of 8 implementation phases complete. Data collection and research are still in progress.
+I've tested the pipeline and report figures offline, with separate synthetic examples.
+The included ten-minute market capture still has a closed IV gate.
+I haven't collected settled research forecasts or measured market calibration yet.
 
 ## Run it
 
-I use Python 3.11 or later. From this repo, I create an environment and install:
+I use Python 3.11 or later. From this repo, I install and rebuild offline:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e .
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
-.\.venv\Scripts\python.exe -m implied_calibration.cli record --output data/smoke-01 --interval 60 --seconds 600
-.\.venv\Scripts\python.exe -m implied_calibration.cli ingest --input data/smoke-01 --db data/research.sqlite
-.\.venv\Scripts\python.exe -m implied_calibration.cli predict --db data/research.sqlite --output results/predictions.json
-.\.venv\Scripts\python.exe -m implied_calibration.cli settle --db data/research.sqlite --fetch --raw-output data/delivery-01
-.\.venv\Scripts\python.exe -m implied_calibration.cli score --db data/research.sqlite --output results/scores.json
-.\.venv\Scripts\python.exe -m implied_calibration.cli infer --db data/research.sqlite --output results/inference.json
-.\.venv\Scripts\python.exe scripts/synthetic_cdf.py --output results/synthetic-cdf.json --plot results/synthetic-cdf.png
+.\.venv\Scripts\python.exe scripts/reproduce.py
+.\.venv\Scripts\python.exe -m implied_calibration.cli ingest --input recordings/smoke-01 --db data/research.sqlite
+.\.venv\Scripts\python.exe -m implied_calibration.cli report --db data/research.sqlite --output results/report
 ```
 
-On macOS or Linux, I use these commands:
+On macOS or Linux:
 
 ```sh
 python3 -m venv .venv
 .venv/bin/python -m pip install -e .
 .venv/bin/python -m unittest discover -s tests -v
-.venv/bin/python -m implied_calibration.cli record --output data/smoke-01 --interval 60 --seconds 600
-.venv/bin/python -m implied_calibration.cli ingest --input data/smoke-01 --db data/research.sqlite
-.venv/bin/python -m implied_calibration.cli predict --db data/research.sqlite --output results/predictions.json
-.venv/bin/python -m implied_calibration.cli settle --db data/research.sqlite --fetch --raw-output data/delivery-01
-.venv/bin/python -m implied_calibration.cli score --db data/research.sqlite --output results/scores.json
-.venv/bin/python -m implied_calibration.cli infer --db data/research.sqlite --output results/inference.json
-.venv/bin/python scripts/synthetic_cdf.py --output results/synthetic-cdf.json --plot results/synthetic-cdf.png
+.venv/bin/python scripts/reproduce.py
+.venv/bin/python -m implied_calibration.cli ingest --input recordings/smoke-01 --db data/research.sqlite
+.venv/bin/python -m implied_calibration.cli report --db data/research.sqlite --output results/report
 ```
 
-I omit `--seconds` for continuous recording. The default interval is 300 seconds;
-the minimum is 10. Polls start at UTC epoch-aligned boundaries. A request already
-in progress can finish after the duration expires. Ctrl+C records an interruption.
-The command returns 1 for failed attempts, gaps, clock changes, or no cycles.
+I open `results/reproduction/index.html` to view the two reports. The market report
+preserves the capture's gate; the synthetic report demonstrates all six figures.
+Reproduction returns 0 when the rebuild completes. `report` returns 2 for
+"insufficient data". My [live recording and scoring commands](report/research-note.md#running-the-pipeline)
+are separate from this offline rebuild.
 
-## What I keep
+## Method and data
 
-I call the BTC option summary and `btc_usd` index each cycle, plus instruments
-on the first cycle and once in each UTC hour. I only use the production API.
-The index response isn't a settlement price, and the quotes aren't atomic.
+I record production Deribit BTC inverse options, keep missing sides as nulls,
+convert BTC premiums with each expiry's forward, and fit checked SVI smiles.
+I freeze accepted CDFs and baselines at 24-hour and seven-day leads, then score
+them against official delivery prices. My headline comparison is 24-hour USD CRPS
+against the same-snapshot ATM lognormal, with dependence-aware uncertainty.
 
-Each `raw/YYYY-MM-DD.jsonl.gz` line contains the parsed response body unchanged,
-endpoint, params, HTTP status, local UTC millisecond timings, and attempt outcome.
-I keep Deribit's microsecond server timings inside the original body.
-Network failures have a null body and HTTP status; invalid JSON also keeps its text.
-I follow the [Deribit JSON-RPC response format](https://docs.deribit.com/articles/json-rpc-overview).
-The request and schema rules live in [client.py](src/implied_calibration/client.py).
+Each retained gzip JSON-lines record keeps the response body, endpoint, parameters
+and local millisecond timings. I include the unchanged public-market sample and
+heartbeat under `recordings/`, with hashes in its [manifest](recordings/manifest.json).
+The [research note](report/research-note.md) gives the observed engineering results,
+format details, rejection reasons and numerical choices.
 
-I keep heartbeat JSONL beside the raw files. My retry, crash recovery, clock,
-and validation details are in the [research note](report/research-note.md).
+## Limits
 
-## SQLite and coverage
+Risk-neutral probabilities include risk premia, so they can differ from realised
+frequencies. I use one venue and a short sample; overlapping outcomes reduce
+effective sample size. I suppress inference below the fixed ESS minimum.
 
-I keep BTC prices, percent mark IVs, and nulls without converting their units.
-Instrument identities use an English month map and 08:00 UTC expiries. Metadata
-and index joins only use observations fetched by the quote snapshot's timestamp.
-
-I use a fixed ingestion horizon and report declared-session coverage, missing slots,
-and low instrument counts. My [research note](report/research-note.md) gives the limits and counting rules.
-The schema and as-of reads live in [store.py](src/implied_calibration/store.py).
-
-I clean through the latest capture, or pass `--as-of-ms` for an earlier cutoff.
-The cleaning JSON keeps every stored quote and its reasons. Exit 2 from `clean` or
-`fit` or `cdf` keeps the data gate visible. `predict` and `score` also return 2 when nothing qualifies.
-I store CDF parameters and report repairs and extrapolated mass in the [research note](report/research-note.md#implied-cdf).
-I run `predict` within 10 minutes of each due lead time. The [fixed protocol](protocol/protocol.json) starts with 26 October 2026 expiries.
+Settlement is a 30-minute index TWAP. Thin option wings need extrapolation, and
+the GARCH CDF uses a finite simulation approximation. Quotes and the index aren't
+an atomic snapshot. Crypto funding, jumps and market structure also affect comparisons.
 
 ## Files
 
-- `src/implied_calibration/`: my capture, database, fitting, frozen forecasts, baselines and inference.
-- `tests/`: my offline checks using synthetic responses, clocks, and temporary databases.
-- `scripts/`: my disk estimate and labelled synthetic SVI and CDF examples.
-- `report/research-note.md`: my research question, data checks, and limits so far.
-- `.github/workflows/tests.yml`: my offline tests on Windows and Linux, Python 3.11 and 3.12.
-- `protocol/`: my fixed research choices, baseline extension and committed hash locks.
+- `src/implied_calibration/`: my recorder, database, pricing, forecasts, inference and reports.
+- `tests/`: my offline synthetic checks; `.github/workflows/tests.yml` runs them on Windows and Linux.
+- `scripts/reproduce.py`: my offline rebuild; the other scripts keep the earlier synthetic examples and disk estimate.
+- `recordings/`: my small public-market sample and source hashes.
+- `protocol/`: my fixed choices and committed locks.
+- `report/research-note.md`: my method, engineering evidence and research limits.
 
 ## Next
 
-I'll finish reporting and reproduction in Phase 8. My [baseline and inference choices](report/research-note.md#baselines-and-inference) are fixed.
-I'll update the research note as I complete each phase.
+I'll investigate the IV flag, collect qualifying snapshots and hourly history,
+then freeze and score enough expiries to study calibration with the declared checks.
 
 I haven't picked a licence yet.
