@@ -104,6 +104,21 @@ CREATE TABLE IF NOT EXISTS scores (
     prediction_id TEXT NOT NULL REFERENCES predictions(prediction_id), metric TEXT NOT NULL,
     value REAL, PRIMARY KEY (prediction_id, metric)
 );
+CREATE TABLE IF NOT EXISTS evaluation_protocols (
+    protocol_hash TEXT PRIMARY KEY, content_json TEXT NOT NULL, lock_json TEXT NOT NULL,
+    witness_commit TEXT NOT NULL, witness_at_ms INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS delivery_sources (
+    source_id TEXT PRIMARY KEY, fetched_at_ms INTEGER NOT NULL, params_json TEXT NOT NULL,
+    body_hash TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS delivery_observations (
+    expiry_ms INTEGER PRIMARY KEY REFERENCES delivery_prices(expiry_ms),
+    source_id TEXT NOT NULL REFERENCES delivery_sources(source_id), content_hash TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS score_records (
+    prediction_id TEXT PRIMARY KEY REFERENCES predictions(prediction_id), payload_json TEXT NOT NULL
+);
 """
 
 
@@ -117,7 +132,7 @@ class Store:
         self.connection.row_factory = sqlite3.Row
         try:
             version = self.connection.execute("PRAGMA user_version").fetchone()[0]
-            if version not in (0, 1):
+            if version not in (0, 1, 2):
                 raise ValueError(f"Unsupported database schema version: {version}")
             if version == 0 and self.connection.execute(
                     "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").fetchone():
@@ -125,7 +140,21 @@ class Store:
             self.connection.execute("PRAGMA journal_mode=WAL")
             self.connection.execute("PRAGMA foreign_keys=ON")
             self.connection.executescript(SCHEMA)
-            self.connection.execute("PRAGMA user_version=1")
+            for table in ('predictions', 'scores', 'score_records', 'delivery_prices', 'delivery_sources',
+                          'delivery_observations', 'evaluation_protocols'):
+                for action in ('UPDATE', 'DELETE'):
+                    self.connection.execute(f"CREATE TRIGGER IF NOT EXISTS immutable_{table}_{action} "
+                                            f"BEFORE {action} ON {table} BEGIN "
+                                            "SELECT RAISE(ABORT, 'I keep evaluation rows append-only'); END")
+                keys = {'predictions': ('prediction_id',), 'scores': ('prediction_id', 'metric'),
+                        'score_records': ('prediction_id',), 'delivery_prices': ('expiry_ms',),
+                        'delivery_sources': ('source_id',), 'delivery_observations': ('expiry_ms',),
+                        'evaluation_protocols': ('protocol_hash',)}[table]
+                match = ' AND '.join(f'{key}=NEW.{key}' for key in keys)
+                self.connection.execute(f'CREATE TRIGGER IF NOT EXISTS immutable_{table}_INSERT '
+                                        f'BEFORE INSERT ON {table} WHEN EXISTS (SELECT 1 FROM {table} WHERE {match}) '
+                                        "BEGIN SELECT RAISE(ABORT, 'I never replace evaluation rows'); END")
+            self.connection.execute("PRAGMA user_version=2")
             existing = self.connection.execute(
                 "SELECT value FROM settings WHERE name='max_days_to_expiry'").fetchone()
             if existing is not None and int(existing[0]) != max_days_to_expiry:
@@ -219,3 +248,17 @@ class Store:
         tables = ("raw_records", "snapshots", "quotes", "instruments", "index_observations",
                   "heartbeat", "issues", "delivery_prices", "predictions", "scores")
         return {table: self.connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] for table in tables}
+
+
+def evaluation_store(path: Path) -> Store:
+    path = Path(path).resolve()
+    horizon = 400
+    if path.exists():
+        connection = sqlite3.connect(path.as_uri() + '?mode=ro', uri=True)
+        try:
+            row = connection.execute("SELECT value FROM settings WHERE name='max_days_to_expiry'").fetchone()
+            if row is not None:
+                horizon = int(row[0])
+        finally:
+            connection.close()
+    return Store(path, horizon)

@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 import logging
 import math
 import random
+import re
 import time
 from typing import Any, Callable
 
@@ -85,6 +86,28 @@ def validate_response(endpoint: str, status: int, body: Any) -> Any:
         value = result["index_price"]
         if type(value) not in (int, float) or not math.isfinite(value) or value <= 0:
             raise ClientError("schema_error", "index_price: expected finite positive number")
+    elif endpoint == 'public/get_delivery_prices':
+        fields = {'data', 'records_total'}
+        if not isinstance(result, dict) or set(result) != fields:
+            actual = set(result) if isinstance(result, dict) else set()
+            raise ClientError('schema_error', f'delivery result: missing keys={sorted(fields-actual)}; unexpected keys={sorted(actual-fields)}')
+        if (type(result['records_total']) is not int or result['records_total'] < 0
+                or not isinstance(result['data'], list) or len(result['data']) > result['records_total']):
+            raise ClientError('schema_error', 'delivery result needs nonnegative records_total and data array')
+        for row in result['data']:
+            fields = {'date', 'delivery_price'}
+            if not isinstance(row, dict) or set(row) != fields:
+                actual = set(row) if isinstance(row, dict) else set()
+                raise ClientError('schema_error', f'delivery row: missing keys={sorted(fields-actual)}; unexpected keys={sorted(actual-fields)}')
+            try:
+                if not isinstance(row['date'], str) or not re.fullmatch('[0-9]{4}-[0-9]{2}-[0-9]{2}', row['date']):
+                    raise ValueError('I need YYYY-MM-DD')
+                date.fromisoformat(row['date'])
+                value = row['delivery_price']
+                if type(value) not in (int, float) or not math.isfinite(value) or value <= 0:
+                    raise ValueError('delivery_price must be finite and positive')
+            except (ValueError, OverflowError) as exc:
+                raise ClientError('schema_error', f'Invalid delivery row: {exc}') from exc
     else:
         raise ClientError("unsupported_endpoint", f"No Phase 1 schema for {endpoint}")
     return result
@@ -120,7 +143,8 @@ class PublicClient:
 
     def request(self, endpoint: str, params: dict[str, Any]) -> ApiResponse:
         if endpoint not in (
-            "public/get_book_summary_by_currency", "public/get_index_price", "public/get_instruments"
+            "public/get_book_summary_by_currency", "public/get_index_price", "public/get_instruments",
+            "public/get_delivery_prices"
         ):
             raise ValueError(f"Unsupported Phase 1 endpoint: {endpoint}")
         for attempt in range(1, self.max_retries + 2):
