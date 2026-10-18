@@ -119,6 +119,26 @@ CREATE TABLE IF NOT EXISTS delivery_observations (
 CREATE TABLE IF NOT EXISTS score_records (
     prediction_id TEXT PRIMARY KEY REFERENCES predictions(prediction_id), payload_json TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS history_sources (
+    source_id TEXT PRIMARY KEY, fetched_at_ms INTEGER NOT NULL, params_json TEXT NOT NULL, body_hash TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS hourly_observations (
+    open_ms INTEGER NOT NULL, fetched_at_ms INTEGER NOT NULL, close_ms INTEGER NOT NULL,
+    close_usd REAL NOT NULL, source_id TEXT NOT NULL REFERENCES history_sources(source_id),
+    PRIMARY KEY(open_ms, fetched_at_ms, source_id)
+);
+CREATE INDEX IF NOT EXISTS hourly_cutoff ON hourly_observations(close_ms, fetched_at_ms);
+CREATE TABLE IF NOT EXISTS baseline_protocols (
+    extension_hash TEXT PRIMARY KEY, payload_json TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS baseline_predictions (
+    baseline_id TEXT PRIMARY KEY, prediction_id TEXT NOT NULL REFERENCES predictions(prediction_id),
+    baseline_name TEXT NOT NULL, extension_hash TEXT NOT NULL REFERENCES baseline_protocols(extension_hash),
+    payload_json TEXT NOT NULL, UNIQUE(prediction_id, baseline_name, extension_hash)
+);
+CREATE TABLE IF NOT EXISTS baseline_scores (
+    baseline_id TEXT PRIMARY KEY REFERENCES baseline_predictions(baseline_id), payload_json TEXT NOT NULL
+);
 """
 
 
@@ -132,7 +152,7 @@ class Store:
         self.connection.row_factory = sqlite3.Row
         try:
             version = self.connection.execute("PRAGMA user_version").fetchone()[0]
-            if version not in (0, 1, 2):
+            if version not in (0, 1, 2, 3):
                 raise ValueError(f"Unsupported database schema version: {version}")
             if version == 0 and self.connection.execute(
                     "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").fetchone():
@@ -141,7 +161,8 @@ class Store:
             self.connection.execute("PRAGMA foreign_keys=ON")
             self.connection.executescript(SCHEMA)
             for table in ('predictions', 'scores', 'score_records', 'delivery_prices', 'delivery_sources',
-                          'delivery_observations', 'evaluation_protocols'):
+                          'delivery_observations', 'evaluation_protocols', 'history_sources', 'hourly_observations',
+                          'baseline_protocols', 'baseline_predictions', 'baseline_scores'):
                 for action in ('UPDATE', 'DELETE'):
                     self.connection.execute(f"CREATE TRIGGER IF NOT EXISTS immutable_{table}_{action} "
                                             f"BEFORE {action} ON {table} BEGIN "
@@ -149,12 +170,15 @@ class Store:
                 keys = {'predictions': ('prediction_id',), 'scores': ('prediction_id', 'metric'),
                         'score_records': ('prediction_id',), 'delivery_prices': ('expiry_ms',),
                         'delivery_sources': ('source_id',), 'delivery_observations': ('expiry_ms',),
-                        'evaluation_protocols': ('protocol_hash',)}[table]
+                        'evaluation_protocols': ('protocol_hash',), 'history_sources': ('source_id',),
+                        'hourly_observations': ('open_ms', 'fetched_at_ms', 'source_id'),
+                        'baseline_protocols': ('extension_hash',), 'baseline_predictions': ('baseline_id',),
+                        'baseline_scores': ('baseline_id',)}[table]
                 match = ' AND '.join(f'{key}=NEW.{key}' for key in keys)
                 self.connection.execute(f'CREATE TRIGGER IF NOT EXISTS immutable_{table}_INSERT '
                                         f'BEFORE INSERT ON {table} WHEN EXISTS (SELECT 1 FROM {table} WHERE {match}) '
                                         "BEGIN SELECT RAISE(ABORT, 'I never replace evaluation rows'); END")
-            self.connection.execute("PRAGMA user_version=2")
+            self.connection.execute("PRAGMA user_version=3")
             existing = self.connection.execute(
                 "SELECT value FROM settings WHERE name='max_days_to_expiry'").fetchone()
             if existing is not None and int(existing[0]) != max_days_to_expiry:

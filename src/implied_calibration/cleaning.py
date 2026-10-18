@@ -245,7 +245,7 @@ def clean_database(path: Path, protocol: Protocol, as_of_ms: int | None = None) 
     connection = sqlite3.connect(Path(path).resolve().as_uri() + '?mode=ro', uri=True)
     connection.row_factory = sqlite3.Row
     try:
-        if connection.execute('PRAGMA user_version').fetchone()[0] not in (1, 2):
+        if connection.execute('PRAGMA user_version').fetchone()[0] not in (1, 2, 3):
             raise ValueError('Unsupported database schema')
         if as_of_ms is None:
             as_of_ms = connection.execute('SELECT COALESCE(MAX(fetched_at_ms), 0) FROM snapshots').fetchone()[0]

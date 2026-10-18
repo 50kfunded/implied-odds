@@ -86,6 +86,30 @@ def validate_response(endpoint: str, status: int, body: Any) -> Any:
         value = result["index_price"]
         if type(value) not in (int, float) or not math.isfinite(value) or value <= 0:
             raise ClientError("schema_error", "index_price: expected finite positive number")
+    elif endpoint == 'public/get_tradingview_chart_data':
+        arrays = {'ticks', 'open', 'high', 'low', 'close', 'volume', 'cost'}
+        actual = set(result) if isinstance(result, dict) else set()
+        if (not isinstance(result, dict) or result.get('status') not in ('ok', 'no_data')
+                or actual - (arrays | {'status'})
+                or result['status'] == 'ok' and actual != arrays | {'status'}):
+            expected = arrays | {'status'}
+            raise ClientError('schema_error', f'Hourly candle result: missing keys={sorted(expected-actual)}; '
+                              f'unexpected keys={sorted(actual-expected)}; status must be ok or no_data')
+        lengths = []
+        for name in arrays & actual:
+            values = result[name]
+            if (not isinstance(values, list) or any(type(v) not in (int, float) or not math.isfinite(v)
+                    or v < 0 or name in ('open', 'high', 'low', 'close') and v <= 0
+                    or name == 'ticks' and (type(v) is not int or v % 3600000) for v in values)):
+                raise ClientError('schema_error', f'Invalid hourly candle array: {name}')
+            lengths.append(len(values))
+        if (len(set(lengths)) > 1 or result['status'] == 'no_data' and any(lengths)
+                or result['status'] == 'ok' and (not lengths or not lengths[0])
+                or any(b <= a for a, b in zip(result.get('ticks', []), result.get('ticks', [])[1:]))):
+            raise ClientError('schema_error', 'Hourly candle lengths, order or no_data differ')
+        if result['status'] == 'ok' and any(lo > min(o, c) or hi < max(o, c) or lo > hi for o, hi, lo, c
+                in zip(result['open'], result['high'], result['low'], result['close'])):
+            raise ClientError('schema_error', 'Hourly OHLC values are inconsistent')
     elif endpoint == 'public/get_delivery_prices':
         fields = {'data', 'records_total'}
         if not isinstance(result, dict) or set(result) != fields:
@@ -144,7 +168,7 @@ class PublicClient:
     def request(self, endpoint: str, params: dict[str, Any]) -> ApiResponse:
         if endpoint not in (
             "public/get_book_summary_by_currency", "public/get_index_price", "public/get_instruments",
-            "public/get_delivery_prices"
+            "public/get_delivery_prices", "public/get_tradingview_chart_data"
         ):
             raise ValueError(f"Unsupported Phase 1 endpoint: {endpoint}")
         for attempt in range(1, self.max_retries + 2):
