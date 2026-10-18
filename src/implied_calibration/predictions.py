@@ -71,7 +71,7 @@ def select_snapshot(connection: sqlite3.Connection, target_time_ms: int, as_of_m
 
 def freeze_predictions(db: Path, locked: LockedProtocol, as_of_ms: int, created_at_ms: int,
                        git_commit: str, *, expiries: list[int] | None = None,
-                       now_ms: Callable[[], int] | None = None) -> dict[str, Any]:
+                       now_ms: Callable[[], int] | None = None, baseline_extension=None) -> dict[str, Any]:
     locked.validate()
     if (type(as_of_ms) is not int or type(created_at_ms) is not int or not 0 <= as_of_ms <= created_at_ms
             or not re.fullmatch('[0-9a-f]{40}', git_commit)):
@@ -79,7 +79,9 @@ def freeze_predictions(db: Path, locked: LockedProtocol, as_of_ms: int, created_
     choices = locked.protocol.content['evaluation']
     store = evaluation_store(db)
     added, existing_count, not_due, ineligible = 0, 0, 0, 0
-    output = []
+    output, baseline_output = [], []
+    if baseline_extension is not None:
+        baseline_extension.validate(locked)
     try:
         with store.connection:
             register_protocol(store.connection, locked)
@@ -102,6 +104,12 @@ def freeze_predictions(db: Path, locked: LockedProtocol, as_of_ms: int, created_
                             not_due += 1
                             continue
                         output.append(record)
+                        if baseline_extension is not None:
+                            stored_baselines = store.connection.execute('SELECT payload_json FROM baseline_predictions '
+                                'WHERE prediction_id=? AND extension_hash=? '
+                                "AND json_extract(payload_json, '$.created_at_ms')<=? ORDER BY baseline_name",
+                                (identity, baseline_extension.content_hash, as_of_ms)).fetchall()
+                            baseline_output.extend(checked_prediction(row[0]) for row in stored_baselines)
                         existing_count += 1
                         continue
                     if target > as_of_ms:
@@ -146,12 +154,18 @@ def freeze_predictions(db: Path, locked: LockedProtocol, as_of_ms: int, created_
                     record['content_hash'] = digest(record)
                     store.connection.execute('INSERT INTO predictions VALUES (?, ?, ?, ?, ?, ?)',
                                              (identity, expiry, lead, prediction.snapshot_id, prediction.status, canonical(record)))
+                    if baseline_extension is not None:
+                        from .baseline_evaluation import freeze_baselines
+                        baseline_output.extend(freeze_baselines(store.connection, record, baseline_extension, locked,
+                                                                 completed_at_ms, git_commit, now_ms))
                     output.append(record)
                     added += 1
     finally:
         store.close()
     return {'status': 'ok' if any(row['status'] == 'ok' for row in output) else 'no_eligible_forecasts',
-            'as_of_ms': as_of_ms, 'created_at_ms': max([created_at_ms] + [row['created_at_ms'] for row in output]),
+            'as_of_ms': as_of_ms, 'created_at_ms': max([created_at_ms] + [row['created_at_ms'] for row in output + baseline_output]),
             'protocol_hash': locked.protocol.content_hash,
             'added': added, 'existing': existing_count, 'not_due': not_due, 'ineligible_expiries': ineligible,
-            'status_counts': dict(sorted(Counter(row['status'] for row in output).items())), 'predictions': output}
+            'status_counts': dict(sorted(Counter(row['status'] for row in output).items())), 'predictions': output,
+            'baselines': sorted(baseline_output, key=lambda row: (row['expiry_ms'], row['lead_ms'], row['baseline_name'])),
+            'baseline_status_counts': dict(sorted(Counter(row['status'] for row in baseline_output).items()))}

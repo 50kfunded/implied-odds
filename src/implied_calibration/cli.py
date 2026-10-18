@@ -21,6 +21,9 @@ from .protocol import load_protocol
 from .recorder import record
 from .store import Store
 from .settlement import capture_deliveries, ingest_deliveries
+from .baseline_lock import load_locked_baselines
+from .baseline_evaluation import infer_database, score_baselines
+from .history import capture_history, ingest_history
 
 
 def provenance() -> dict[str, str | bool | None]:
@@ -76,11 +79,12 @@ def main() -> int:
     cdf.add_argument("--as-of-ms", type=int)
     cdf.add_argument("--protocol", type=Path, default=Path("protocol/protocol.json"))
     cdf.add_argument("--output", type=Path)
-    for name in ('predict', 'score'):
+    for name in ('predict', 'score', 'infer'):
         command = commands.add_parser(name, help=f'I {name} with the committed evaluation protocol')
         command.add_argument('--db', type=Path, required=True)
         command.add_argument('--as-of-ms', type=int)
         command.add_argument('--protocol', type=Path, default=Path('protocol/protocol.json'))
+        command.add_argument('--baselines', type=Path, default=Path('protocol/baselines.json'))
         command.add_argument('--output', type=Path)
     settler = commands.add_parser('settle', help='I ingest retained official delivery pages or capture them explicitly')
     settler.add_argument('--db', type=Path, required=True)
@@ -90,6 +94,16 @@ def main() -> int:
     settler.add_argument('--raw-output', type=Path)
     settler.add_argument('--as-of-ms', type=int)
     settler.add_argument('--output', type=Path)
+    historian = commands.add_parser('history', help='I ingest retained hourly candles or capture them explicitly')
+    historian.add_argument('--db', type=Path, required=True)
+    history_source = historian.add_mutually_exclusive_group(required=True)
+    history_source.add_argument('--input', type=Path)
+    history_source.add_argument('--fetch', action='store_true')
+    historian.add_argument('--raw-output', type=Path)
+    historian.add_argument('--start-ms', type=int)
+    historian.add_argument('--end-ms', type=int)
+    historian.add_argument('--as-of-ms', type=int)
+    historian.add_argument('--output', type=Path)
     args = parser.parse_args()
     logging.basicConfig(level=getattr(logging, args.log_level), format="%(levelname)s %(name)s %(message)s")
     try:
@@ -112,15 +126,38 @@ def main() -> int:
             result = fit_database(args.db, load_protocol(args.protocol), args.as_of_ms)
         elif args.command == 'cdf':
             result = cdf_database(args.db, load_protocol(args.protocol), args.as_of_ms)
-        elif args.command in ('predict', 'score'):
+        elif args.command in ('predict', 'score', 'infer'):
             details = provenance()
             if details['git_commit'] is None or details['working_tree_dirty'] is not False:
                 raise ValueError('I need a clean Git checkout to freeze or score research forecasts')
             now = utc_ms()
             locked = load_locked_protocol(args.protocol)
-            action = freeze_predictions if args.command == 'predict' else score_database
-            result = action(args.db, locked, now if args.as_of_ms is None else args.as_of_ms, now,
-                            details['git_commit'], **({'now_ms': utc_ms} if args.command == 'predict' else {}))
+            extension = load_locked_baselines(args.baselines, locked)
+            cutoff = now if args.as_of_ms is None else args.as_of_ms
+            if cutoff > now:
+                raise ValueError('I cannot use a future as-of time')
+            if args.command == 'infer':
+                result = infer_database(args.db, extension, locked, cutoff)
+            elif args.command == 'predict':
+                result = freeze_predictions(args.db, locked, cutoff, now, details['git_commit'],
+                                            now_ms=utc_ms, baseline_extension=extension)
+            else:
+                result = score_database(args.db, locked, cutoff, now, details['git_commit'])
+                result['baselines'] = score_baselines(args.db, extension, locked, cutoff, now, details['git_commit'],
+                    parent_preview=result['scores'] if cutoff < now else None)
+        elif args.command == 'history':
+            if args.fetch:
+                if args.raw_output is None or args.as_of_ms is not None or args.start_ms is None or args.end_ms is None:
+                    raise ValueError('Live history needs --raw-output, --start-ms and --end-ms with actual capture time')
+                if args.end_ms > utc_ms():
+                    raise ValueError('I only request completed history intervals')
+                captured = capture_history(args.raw_output, args.start_ms, args.end_ms)
+                result = ingest_history(args.raw_output, args.db, utc_ms())
+                result['capture'] = captured
+            else:
+                if args.start_ms is not None or args.end_ms is not None or args.raw_output is not None:
+                    raise ValueError('Offline history uses only the retained request interval')
+                result = ingest_history(args.input, args.db, utc_ms() if args.as_of_ms is None else args.as_of_ms)
         else:
             if args.fetch:
                 if args.raw_output is None or args.as_of_ms is not None:
@@ -133,7 +170,7 @@ def main() -> int:
         result["provenance"] = provenance()
         emit(result, args.output)
         return 2 if (args.command == "clean" and not result["phase4_ready"]
-                     or args.command in ("fit", "cdf", "predict", "score") and result["status"] != "ok") else 0
+                     or args.command in ("fit", "cdf", "predict", "score", "infer") and result["status"] != "ok") else 0
     except KeyboardInterrupt:
         print(json.dumps({"status": "interrupted", "exit_code": 130}))
         return 130

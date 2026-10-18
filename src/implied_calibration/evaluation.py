@@ -35,7 +35,8 @@ def score_database(db: Path, locked: LockedProtocol, as_of_ms: int, created_at_m
                 prediction = checked_prediction(row['payload_json'])
                 assert prediction['created_at_ms'] <= as_of_ms and prediction['expiry_ms'] <= as_of_ms
                 identity = row['prediction_id']
-                old = store.connection.execute('SELECT payload_json FROM score_records WHERE prediction_id=?', (identity,)).fetchone()
+                old = store.connection.execute('SELECT payload_json FROM score_records WHERE prediction_id=? '
+                    "AND json_extract(payload_json, '$.created_at_ms')<=?", (identity, as_of_ms)).fetchone()
                 if old is not None:
                     record = checked_prediction(old['payload_json'])
                     if record['created_at_ms'] <= as_of_ms:
@@ -65,10 +66,11 @@ def score_database(db: Path, locked: LockedProtocol, as_of_ms: int, created_at_m
                           'created_at_ms': created_at_ms, 'as_of_ms': as_of_ms, 'expiry_ms': prediction['expiry_ms'],
                           'lead_ms': prediction['lead_ms'], 'status': 'ok', 'delivery': dict(delivery), 'score': asdict(score)}
                 record['content_hash'] = digest(record)
-                store.connection.execute('INSERT INTO score_records VALUES (?, ?)', (identity, canonical(record)))
-                for metric, value in score.metrics.items():
-                    store.connection.execute('INSERT INTO scores VALUES (?, ?, ?)', (identity, metric, value))
-                added += 1
+                if created_at_ms == as_of_ms:
+                    store.connection.execute('INSERT INTO score_records VALUES (?, ?)', (identity, canonical(record)))
+                    for metric, value in score.metrics.items():
+                        store.connection.execute('INSERT INTO scores VALUES (?, ?, ?)', (identity, metric, value))
+                    added += 1
                 output.append(record)
                 completed.append(record)
     finally:
@@ -90,8 +92,9 @@ def score_database(db: Path, locked: LockedProtocol, as_of_ms: int, created_at_m
                           mean(record['score']['metrics']['negative_log_score_log_return'] for record in records),
                           'log_mean_status': 'infinite' if infinite else 'undefined' if unavailable else 'finite'})
     return {'status': 'ok' if completed else 'no_scorable_forecasts', 'as_of_ms': as_of_ms,
+            'mode': 'persist' if created_at_ms == as_of_ms else 'historical_preview',
             'created_at_ms': created_at_ms, 'protocol_hash': locked.protocol.content_hash,
             'added': added, 'existing': existing_count,
             'status_counts': dict(sorted(Counter(row['status'] for row in output).items())),
-            'inference_status': 'insufficient data; dependence-aware inference starts in Phase 7',
+            'inference_status': 'insufficient data; I run infer for dependence-aware comparisons',
             'class_and_lead_summary': summaries, 'scores': output}
