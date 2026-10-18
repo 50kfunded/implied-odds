@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "status": "draft",
+  "status": "fixed",
   "cleaning": {
     "minimum_maturity_hours": 6.0,
     "minimum_mid_ticks": 2.0,
@@ -54,5 +54,37 @@
     "tail_probability_tolerance": 1e-10,
     "tail_mean_relative_tolerance": 1e-08,
     "forward_relative_tolerance": 2e-06
+  },
+  "evaluation": {
+    "lead_times_ms": [
+      86400000,
+      604800000
+    ],
+    "snapshot_tolerance_ms": 600000,
+    "freeze_delay_tolerance_ms": 600000,
+    "first_expiry_ms": 1793001600000,
+    "primary_hypothesis": "I test whether SVI lowers mean CRPS against the same-snapshot ATM lognormal at the 24-hour lead.",
+    "primary_metric": "crps_usd",
+    "primary_lead_ms": 86400000,
+    "primary_baseline": "same_snapshot_atm_lognormal",
+    "baseline_names": [
+      "same_snapshot_atm_lognormal",
+      "trailing_realised_lognormal",
+      "garch11_student_t"
+    ],
+    "bootstrap_resamples": 2000,
+    "bootstrap_seed": 1729,
+    "expected_block_length": 14,
+    "minimum_effective_sample_size": 60,
+    "multiple_testing": "single_declared_primary_comparison",
+    "expiry_class_rule": "quarterly_then_monthly_then_friday_weekly_else_daily",
+    "cdf_support_policy": "collapse_tails_to_boundary_atoms"
+  },
+  "scoring": {
+    "pit_transform_epsilon": 1e-06,
+    "crps_initial_points": 4097,
+    "crps_max_refinements": 4,
+    "crps_relative_tolerance": 1e-07,
+    "crps_absolute_tolerance_usd": 1e-06
   }
 }

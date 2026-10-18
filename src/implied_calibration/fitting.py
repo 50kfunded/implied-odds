@@ -18,11 +18,12 @@ def svi_settings(protocol: Protocol) -> SVISettings:
                        minimum_strikes_each_side=protocol.content['cleaning']['minimum_strikes_each_side'])
 
 
-def fit_database(path: Path, protocol: Protocol, as_of_ms: int | None = None) -> dict[str, Any]:
+def fit_database(path: Path, protocol: Protocol, as_of_ms: int | None = None,
+                 *, snapshot_id: str | None = None) -> dict[str, Any]:
     cleaned = clean_database(path, protocol, as_of_ms)
     settings = svi_settings(protocol)
     slices = []
-    groups = cleaned['groups']
+    groups = [group for group in cleaned['groups'] if snapshot_id is None or group['snapshot_id'] == snapshot_id]
     for group in groups:
         rows = [row for row in group['quotes'] if row['status'] == 'usable']
         assert all(row['fetched_at_ms'] <= cleaned['as_of_ms'] for row in group['quotes'])

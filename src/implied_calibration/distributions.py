@@ -10,8 +10,9 @@ from .protocol import Protocol
 from .svi import SVIParams
 
 
-def cdf_database(path: Path, protocol: Protocol, as_of_ms: int | None = None) -> dict[str, Any]:
-    fitted = fit_database(path, protocol, as_of_ms)
+def cdf_database(path: Path, protocol: Protocol, as_of_ms: int | None = None,
+                 *, snapshot_id: str | None = None) -> dict[str, Any]:
+    fitted = fit_database(path, protocol, as_of_ms, snapshot_id=snapshot_id)
     output = []
     for group in fitted['groups']:
         assert group['fetched_at_ms'] <= fitted['as_of_ms']

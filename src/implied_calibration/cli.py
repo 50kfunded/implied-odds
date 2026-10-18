@@ -9,13 +9,18 @@ import sqlite3
 import subprocess
 
 from .coverage import coverage_report
+from .client import ClientError, utc_ms
 from .cleaning import clean_database
 from .fitting import fit_database
 from .distributions import cdf_database
 from .ingest import ingest
+from .evaluation import score_database
+from .locking import load_locked_protocol
+from .predictions import freeze_predictions
 from .protocol import load_protocol
 from .recorder import record
 from .store import Store
+from .settlement import capture_deliveries, ingest_deliveries
 
 
 def provenance() -> dict[str, str | bool | None]:
@@ -71,6 +76,20 @@ def main() -> int:
     cdf.add_argument("--as-of-ms", type=int)
     cdf.add_argument("--protocol", type=Path, default=Path("protocol/protocol.json"))
     cdf.add_argument("--output", type=Path)
+    for name in ('predict', 'score'):
+        command = commands.add_parser(name, help=f'I {name} with the committed evaluation protocol')
+        command.add_argument('--db', type=Path, required=True)
+        command.add_argument('--as-of-ms', type=int)
+        command.add_argument('--protocol', type=Path, default=Path('protocol/protocol.json'))
+        command.add_argument('--output', type=Path)
+    settler = commands.add_parser('settle', help='I ingest retained official delivery pages or capture them explicitly')
+    settler.add_argument('--db', type=Path, required=True)
+    source = settler.add_mutually_exclusive_group(required=True)
+    source.add_argument('--input', type=Path)
+    source.add_argument('--fetch', action='store_true')
+    settler.add_argument('--raw-output', type=Path)
+    settler.add_argument('--as-of-ms', type=int)
+    settler.add_argument('--output', type=Path)
     args = parser.parse_args()
     logging.basicConfig(level=getattr(logging, args.log_level), format="%(levelname)s %(name)s %(message)s")
     try:
@@ -91,16 +110,34 @@ def main() -> int:
             result = clean_database(args.db, load_protocol(args.protocol), args.as_of_ms)
         elif args.command == "fit":
             result = fit_database(args.db, load_protocol(args.protocol), args.as_of_ms)
-        else:
+        elif args.command == 'cdf':
             result = cdf_database(args.db, load_protocol(args.protocol), args.as_of_ms)
+        elif args.command in ('predict', 'score'):
+            details = provenance()
+            if details['git_commit'] is None or details['working_tree_dirty'] is not False:
+                raise ValueError('I need a clean Git checkout to freeze or score research forecasts')
+            now = utc_ms()
+            locked = load_locked_protocol(args.protocol)
+            action = freeze_predictions if args.command == 'predict' else score_database
+            result = action(args.db, locked, now if args.as_of_ms is None else args.as_of_ms, now,
+                            details['git_commit'], **({'now_ms': utc_ms} if args.command == 'predict' else {}))
+        else:
+            if args.fetch:
+                if args.raw_output is None or args.as_of_ms is not None:
+                    raise ValueError('Live settlement capture needs --raw-output and uses the actual current time')
+                captured = capture_deliveries(args.raw_output)
+                result = ingest_deliveries(args.raw_output, args.db, utc_ms())
+                result['capture'] = captured
+            else:
+                result = ingest_deliveries(args.input, args.db, utc_ms() if args.as_of_ms is None else args.as_of_ms)
         result["provenance"] = provenance()
         emit(result, args.output)
         return 2 if (args.command == "clean" and not result["phase4_ready"]
-                     or args.command in ("fit", "cdf") and result["status"] != "ok") else 0
+                     or args.command in ("fit", "cdf", "predict", "score") and result["status"] != "ok") else 0
     except KeyboardInterrupt:
         print(json.dumps({"status": "interrupted", "exit_code": 130}))
         return 130
-    except (OSError, ValueError, sqlite3.Error) as exc:
+    except (OSError, ValueError, sqlite3.Error, ClientError) as exc:
         logging.getLogger(__name__).exception("Command stopped: %s", exc)
         return 1
 
