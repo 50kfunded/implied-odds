@@ -1,0 +1,16 @@
+{
+  "as_of_ms": 1792181244898,
+  "description": "I recorded these public BTC option responses during the approved ten-minute smoke run. I retain the raw bytes and heartbeat unchanged.",
+  "files": {
+    "smoke-01/heartbeat/2026-10-16.jsonl": {
+      "bytes": 7598,
+      "sha256": "8deee12211f869e8e0537ff08a0cdf457c85b68f4def0a4fdcab161c5366190c"
+    },
+    "smoke-01/raw/2026-10-16.jsonl.gz": {
+      "bytes": 413204,
+      "sha256": "6a399d0bccd85d81c25070cae593de4ac111859f67e2bb68bebd4cc49df51f77"
+    }
+  },
+  "kind": "public_market_capture",
+  "schema_version": 1
+}
