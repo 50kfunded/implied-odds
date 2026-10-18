@@ -230,7 +230,7 @@ ATM lognormal at the 24-hour lead. I reserve headline inference for that compari
 The declared baseline list also includes trailing realised-vol lognormal and
 GARCH(1,1)-t. My stationary-bootstrap choices are 2,000 resamples, seed 1729 and
 expected block length 14 expiries, with minimum effective sample size 60.
-These are declared research choices. Baseline fitting and inference start in Phase 7.
+I keep these choices fixed in the baseline extension below.
 
 I fetch `public/get_delivery_prices` with btc_usd, offset and count, retaining every
 attempt in raw gzip JSON-lines. Pages wait at least 10 seconds between successful
@@ -297,10 +297,128 @@ I can run the earlier inspection commands with either interpreter from the READM
 
 ## Research still to do
 
-I'll compare baselines and uncertainty in Phase 7, then finish the report and
-reproduction work in Phase 8. I've brought offline CI forward.
+I'll finish the report and reproduction work in Phase 8. I've brought offline CI forward.
 
 I haven't collected a set of settled research forecasts. I'll freeze each forecast
 using only information available at its decision timestamp, then score it after
 the official delivery price exists. I won't draw calibration conclusions before
 I have enough recorded expiries and dependence-aware checks.
+
+## Baselines and inference
+
+I've fixed the remaining choices in [baselines.json](../protocol/baselines.json),
+with its own [committed lock](../protocol/baselines.lock.json) tied to the original
+protocol hash. I haven't changed the original protocol or lock. I use the same
+first expiry, 26 October 2026 at 08:00 UTC. Both locks must have a reachable Git
+witness before the first seven-day target on 19 October at 08:00 UTC.
+I can't add missing baselines to an already frozen SVI forecast.
+
+I compare the same official BTC delivery price, using each selected snapshot's
+F, T and finite SVI scoring bounds. I use the same PIT, USD CRPS, log-return
+log score and interval coverage rules for every model.
+
+| Baseline | My volatility input | My drift relative to frozen F |
+| --- | --- | --- |
+| Same-snapshot ATM lognormal | Fitted SVI total variance at k=0 | Log mean -w/2, so the raw lognormal price mean is F |
+| Trailing realised lognormal | Mean squared hourly log returns over 720 returns, scaled by T times 365 times 24 | Log mean -w/2 |
+| GARCH(1,1)-t | ZeroMean fit to 2,160 hourly log returns using arch | Zero log drift, with symmetric innovations around frozen F |
+
+My ATM choice is a flat-vol ablation of the accepted SVI slice. I don't substitute
+a different quote or a nearest strike. My realised estimator keeps the second
+moment without estimating a short-window return drift.
+
+I retain `public/get_tradingview_chart_data` pages for BTC-PERPETUAL with
+`resolution="60"`, request intervals of at most 720 hours and ten seconds between
+pages. The [Deribit parameter schema](https://docs.deribit.com/api-reference/market-data/public-get_tradingview_chart_data)
+uses `resolution`; its introductory prose calls it `chart_resolution`.
+I interpret ticks as bar opens, following the endpoint's TradingView format and
+[TradingView's opening-time convention](https://www.tradingview.com/pine-script-docs/concepts/time/).
+I haven't verified that interpretation against a live history response yet.
+I make each close available one hour after its tick, and only after its local
+fetch timestamp. Both times must be at or before the option snapshot.
+
+I require 721 or 2,161 contiguous closes, with the last close at most two hours
+old. Short, stale, gapped, revised and invalid histories have separate reasons.
+I keep source hashes and every observed revision. A later fetch can't supply a
+past forecast. I don't forward-fill candles or overwrite a rejected baseline.
+Schema 3 adds append-only history and baseline tables without revising captures.
+
+I fit GARCH to 100 times log returns, then convert variance and residual state
+back to decimal units. I require convergence, nu>2 and alpha+beta<1.
+I simulate 16,384 paths with seed 271828, using variance-standardised Student-t
+innovations and ordinary hourly GARCH state updates. If the last close precedes
+the snapshot, I simulate the gap and discard its return contribution. For each
+hour I include its innovation times the square root of that hour's overlap with
+the snapshot-to-expiry interval. I treat this intra-hour allocation as an
+approximation; the variance state only updates at hourly boundaries.
+The [arch forecasting documentation](https://arch.readthedocs.io/en/latest/univariate/forecasting.html)
+describes the hourly simulation recursion I use.
+
+I freeze 257 empirical log-return quantiles and interpolate CDF values linearly
+between them, with density equal to delta probability over delta log return.
+I retain the knots, fitted state, versions, seed and path count, so scoring doesn't
+refit or resimulate. Repeated knots or nonfinite paths reject the forecast.
+I add the knots to CRPS integration nodes and still require refinement convergence.
+
+Student-t log innovations don't have a finite exponential moment. I only score
+the explicit bounded surrogate, collapsing its tails onto the same SVI bounds.
+Zero log drift doesn't establish a finite raw price mean. I retain tail counts,
+one-sided 95% binomial upper bounds for Monte Carlo tail probability, path resolution
+1/16,384 and quantile probability spacing 1/256 as separate diagnostics.
+The binomial bounds describe simulation error conditional on the fitted model.
+They don't cover parameter uncertainty or quantile interpolation error.
+Beyond the simulated extrema, the surrogate can assign zero density. I flag these
+outcomes and their infinite log losses as simulation-approximation effects.
+
+`predict` freezes each baseline once, including failures, within the original
+ten-minute completion deadline. Repeat runs return stored records. `score` uses
+the same retained delivery row and verifies both forecast hashes and common bounds.
+With a historical `--as-of-ms`, scoring produces a repeatable preview and doesn't
+insert score rows. I can inspect retained history and inference with either
+interpreter from the README:
+
+```sh
+.venv/bin/python -m implied_calibration.cli history --db data/research.sqlite --input data/hourly-01
+.venv/bin/python -m implied_calibration.cli history --help
+.venv/bin/python -m implied_calibration.cli infer --db data/research.sqlite --output results/inference.json
+```
+
+I request live history explicitly with `history --fetch --raw-output`, plus
+hour-aligned `--start-ms` and `--end-ms`. I haven't run that capture. I need to
+collect it before future option snapshots to qualify the history baselines.
+
+For inference I pair one SVI score and one baseline score per unique expiry,
+sort chronologically, and retain missing-pair reasons. Negative CRPS differences
+mean lower loss for SVI. I use the Politis-Romano stationary bootstrap with
+2,000 resamples, seed 1729, circular continuation and geometric block restarts.
+My expected block length is max(14, observed expiries inside the lead window).
+I report a two-sided 95% percentile interval and a null-centred bootstrap p-value
+with a plus-one correction. The [stationary-bootstrap reference](https://arch.readthedocs.io/en/latest/bootstrap/generated/arch.bootstrap.StationaryBootstrap.html)
+gives the geometric block construction.
+
+I cross-check the paired mean with an asymptotic normal Diebold-Mariano statistic
+and Bartlett Newey-West variance. HAC lags are max(13, overlap count minus one).
+My ESS is the minimum of n, the initial-positive monotone autocorrelation-pair
+estimate and n times sample variance divided by the HAC long-run variance.
+The HAC cross-check catches delayed dependence that adjacent pairs can miss.
+Degenerate variances don't qualify. ESS below 60 prints "insufficient data"
+and suppresses intervals, test statistics, p-values and conclusions.
+
+For PIT I transform a separate copy clipped to [1e-6,1-1e-6] through Phi inverse.
+I report clipping counts. My Berkowitz-type diagnostic jointly checks E[z]=0
+and E[z squared]=1 with a two-moment HAC Wald statistic. I allow serial dependence
+under the null and use the smaller ESS of the two moment series. I only test those
+marginal moments; this diagnostic can't establish full normality. Its asymptotic
+chi-square reference comes from HAC moment covariance, without assuming independent
+PITs. I don't use an independent KS or binned chi-square test.
+
+I reserve headline inference for the original 24-hour ATM comparison on USD CRPS.
+All other leads, baselines, expiry classes, PIT diagnostics and DM checks stay
+descriptive, with p-values suppressed. I retain infinite and undefined log-loss
+counts rather than dropping those outcomes from a finite mean.
+
+My offline checks cover all three baseline scores, seeded GARCH simulation,
+hourly gaps, future-row invariance, immutable failures, historical previews and
+Git witnesses. I check stationary-bootstrap coverage across 60 AR(1) simulations,
+DM and vector HAC against hand calculations, delayed-lag ESS, and calibrated
+correlated PITs. These are synthetic checks, not evidence of market calibration.

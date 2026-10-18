@@ -8,8 +8,8 @@ the realised frequency and see how that changes across expiries.
 
 ## Status
 
-6 of 8 phases complete. Phase 7 next: baselines and inference.
-I've tested frozen forecasts, official delivery ingestion and scoring on synthetic data.
+7 of 8 phases complete. Phase 8 next: reporting and reproduction.
+I've tested baselines, frozen scoring and dependence checks on synthetic data.
 My ten-minute capture still has a closed data gate, so I haven't extracted its distributions.
 I haven't collected settled research forecasts or measured calibration yet.
 
@@ -26,6 +26,7 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m implied_calibration.cli predict --db data/research.sqlite --output results/predictions.json
 .\.venv\Scripts\python.exe -m implied_calibration.cli settle --db data/research.sqlite --fetch --raw-output data/delivery-01
 .\.venv\Scripts\python.exe -m implied_calibration.cli score --db data/research.sqlite --output results/scores.json
+.\.venv\Scripts\python.exe -m implied_calibration.cli infer --db data/research.sqlite --output results/inference.json
 .\.venv\Scripts\python.exe scripts/synthetic_cdf.py --output results/synthetic-cdf.json --plot results/synthetic-cdf.png
 ```
 
@@ -40,6 +41,7 @@ python3 -m venv .venv
 .venv/bin/python -m implied_calibration.cli predict --db data/research.sqlite --output results/predictions.json
 .venv/bin/python -m implied_calibration.cli settle --db data/research.sqlite --fetch --raw-output data/delivery-01
 .venv/bin/python -m implied_calibration.cli score --db data/research.sqlite --output results/scores.json
+.venv/bin/python -m implied_calibration.cli infer --db data/research.sqlite --output results/inference.json
 .venv/bin/python scripts/synthetic_cdf.py --output results/synthetic-cdf.json --plot results/synthetic-cdf.png
 ```
 
@@ -77,21 +79,21 @@ The schema and as-of reads live in [store.py](src/implied_calibration/store.py).
 I clean through the latest capture, or pass `--as-of-ms` for an earlier cutoff.
 The cleaning JSON keeps every stored quote and its reasons. Exit 2 from `clean` or
 `fit` or `cdf` keeps the data gate visible. `predict` and `score` also return 2 when nothing qualifies.
-I store CDF parameters and report repairs and extrapolated mass; the [research note](report/research-note.md#implied-cdf) explains how.
+I store CDF parameters and report repairs and extrapolated mass in the [research note](report/research-note.md#implied-cdf).
 I run `predict` within 10 minutes of each due lead time. The [fixed protocol](protocol/protocol.json) starts with 26 October 2026 expiries.
 
 ## Files
 
-- `src/implied_calibration/`: my recording, database, pricing, fitting, frozen forecasts and scoring.
+- `src/implied_calibration/`: my capture, database, fitting, frozen forecasts, baselines and inference.
 - `tests/`: my offline checks using synthetic responses, clocks, and temporary databases.
 - `scripts/`: my disk estimate and labelled synthetic SVI and CDF examples.
 - `report/research-note.md`: my research question, data checks, and limits so far.
 - `.github/workflows/tests.yml`: my offline tests on Windows and Linux, Python 3.11 and 3.12.
-- `protocol/`: my fixed research choices and committed hash lock.
+- `protocol/`: my fixed research choices, baseline extension and committed hash locks.
 
 ## Next
 
-I'll compare baselines and uncertainty in Phase 7, then finish reporting and reproduction.
+I'll finish reporting and reproduction in Phase 8. My [baseline and inference choices](report/research-note.md#baselines-and-inference) are fixed.
 I'll update the research note as I complete each phase.
 
 I haven't picked a licence yet.
