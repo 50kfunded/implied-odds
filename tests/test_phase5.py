@@ -94,6 +94,12 @@ class CDFTests(OfflineTest):
         self.assertGreater(float(sf), 0)
         self.assertLess(float(sf), 1e-30)
 
+    def test_narrow_flat_variance_keeps_the_known_forward_with_an_irregular_grid(self):
+        model=synthetic_cdf(SVIParams(.001,0.,0.,-.9,.1))
+        report=model.to_record()['diagnostics']
+        self.assertEqual(report['status'],'ok')
+        self.assertAlmostEqual(report['mean_usd'],100.,delta=2e-4)
+
     def test_heavy_lee_wings_report_unresolved_mean_without_rescaling(self):
         model = synthetic_cdf(SVIParams(8.0, 1.99, 0.0, 0.0, 1.0))
         report = model.to_record()['diagnostics']

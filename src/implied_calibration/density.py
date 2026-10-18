@@ -184,6 +184,16 @@ class ImpliedCDF:
         # I integrate survival on the log-price axis with dS = F exp(k) dk.
         truncated = (_linear_survival_integral(k, sf) if repair else
                      float(np.trapezoid(sf * np.exp(k), k)))
+        integration_points, integration_refinements = len(k), 0
+        if not repair:
+            for refinement in range(1, 5):
+                if abs(truncated + left_mean + right_mean - 1) <= self.settings.forward_relative_tolerance:
+                    break
+                integration_k = np.unique(np.concatenate((k, np.linspace(left, right,
+                                                        (self.settings.grid_points - 1) * 2 ** refinement + 1))))
+                integration_sf = analytic_probabilities(integration_k, self.params)[1]
+                truncated = float(np.trapezoid(integration_sf * np.exp(integration_k), integration_k))
+                integration_points, integration_refinements = len(integration_k), refinement
         if repair:
             full_mean = truncated + math.exp(left)
             omitted_left, omitted_right = math.exp(left), 0.0
@@ -216,6 +226,7 @@ class ImpliedCDF:
             'grid_k_min': left, 'grid_k_max': right, 'grid_points': len(k),
             'query_method': 'linear_in_log_moneyness' if repair else 'analytic',
             'integration_method': 'exact_linear_in_log_moneyness' if repair else 'trapezoid_log_price',
+            'integration_points': integration_points, 'integration_refinements': integration_refinements,
             'boundary_policy': 'finite_support_0_1' if repair else 'analytic_svi_wings',
             'raw_left_tail_mass': float(boundary_cdf[0]), 'raw_right_tail_mass': float(boundary_sf[1]),
             'raw_truncated_tail_mass': float(boundary_cdf[0] + boundary_sf[1]),
