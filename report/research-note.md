@@ -77,11 +77,11 @@ strictly above F. Tick steps apply only strictly above their BTC price threshold
 following [Deribit's tick rules](https://support.deribit.com/hc/en-us/articles/25944779257373-6-July-2023-TS).
 I use the metadata version attached at ingestion, never a later tick observation.
 
-My [draft settings](../protocol/protocol.json) require at least 6 hours to expiry,
+My [fixed settings](../protocol/protocol.json) require at least 6 hours to expiry,
 a midpoint of at least 2 ticks, spread/mid at most 0.5, 6 distinct usable strikes,
 and 2 strictly on each side of F. These are initial research choices, not validated
-optimal filters. The report includes the settings and their hash. It doesn't lock
-the evaluation protocol. Each quote keeps its pre-expiry-filter status and final
+optimal filters. The report includes the settings and their hash. My committed
+lock fixes the evaluation choices below. Each quote keeps its pre-expiry-filter status and final
 status; reason counts can include several reasons for one quote.
 
 I compare midpoint IV and mark-price IV separately with mark_iv/100. The latter
@@ -124,7 +124,7 @@ start just to hide a failed check. Failed starts stay in the result message.
 I check g(k) against -1e-8 over at least 6 ATM standard deviations, observed strikes,
 and local grids around m and the variance minimum. I compare all butterfly-eligible
 expiry pairs within a snapshot on one shared grid. Calendar crossings get flags;
-I don't repair them. My draft primary rule requires both checks to pass. A single
+I don't repair them. My primary rule requires both checks to pass. A single
 eligible expiry has zero calendar pairs, which isn't evidence about a term structure.
 Finite grids can miss violations between nodes or beyond the checked range.
 
@@ -159,7 +159,7 @@ reports whether its price is outside the observed usable strike range.
 Extrapolated mass is CDF at the lowest observed strike plus survival at the highest.
 I don't claim calibration in the extrapolated wings or inside the observed range.
 
-My draft grid starts at k=-8 to 8 and doubles to at most -64 to 64, including local
+My grid starts at k=-8 to 8 and doubles to at most -64 to 64, including local
 nodes around m and the variance minimum. I coalesce nearly identical floating-point
 nodes. I require each raw boundary tail below 1e-10 and each omitted mean contribution
 below 1e-8 of F. I integrate survival with the price Jacobian F exp(k) and check the
@@ -167,6 +167,9 @@ mean against F within 2e-6 relative error. For the analytic curve, I also compar
 truncated integral with C(L)-C(U) and report omitted contributions F-C(L) and C(U).
 The implementation uses L-Put(L) for the left contribution to avoid cancellation.
 These tail identities assume a valid slice with the required endpoint limits.
+I refine the integration grid up to four times if the forward check is unresolved,
+without changing the CDF query or repair grid. This resolves narrow synthetic slices
+that a coarse irregular integration grid would otherwise reject.
 
 If I detect a decreasing CDF, increasing survival or out-of-range probability,
 I apply equal-weight PAVA on the fixed nodes and project its values onto [0,1].
@@ -188,22 +191,116 @@ Tiny tail probability alone doesn't establish that the omitted mean is small.
 The `cdf` command reuses the as-of cleaning and fit gates, retains every group and
 returns exit 2 when no CDF passes. My saved capture produces zero distributions;
 its 120 groups remain blocked before fitting. Finite grids can miss violations,
-and PAVA doesn't preserve option prices or the martingale mean. I haven't added
-density evaluation or log scores in this phase.
+and PAVA doesn't preserve option prices or the martingale mean. My scoring convention
+for accepted analytic CDFs is below.
 
 I can still run the synthetic smile plot from Phase 4 with
 `.venv/bin/python scripts/synthetic_svi.py --output results/synthetic-svi.json --plot results/synthetic-svi.png`
 on macOS or Linux, or replace the interpreter with `.\.venv\Scripts\python.exe`
 in PowerShell. The README gives the equivalent CDF example commands.
 
+## Frozen forecasts and scoring
+
+I've fixed the [protocol](../protocol/protocol.json) before the first eligible decision.
+My first eligible expiry is 26 October 2026 at 08:00 UTC; its seven-day target is
+19 October at 08:00 UTC. I keep the earlier capture as engineering evidence.
+The [lock](../protocol/protocol.lock.json) records the canonical protocol hash,
+creation timestamp and the commit containing its settings. The loader checks a
+reachable commit containing both matching files before that first target.
+Git timestamps are editable provenance. Publishing the commit before the target
+also leaves an external record; it doesn't prove a forecast was made on time.
+
+I use 24-hour and seven-day leads. For each due lead, I select the latest whole
+snapshot at or before expiry minus lead, with a gap of at most 10 minutes. I don't
+search backward for a better fit. T stays tied to that selected snapshot.
+I keep the existing cleaning, IV, butterfly, calendar and CDF gates.
+I allow 10 minutes after the target to finish freezing. The CLI records completion
+time and rejects a forecast if calculation finishes late. I record no_snapshot,
+late_freeze and every rejection instead of filling a missing forecast later.
+I discover expiry identities only from metadata available at the as-of cutoff.
+
+I store the selected snapshot, gap, SVI parameters, F, T, fit and CDF diagnostics,
+protocol hash, Git commit, creation time and content hash. Repeat runs return the
+stored row without refitting. SQLite guards block updates, deletes and replacements.
+An interrupted batch rolls back. Schema 2 adds evaluation tables to earlier databases;
+it doesn't revise captured quotes. I check forecasts and scores from a clean checkout.
+
+My primary hypothesis is that SVI lowers mean USD CRPS against the same-snapshot
+ATM lognormal at the 24-hour lead. I reserve headline inference for that comparison.
+The declared baseline list also includes trailing realised-vol lognormal and
+GARCH(1,1)-t. My stationary-bootstrap choices are 2,000 resamples, seed 1729 and
+expected block length 14 expiries, with minimum effective sample size 60.
+These are declared research choices. Baseline fitting and inference start in Phase 7.
+
+I fetch `public/get_delivery_prices` with btc_usd, offset and count, retaining every
+attempt in raw gzip JSON-lines. Pages wait at least 10 seconds between successful
+requests. I reject changing totals, overlaps, empty nonterminal pages and overruns.
+The [official response](https://docs.deribit.com/api-reference/market-data/public-get_delivery_prices)
+contains data rows with date and delivery_price, plus records_total. I validate this
+schema centrally and map each date to 08:00 UTC. Retained partial pages can still
+supply delivery observations; importing them doesn't establish complete history.
+I compare duplicate prices and stop on conflicts. I don't overwrite the first value.
+
+I score only after the official delivery row exists and was fetched by the scoring
+cutoff. Missing delivery prices stay pending without final score rows. I never use
+spot as settlement. Deribit uses the [07:30 to 08:00 UTC index TWAP](https://support.deribit.com/hc/en-us/articles/29734325712413-Settlement).
+That averaging slightly reduces effective terminal variance at short maturities;
+I document it without a v1 correction.
+
+I freeze a finite scoring support from each accepted CDF's resolved check limits.
+I collapse the small omitted tails onto boundary atoms and record the policy,
+atom masses, omitted raw probability and tail-mean diagnostics. The Phase 5
+analytic CDF still continues into its SVI wings; this scoring wrapper is explicit.
+Outside frozen support, raw PIT is zero or one with a tail-exceedance flag.
+I keep that PIT and a separate transformed value clipped to [1e-6,1-1e-6].
+
+I integrate CRPS in USD, splitting at the delivery price and median. I use direct
+survival in the upper tail and the price Jacobian on log grids. A wide grid plus
+separate center and shoulder grids resolves narrow distributions. I report the
+change under refinement and reject unresolved scores. Tests compare with closed-form
+normal and lognormal CRPS, including far-tail outcomes and small total variance.
+Convergence estimates remain numerical diagnostics, not certified error bounds.
+
+My log score is negative log density on ln(delivery/frozen forward). I don't add
+a density floor. Outside-support zero density is an explicit infinite loss; at
+boundary atoms I leave the continuous log score undefined. I reject nonpositive
+interior density. Class summaries retain infinite and undefined counts.
+I compute central 50%, 80% and 90% interval coverage with inclusive boundaries.
+I derive expiry class in quarterly, monthly, weekly, daily precedence, following
+the [contract introduction policy](https://support.deribit.com/hc/en-us/articles/25944688876957),
+and report scores and coverage separately by class and lead.
+
+My offline tests cover successful forecasts at both leads, missing and late freezes,
+future-row invariance, immutable payloads, pending delivery then scoring, conflicting
+settlement prices, PIT simulation and score identities. These use synthetic inputs.
+I haven't created research forecasts or scores from the saved market capture.
+
+I can run the earlier inspection commands with either interpreter from the README:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/estimate_disk.py data/smoke-01
+.\.venv\Scripts\python.exe -m implied_calibration.cli coverage --db data/research.sqlite
+.\.venv\Scripts\python.exe -m implied_calibration.cli clean --db data/research.sqlite --output results/clean.json
+.\.venv\Scripts\python.exe -m implied_calibration.cli fit --db data/research.sqlite --output results/fit.json
+.\.venv\Scripts\python.exe -m implied_calibration.cli cdf --db data/research.sqlite --output results/cdf.json
+.\.venv\Scripts\python.exe -m implied_calibration.cli settle --db data/research.sqlite --input data/delivery-01
+```
+
+```sh
+.venv/bin/python scripts/estimate_disk.py data/smoke-01
+.venv/bin/python -m implied_calibration.cli coverage --db data/research.sqlite
+.venv/bin/python -m implied_calibration.cli clean --db data/research.sqlite --output results/clean.json
+.venv/bin/python -m implied_calibration.cli fit --db data/research.sqlite --output results/fit.json
+.venv/bin/python -m implied_calibration.cli cdf --db data/research.sqlite --output results/cdf.json
+.venv/bin/python -m implied_calibration.cli settle --db data/research.sqlite --input data/delivery-01
+```
+
 ## Research still to do
 
-I plan to lock the protocol and freeze forecasts in Phase 6, compare baselines
-and uncertainty in Phase 7, then finish the report and reproduction work in
-Phase 8. I've brought offline CI forward for this release.
+I'll compare baselines and uncertainty in Phase 7, then finish the report and
+reproduction work in Phase 8. I've brought offline CI forward.
 
-I haven't fixed the protocol choices or collected a set of settled forecasts.
-I'll commit the locked protocol and its hash before the first evaluated expiry
-occurs. I'll freeze each forecast using only information available at its decision
-timestamp, then score it after the official delivery price exists. I won't draw
-calibration conclusions before I have enough recorded expiries.
+I haven't collected a set of settled research forecasts. I'll freeze each forecast
+using only information available at its decision timestamp, then score it after
+the official delivery price exists. I won't draw calibration conclusions before
+I have enough recorded expiries and dependence-aware checks.

@@ -8,10 +8,10 @@ the realised frequency and see how that changes across expiries.
 
 ## Status
 
-5 of 8 phases complete. Phase 6 next: frozen forecasts and scoring.
-I've checked SVI fits and implied CDFs on synthetic slices, including repairs and tails.
+6 of 8 phases complete. Phase 7 next: baselines and inference.
+I've tested frozen forecasts, official delivery ingestion and scoring on synthetic data.
 My ten-minute capture still has a closed data gate, so I haven't extracted its distributions.
-I haven't frozen forecasts or measured calibration yet.
+I haven't collected settled research forecasts or measured calibration yet.
 
 ## Run it
 
@@ -22,12 +22,10 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e .
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 .\.venv\Scripts\python.exe -m implied_calibration.cli record --output data/smoke-01 --interval 60 --seconds 600
-.\.venv\Scripts\python.exe scripts/estimate_disk.py data/smoke-01
 .\.venv\Scripts\python.exe -m implied_calibration.cli ingest --input data/smoke-01 --db data/research.sqlite
-.\.venv\Scripts\python.exe -m implied_calibration.cli coverage --db data/research.sqlite
-.\.venv\Scripts\python.exe -m implied_calibration.cli clean --db data/research.sqlite --output results/clean.json
-.\.venv\Scripts\python.exe -m implied_calibration.cli fit --db data/research.sqlite --output results/fit.json
-.\.venv\Scripts\python.exe -m implied_calibration.cli cdf --db data/research.sqlite --output results/cdf.json
+.\.venv\Scripts\python.exe -m implied_calibration.cli predict --db data/research.sqlite --output results/predictions.json
+.\.venv\Scripts\python.exe -m implied_calibration.cli settle --db data/research.sqlite --fetch --raw-output data/delivery-01
+.\.venv\Scripts\python.exe -m implied_calibration.cli score --db data/research.sqlite --output results/scores.json
 .\.venv\Scripts\python.exe scripts/synthetic_cdf.py --output results/synthetic-cdf.json --plot results/synthetic-cdf.png
 ```
 
@@ -38,12 +36,10 @@ python3 -m venv .venv
 .venv/bin/python -m pip install -e .
 .venv/bin/python -m unittest discover -s tests -v
 .venv/bin/python -m implied_calibration.cli record --output data/smoke-01 --interval 60 --seconds 600
-.venv/bin/python scripts/estimate_disk.py data/smoke-01
 .venv/bin/python -m implied_calibration.cli ingest --input data/smoke-01 --db data/research.sqlite
-.venv/bin/python -m implied_calibration.cli coverage --db data/research.sqlite
-.venv/bin/python -m implied_calibration.cli clean --db data/research.sqlite --output results/clean.json
-.venv/bin/python -m implied_calibration.cli fit --db data/research.sqlite --output results/fit.json
-.venv/bin/python -m implied_calibration.cli cdf --db data/research.sqlite --output results/cdf.json
+.venv/bin/python -m implied_calibration.cli predict --db data/research.sqlite --output results/predictions.json
+.venv/bin/python -m implied_calibration.cli settle --db data/research.sqlite --fetch --raw-output data/delivery-01
+.venv/bin/python -m implied_calibration.cli score --db data/research.sqlite --output results/scores.json
 .venv/bin/python scripts/synthetic_cdf.py --output results/synthetic-cdf.json --plot results/synthetic-cdf.png
 ```
 
@@ -80,21 +76,22 @@ The schema and as-of reads live in [store.py](src/implied_calibration/store.py).
 
 I clean through the latest capture, or pass `--as-of-ms` for an earlier cutoff.
 The cleaning JSON keeps every stored quote and its reasons. Exit 2 from `clean` or
-`fit` or `cdf` keeps the data gate visible. The synthetic example runs independently.
+`fit` or `cdf` keeps the data gate visible. `predict` and `score` also return 2 when nothing qualifies.
 I store CDF parameters and report repairs and extrapolated mass; the [research note](report/research-note.md#implied-cdf) explains how.
+I run `predict` within 10 minutes of each due lead time. The [fixed protocol](protocol/protocol.json) starts with 26 October 2026 expiries.
 
 ## Files
 
-- `src/implied_calibration/`: my recording, database, pricing, cleaning, SVI, CDF, and CLI code.
+- `src/implied_calibration/`: my recording, database, pricing, fitting, frozen forecasts and scoring.
 - `tests/`: my offline checks using synthetic responses, clocks, and temporary databases.
 - `scripts/`: my disk estimate and labelled synthetic SVI and CDF examples.
 - `report/research-note.md`: my research question, data checks, and limits so far.
 - `.github/workflows/tests.yml`: my offline tests on Windows and Linux, Python 3.11 and 3.12.
-- `protocol/protocol.json`: my draft research choices, with no evaluation lock yet.
+- `protocol/`: my fixed research choices and committed hash lock.
 
 ## Next
 
-I'll add frozen forecasts and scoring in Phase 6, then baselines and reporting.
+I'll compare baselines and uncertainty in Phase 7, then finish reporting and reproduction.
 I'll update the research note as I complete each phase.
 
 I haven't picked a licence yet.
