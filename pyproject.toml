@@ -7,7 +7,7 @@ name = "implied-odds"
 version = "0.1.0"
 description = "I record BTC option quotes for a probability calibration study."
 requires-python = ">=3.11"
-dependencies = ["requests>=2.31,<3", "numpy>=2,<3", "scipy>=1.14,<2", "matplotlib>=3.9,<4"]
+dependencies = ["requests>=2.31,<3", "numpy>=2,<3", "scipy>=1.14,<2", "matplotlib>=3.9,<4", "arch>=8,<9"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

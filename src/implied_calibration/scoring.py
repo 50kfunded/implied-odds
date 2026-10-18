@@ -41,7 +41,7 @@ class CRPSResult:
 
 def crps_integral(cdf: Callable[[np.ndarray], np.ndarray], survival: Callable[[np.ndarray], np.ndarray],
                   observed: float, lower: float, upper: float, *, log_price: bool = False,
-                  settings: ScoreSettings = ScoreSettings()) -> CRPSResult:
+                  settings: ScoreSettings = ScoreSettings(), extra_price_nodes: tuple = ()) -> CRPSResult:
     if (not all(math.isfinite(v) for v in (observed, lower, upper)) or lower >= upper
             or log_price and lower <= 0):
         raise ValueError('Invalid CRPS outcome or integration support')
@@ -64,11 +64,15 @@ def crps_integral(cdf: Callable[[np.ndarray], np.ndarray], survival: Callable[[n
     local_left, centre_left, median, centre_right, local_right = [
         quantile_node(p) for p in (1e-12, .001, .5, .999, 1 - 1e-12)]
     previous = None
+    extra = np.asarray(extra_price_nodes, dtype=float)
+    if not np.isfinite(extra).all() or np.any((extra <= lower) | (extra >= upper)):
+        raise ValueError('Extra integration nodes must lie strictly inside the scoring support')
+    extra = np.log(extra) if log_price else extra
     count = settings.crps_initial_points
     for refinement in range(settings.crps_max_refinements + 1):
         grid = np.unique(np.concatenate((np.linspace(left, right, count),
                                          np.linspace(local_left, local_right, count),
-                                         np.linspace(centre_left, centre_right, count), [pivot, median])))
+                                         np.linspace(centre_left, centre_right, count), [pivot, median], extra)))
         pieces = []
         intervals = [(left, min(pivot, median), cdf, False),
                      (median, pivot, survival, True), (pivot, median, cdf, True),
@@ -151,6 +155,12 @@ class FrozenCDF:
         return (np.where(x < self.lower_usd, 0.0, np.where(x >= self.upper_usd, 1.0, cdf)),
                 np.where(x < self.lower_usd, 1.0, np.where(x >= self.upper_usd, 0.0, sf)))
 
+    def interior_probabilities(self, price: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        return self.model.probabilities(np.log(price / self.model.forward_usd))
+
+    def is_extrapolated(self, price: float) -> bool:
+        return self.model.cdf_at(price).extrapolated
+
     def quantile(self, probability: float) -> float:
         if not 0 < probability < 1:
             raise ValueError('Quantile probability must be strictly between zero and one')
@@ -192,11 +202,11 @@ def score_distribution(distribution: FrozenCDF, observed_usd: float, expiry_ms: 
     cdf, _ = distribution.probabilities(observed_usd)
     pit = float(cdf)
     transformed = min(max(pit, settings.pit_transform_epsilon), 1 - settings.pit_transform_epsilon)
-    model = distribution.model
-    crps = crps_integral(lambda p: model.probabilities(np.log(p / model.forward_usd))[0],
-                         lambda p: model.probabilities(np.log(p / model.forward_usd))[1],
+    crps = crps_integral(lambda p: distribution.interior_probabilities(p)[0],
+                         lambda p: distribution.interior_probabilities(p)[1],
                          observed_usd, distribution.lower_usd, distribution.upper_usd,
-                         log_price=True, settings=settings)
+                         log_price=True, settings=settings,
+                         extra_price_nodes=tuple(distribution.integration_nodes()) if hasattr(distribution, 'integration_nodes') else ())
     log_density, log_status = distribution.log_return_density(observed_usd)
     metrics = {'pit': pit, 'pit_transformed': transformed, 'crps_usd': crps.value,
                'negative_log_score_log_return': -log_density if log_density is not None else None}
@@ -205,8 +215,8 @@ def score_distribution(distribution: FrozenCDF, observed_usd: float, expiry_ms: 
         lower, upper = distribution.quantile((1 - level) / 2), distribution.quantile((1 + level) / 2)
         metrics[f'coverage_{int(level * 100)}'] = float(lower <= observed_usd <= upper)
         intervals[str(int(level * 100))] = {'lower_usd': lower, 'upper_usd': upper,
-                                          'lower_extrapolated': model.cdf_at(lower).extrapolated,
-                                          'upper_extrapolated': model.cdf_at(upper).extrapolated}
+                                          'lower_extrapolated': distribution.is_extrapolated(lower),
+                                          'upper_extrapolated': distribution.is_extrapolated(upper)}
     status = 'invalid_density' if log_status == 'nonpositive_density' else 'ok' if crps.converged else 'crps_unresolved'
     return ScoreRow(status, expiry_class(expiry_ms), metrics,
                     {'tail_exceedance': 'left' if observed_usd < distribution.lower_usd else
@@ -214,5 +224,5 @@ def score_distribution(distribution: FrozenCDF, observed_usd: float, expiry_ms: 
                      'pit_transform_clipped': transformed != pit, 'pit_transform_epsilon': settings.pit_transform_epsilon,
                      'log_score_axis': 'ln_delivery_over_frozen_forward', 'log_score_status': log_status,
                      'negative_log_score_is_infinite': log_status == 'zero_density',
-                     'delivery_extrapolated': model.cdf_at(observed_usd).extrapolated,
+                     'delivery_extrapolated': distribution.is_extrapolated(observed_usd),
                      'crps': asdict(crps), 'scoring_support': distribution.support_record(), 'intervals': intervals})

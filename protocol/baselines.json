@@ -1,0 +1,29 @@
+{
+  "first_expiry_ms": 1793001600000,
+  "parent_protocol_hash": "4e6107a292311c8bbc3f1a423cba494864a16e67e0f9e1f93b614f55e8ac8a02",
+  "settings": {
+    "atm_rule": "fitted_svi_total_variance_at_k_zero",
+    "block_rule": "max_protocol_block_and_observed_overlap_count",
+    "bootstrap_interval_rule": "two_sided_95_percent_percentile_mean",
+    "bootstrap_p_rule": "two_sided_null_centred_with_plus_one",
+    "cdf_rule": "linear_cdf_between_empirical_log_return_quantiles",
+    "ess_rule": "minimum_initial_positive_monotone_pairs_and_overlap_hac",
+    "garch_drift": "zero_log_drift_relative_to_frozen_forward",
+    "garch_fractional_hour": "innovation_times_sqrt_hour_overlap",
+    "garch_gap_rule": "hourly_state_recursion_discard_gap_only_innovations",
+    "garch_rule": "zero_mean_garch11_standardised_student_t_full_hourly_paths",
+    "garch_window_hours": 2160,
+    "gaussian_drift": "minus_half_total_variance_relative_to_frozen_forward",
+    "hac_rule": "max_protocol_block_minus_one_and_overlap_minus_one",
+    "history_max_age_ms": 7200000,
+    "inference_rule": "single_primary_atm_24h_crps_secondary_descriptive",
+    "pit_rule": "berkowitz_type_hac_joint_normal_moments",
+    "realised_rule": "mean_squared_hourly_log_returns",
+    "realised_window_hours": 720,
+    "simulation_paths": 16384,
+    "simulation_quantiles": 257,
+    "simulation_seed": 271828,
+    "support_rule": "same_frozen_svi_bounds_with_boundary_atoms"
+  },
+  "version": 1
+}
