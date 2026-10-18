@@ -1,0 +1,16 @@
+{
+  "as_of_ms": 1792356132985,
+  "description": "I retained one production BTC option snapshot and 2,162 completed hourly candles on 18 October 2026. I fetched the hourly history before the option snapshot; these fits are exploratory.",
+  "files": {
+    "history/raw/2026-10-18.jsonl.gz": {
+      "bytes": 56429,
+      "sha256": "13e3948404f508f6c674c35aa197663c049e3a03558076267b73c0c71266a962"
+    },
+    "options/raw/2026-10-18.jsonl.gz": {
+      "bytes": 49483,
+      "sha256": "980b6013dc8e5882a3da328e1f93a7a7a7af3f555a49ddc3ec8e699c953be6bf"
+    }
+  },
+  "kind": "public_market_capture",
+  "schema_version": 1
+}

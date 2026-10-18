@@ -7,6 +7,14 @@ as evidence of a trading edge.
 
 ## Evidence so far
 
+I've now captured production option quotes and hourly BTC-PERPETUAL history on
+18 October 2026. The [README results](../README.md#results-so-far) describe that
+snapshot, and its [manifest](../recordings/live-02/manifest.json) retains both inputs.
+I select the earliest accepted expiry in the latest retained snapshot for the figure,
+without choosing on fit error. The rebuilt `snapshot/snapshot.json` lists every slice,
+quote rejection reason, fit diagnostic and source commit. These are exploratory
+market fits, separate from frozen forecasts and settled calibration outcomes.
+
 I've checked the recording and ingestion pipeline on a local ten-minute capture
 from 16 October 2026. These are engineering checks. Repeated quotes aren't
 independent outcomes, and this capture doesn't establish calibration.
@@ -119,8 +127,17 @@ vol points, while the mark-price median was +0.068910. Using each quote's own F
 changed midpoint IV by at most 0.01823 vol points, so the common F doesn't explain
 the breach. The 81,500 put's mark was 0.00267248 BTC, above its 0.0025 ask; its
 midpoint was 0.0024. This supports a midpoint-versus-mark price gap in that capture.
-I keep the flag and `phase4_ready=false`; I haven't relaxed the filters to clear it.
+I keep that group's flag and rejection; I haven't relaxed any threshold to clear it.
 I can rebuild the full row-level diagnostic from the included capture.
+
+I corrected the forecast gate's scope after review. The earlier implementation
+used one historical flag to veto every later group. I now apply the same fixed
+checks to each snapshot and expiry, with aggregate medians kept as diagnostics.
+`phase4_ready` means at least one group is eligible, not that every group passed.
+For a forecast I filter its selected snapshot in SQL before cleaning, fit all
+eligible expiries in that snapshot for the same calendar checks, and reuse that
+snapshot's fit results within the freeze call. I haven't changed either locked
+protocol, any numeric threshold, the calendar grid or the inference settings.
 
 ## SVI fitting
 
@@ -151,11 +168,11 @@ and min g about 0.260893 on the check grid. Separate tests cover seeded noise,
 negative a, narrow s bounds, deliberate butterfly violations and calendar crossings.
 These checks don't establish performance on recorded market quotes.
 
-The `fit` command re-cleans captured rows as of the requested cutoff before fitting.
+The `fit` command cleans captured rows as of the requested cutoff before fitting.
 It keeps every expiry group in its output, including rejected or failed fits.
-My ten-minute capture still has `phase4_ready=false`, so its groups remain blocked
-before the optimiser is called. I haven't fitted those recorded smiles or changed
-the Phase 3 thresholds. The synthetic example runs without that capture.
+The original historical gate blocked my ten-minute capture before the optimiser.
+The corrected per-group gate allows eligible market slices and retains flagged groups.
+I haven't changed the Phase 3 thresholds. The synthetic example runs without that capture.
 
 ## Implied CDF
 
@@ -329,7 +346,8 @@ pages. The [Deribit parameter schema](https://docs.deribit.com/api-reference/mar
 uses `resolution`; its introductory prose calls it `chart_resolution`.
 I interpret ticks as bar opens, following the endpoint's TradingView format and
 [TradingView's opening-time convention](https://www.tradingview.com/pine-script-docs/concepts/time/).
-I haven't verified that interpretation against a live history response yet.
+My live capture has hour-aligned ticks and completed prices, but those fields alone
+don't independently prove the bar anchoring.
 I make each close available one hour after its tick, and only after its local
 fetch timestamp. Both times must be at or before the option snapshot.
 
@@ -379,9 +397,9 @@ interpreter from the README:
 .venv/bin/python -m implied_calibration.cli infer --db data/research.sqlite --output results/inference.json
 ```
 
-I request live history explicitly with `history --fetch --raw-output`, plus
-hour-aligned `--start-ms` and `--end-ms`. I haven't run that capture. I need to
-collect it before future option snapshots to qualify the history baselines.
+I can request live history with `history --fetch --raw-output`, plus hour-aligned
+`--start-ms` and `--end-ms`. I've now captured it before a real option snapshot.
+The collector automates this ordering for future forecasts.
 
 For inference I pair one SVI score and one baseline score per unique expiry,
 sort chronologically, and retain missing-pair reasons. Negative CRPS differences
@@ -430,8 +448,12 @@ working research database. I keep generated files under ignored `results/`.
 I write `results/reproduction/market/report.html` and `report.json`, plus six PNG
 panels: smile against bid/ask, CDF against baselines, PIT, tail reliability,
 cumulative paired CRPS differences and coverage. The included sample retains
-its closed IV gate and zero research scores, so unavailable panels show
+its quote-level flags and zero research scores, so unavailable panels show
 "insufficient data". Reporting never refits or replaces a frozen forecast.
+
+The separate `snapshot/` diagnostic refits my new retained market snapshot and
+writes a real smile SVG plus all slice results. It doesn't create predictions,
+baselines or scores. The synthetic report stays separate from both market outputs.
 
 I write a separate `synthetic/` report with 240 generated independent lognormal
 outcomes, fixed seed 314159 and generated hourly GARCH history. It uses one fixed
@@ -472,8 +494,51 @@ as-of report when their retained source has a bounded fetch timestamp.
 
 ## Running the pipeline
 
-I use the environment setup in the README. These commands include live capture
-steps for future research; the offline reproducer doesn't call an API.
+I use the environment setup in the README. I start one local collection job with:
+
+```powershell
+.\.venv\Scripts\python.exe -m implied_calibration.cli collect --output data/live --db data/live.sqlite --report-output results/live
+```
+
+```sh
+.venv/bin/python -m implied_calibration.cli collect --output data/live --db data/live.sqlite --report-output results/live
+```
+
+I add `--seconds 600` for a bounded run. The default keeps collecting while the
+process and PC stay awake. Before option capture I fetch 2,162 completed hourly
+closes, then refresh hourly with enough overlap to fill any sleep or outage gap.
+A short or partial bootstrap stays in recovery mode. I request metadata and index
+before the book, ingest that immutable cycle, freeze due targets, fetch official
+deliveries hourly and score any settled forecasts. A new score rebuilds the report.
+At 08:00, the newly completed book response is after the target, so the previous
+eligible snapshot is normally selected. Newly fetched history can't qualify it.
+
+`data/live/status.json` records the PID, commit, last cycle and failure counters.
+`data/live/heartbeat/` records sessions, skipped slots and clock changes. Each cycle
+has a fresh immutable segment. OS leases prevent two jobs sharing a capture folder
+or database and release after a crash; I don't delete a live process's lock file.
+After a crash I rerun the same command. A new session preserves the old segments
+and starts at the next unused slot. I restart after changing source or commits;
+the collector records `research_checkout_changed` and skips freezing if they change.
+
+I stop after the current cycle with:
+
+```powershell
+.\.venv\Scripts\python.exe -m implied_calibration.cli collect-stop --output data/live
+```
+
+```sh
+.venv/bin/python -m implied_calibration.cli collect-stop --output data/live
+```
+
+My first eligible expiry is still 26 October. The 18 October metadata doesn't list
+it yet. The earliest listed eligible seven-day target is 23 October at 08:00 UTC,
+for 30 October delivery, subject to the same acceptance checks. I don't invent
+missing historical forecasts or move the locked date to create quicker results.
+The original 14-outcome bootstrap block and ESS minimum also stay fixed. A different
+noise-aware gate, block length or tail interval would be separate sensitivity work.
+
+These lower-level commands remain available. The offline reproducer doesn't call an API.
 
 ```powershell
 .\.venv\Scripts\python.exe -m implied_calibration.cli record --output data/smoke-01 --interval 60 --seconds 600
