@@ -24,6 +24,7 @@ from .settlement import capture_deliveries, ingest_deliveries
 from .baseline_lock import load_locked_baselines
 from .baseline_evaluation import infer_database, score_baselines
 from .history import capture_history, ingest_history
+from .report import build_report, write_report
 
 
 def provenance() -> dict[str, str | bool | None]:
@@ -104,6 +105,12 @@ def main() -> int:
     historian.add_argument('--end-ms', type=int)
     historian.add_argument('--as-of-ms', type=int)
     historian.add_argument('--output', type=Path)
+    reporter = commands.add_parser('report',help='I write figures and an offline report from immutable research records')
+    reporter.add_argument('--db',type=Path,required=True)
+    reporter.add_argument('--as-of-ms',type=int)
+    reporter.add_argument('--protocol',type=Path,default=Path('protocol/protocol.json'))
+    reporter.add_argument('--baselines',type=Path,default=Path('protocol/baselines.json'))
+    reporter.add_argument('--output',type=Path,required=True)
     args = parser.parse_args()
     logging.basicConfig(level=getattr(logging, args.log_level), format="%(levelname)s %(name)s %(message)s")
     try:
@@ -126,6 +133,15 @@ def main() -> int:
             result = fit_database(args.db, load_protocol(args.protocol), args.as_of_ms)
         elif args.command == 'cdf':
             result = cdf_database(args.db, load_protocol(args.protocol), args.as_of_ms)
+        elif args.command == 'report':
+            details = provenance()
+            parent = load_locked_protocol(args.protocol)
+            extension = load_locked_baselines(args.baselines,parent)
+            data = build_report(args.db,parent,extension,args.as_of_ms,details['git_commit'])
+            data['provenance']['working_tree_dirty'] = details['working_tree_dirty']
+            result = write_report(data,args.output)
+            emit(result,None)
+            return 0 if result['status'] == 'ok' else 2
         elif args.command in ('predict', 'score', 'infer'):
             details = provenance()
             if details['git_commit'] is None or details['working_tree_dirty'] is not False:
