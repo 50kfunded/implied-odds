@@ -118,6 +118,13 @@ class ReportPipelineTests(DatabaseFixture):
 class ReproductionTests(DatabaseFixture):
     seed_chain=phase6.FrozenForecastTests.seed_chain
 
+    def test_included_market_sample_retains_its_manifest_bytes_on_this_platform(self):
+        path=Path(__file__).resolve().parents[1]/'recordings'/'manifest.json'
+        manifest=verify_sample(path)
+        self.assertEqual(sum(info['bytes'] for info in manifest['files'].values()),420802)
+        self.assertEqual(manifest['files']['smoke-01/raw/2026-10-16.jsonl.gz']['sha256'],
+                         '6a399d0bccd85d81c25070cae593de4ac111859f67e2bb68bebd4cc49df51f77')
+
     def sample(self):
         self.seed_chain()
         sample=self.root/'recordings'
