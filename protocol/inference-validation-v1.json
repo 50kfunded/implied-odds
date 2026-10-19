@@ -1,0 +1,9 @@
+{
+  "first_freeze_ms": 1792541400000,
+  "formal_claims_enabled": false,
+  "future_changes": "I need a separate pre-outcome inference plan and validation before making a formal superiority claim. I don't extend this cohort or change its stopping date based on observed losses.",
+  "kind": "incremental_inference_guard_v1",
+  "parent_plan_sha256": "8b3813897ebb2b0e8b42569063682b78b149f3cc2c89a4b831e6abfc377fd997",
+  "reason": "I found poor ungated size and no gate passes in 200 one-year simulations under each declared null and alternative. I keep this prospective year as evidence collection with a fixed inconclusive terminal decision.",
+  "schema_version": 1
+}
