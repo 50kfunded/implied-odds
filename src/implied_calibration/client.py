@@ -110,6 +110,25 @@ def validate_response(endpoint: str, status: int, body: Any) -> Any:
         if result['status'] == 'ok' and any(lo > min(o, c) or hi < max(o, c) or lo > hi for o, hi, lo, c
                 in zip(result['open'], result['high'], result['low'], result['close'])):
             raise ClientError('schema_error', 'Hourly OHLC values are inconsistent')
+    elif endpoint == 'public/get_volatility_index_data':
+        fields = {'data', 'continuation'}
+        actual = set(result) if isinstance(result, dict) else set()
+        if not isinstance(result, dict) or actual != fields:
+            raise ClientError('schema_error', f'Volatility candles: missing keys={sorted(fields-actual)}; '
+                              f'unexpected keys={sorted(actual-fields)}')
+        continuation = result['continuation']
+        if continuation is not None and (type(continuation) is not int or continuation < 0):
+            raise ClientError('schema_error', 'Volatility continuation must be null or UTC milliseconds')
+        if not isinstance(result['data'], list):
+            raise ClientError('schema_error', 'Volatility data must be an array of OHLC arrays')
+        previous = -1
+        for row in result['data']:
+            if (not isinstance(row, list) or len(row) != 5 or type(row[0]) is not int or row[0] < 0
+                    or row[0] <= previous or any(type(v) not in (int, float) or not math.isfinite(v)
+                                               or v <= 0 for v in row[1:])
+                    or row[3] > min(row[1], row[4]) or row[2] < max(row[1], row[4])):
+                raise ClientError('schema_error', 'Invalid volatility OHLC row or timestamp order')
+            previous = row[0]
     elif endpoint == 'public/get_delivery_prices':
         fields = {'data', 'records_total'}
         if not isinstance(result, dict) or set(result) != fields:
@@ -168,7 +187,7 @@ class PublicClient:
     def request(self, endpoint: str, params: dict[str, Any]) -> ApiResponse:
         if endpoint not in (
             "public/get_book_summary_by_currency", "public/get_index_price", "public/get_instruments",
-            "public/get_delivery_prices", "public/get_tradingview_chart_data"
+            "public/get_delivery_prices", "public/get_tradingview_chart_data", "public/get_volatility_index_data"
         ):
             raise ValueError(f"Unsupported Phase 1 endpoint: {endpoint}")
         for attempt in range(1, self.max_retries + 2):

@@ -66,6 +66,9 @@ def main() -> int:
     collector.add_argument('--seconds', type=int)
     stopper = commands.add_parser('collect-stop', help='I ask the collection job to stop after its current cycle')
     stopper.add_argument('--output', type=Path, required=True)
+    historical = commands.add_parser('historical-fetch', help='I retain a separate retrospective DVOL variance dataset')
+    historical.add_argument('--output', type=Path, required=True)
+    historical.add_argument('--study', type=Path, default=Path('protocol/historical-variance.json'))
     importer = commands.add_parser("ingest", help="Ingest an unchanged local recording into SQLite")
     importer.add_argument("--input", type=Path, required=True)
     importer.add_argument("--db", type=Path, required=True)
@@ -129,6 +132,10 @@ def main() -> int:
     args = parser.parse_args()
     logging.basicConfig(level=getattr(logging, args.log_level), format="%(levelname)s %(name)s %(message)s")
     try:
+        if args.command == 'historical-fetch':
+            from .historical_data import capture_study
+            emit(capture_study(args.output, args.study), None)
+            return 0
         if args.command in ('collect', 'collect-stop'):
             from .collection import CollectionConfig, collect, request_stop
             if args.command == 'collect-stop':
