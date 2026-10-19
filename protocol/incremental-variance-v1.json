@@ -1,0 +1,99 @@
+{
+  "annual_hours": 8760,
+  "availability": "training_target_end_at_or_before_feature_cutoff; features_end_at_cutoff; previous_completed_daily_DVOL_close",
+  "bootstrap_resamples": 5000,
+  "bootstrap_seed": 271828,
+  "decision": {
+    "annual_volatility_budget": 0.2,
+    "entry_exit_fee_bps": [
+      0,
+      5,
+      10,
+      20
+    ],
+    "kind": "capped_constant_fraction_variance_budget_diagnostic",
+    "loss": "(weight_squared_times_realised_variance_minus_budget_variance)^2",
+    "maximum_weight": 1.0,
+    "scope": "I report risk mismatch and separate entry-plus-exit fee amounts. I don't model a traded portfolio, returns, funding or capacity."
+  },
+  "diagnostic_role": "exploratory_secondary_no_multiple_testing_claims",
+  "diagnostics": [
+    "HAC_Mincer_Zarnowitz",
+    "HAC_encompassing",
+    "fixed_calendar_quarters",
+    "leave_one_year_out",
+    "absolute_loss_top_1_5_percent",
+    "all_30_nonoverlap_phases"
+  ],
+  "expected_block_days": 60,
+  "features_days": [
+    1,
+    7,
+    30
+  ],
+  "floor_policy": "I retain raw predictions and count every floor hit. I don't tune the floor after scoring.",
+  "forecast_floor_variance": 1e-06,
+  "future": {
+    "analysis_at_ms": 1826758800000,
+    "data_vintage": "I freeze each forecast before its outcome starts. I retain the raw vintage used for its training inputs.",
+    "feature_cutoff_before_origin_ms": 3600000,
+    "freeze_end_before_origin_ms": 600000,
+    "freeze_start_before_origin_ms": 3000000,
+    "interim_policy": "coverage_counts_and_individual_scores_only_no_aggregate_inference",
+    "missing_rule": "count_unfrozen_origins_never_backfill;withhold_intervals_across_internal_gaps",
+    "n_planned_origins": 365,
+    "origin_end_ms": 1823994000000,
+    "origin_spacing_ms": 86400000,
+    "origin_start_ms": 1792544400000,
+    "source_gate": "each_new_daily_DVOL_close_must_match_last_completed_hourly_close;retain_raw_inputs",
+    "stopping_rule": "one_terminal_analysis_no_outcome_driven_extension",
+    "terminal_rule": "inconclusive_if_coverage_source_or_ESS_gate_fails"
+  },
+  "hac_lags_days": 59,
+  "historical_origin_end_ms": 1789689600000,
+  "historical_origin_start_ms": 1672531200000,
+  "historical_role": "exploratory_after_inspection",
+  "historical_target_shift_hours": 0,
+  "horizon_hours": 720,
+  "kind": "incremental_variance_v1",
+  "limitations": "I keep the historical all-OHLC failure and exploratory status. A future year has about 12 disjoint 30-day windows and may remain inconclusive.",
+  "minimum_effective_sample_size": 60,
+  "models": [
+    "trailing",
+    "dvol",
+    "har",
+    "har_dvol"
+  ],
+  "old_historical_config_sha256": "b2cbf2b857ec7bd585c012d98e40f0434b80cc10586d976f766fdf8602472c4e",
+  "primary_comparison": "qlike_har_dvol_minus_har",
+  "question": "I test whether DVOL adds information to a direct 30-day HAR variance forecast.",
+  "regression": "OLS_levels_intercept_scaled_by_training_feature_standard_deviation",
+  "schema_version": 1,
+  "sensitivity_block_days": [
+    30,
+    90,
+    180,
+    365
+  ],
+  "simulation": {
+    "bootstrap_resamples": 2000,
+    "dgp": [
+      "overlap_30",
+      "overlap_30_plus_slow_365",
+      "overlap_30_plus_clustered_tails"
+    ],
+    "null": "analytically_mean_zero_unconditional;never_center_each_realised_sample",
+    "power_mean_shifts": [
+      0.0,
+      -0.25
+    ],
+    "replications": 200,
+    "role": "finite_sample_diagnostic_not_proof_of_validity",
+    "sample_sizes": [
+      365,
+      1357
+    ],
+    "seed": 161803
+  },
+  "training_completed_origins": 365
+}

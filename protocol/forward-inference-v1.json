@@ -1,0 +1,12 @@
+{
+  "analysis_at_ms": 1824192000000,
+  "expiry_cutoff_ms": 1824019200000,
+  "interim_policy": "descriptive_only_no_primary_p_values_or_directional_claim",
+  "kind": "forward_stopping_amendment_v1",
+  "parent_baseline_hash": "3b7baccbdcbf7e685faf5cb49a85b6724612ee168350f3975503a756c5c4eeba",
+  "parent_protocol_hash": "4e6107a292311c8bbc3f1a423cba494864a16e67e0f9e1f93b614f55e8ac8a02",
+  "primary_comparison": "24_hour_USD_CRPS_SVI_minus_ATM",
+  "schema_version": 1,
+  "scope": "I preserve the original forecast and baseline locks. This amendment fixes when I make the single formal decision.",
+  "terminal_rule": "one_analysis;inconclusive_if_original_ESS_gate_fails;no_outcome_driven_extension"
+}
