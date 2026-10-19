@@ -86,6 +86,12 @@ and [method](report/research-note.md) remain available.
 - `protocol/`: my fixed prospective locks and separate historical study choices.
 - `report/research-note.md`: my results, methods, input format and research limits.
 
+## Limits
+
+Risk-neutral probabilities include risk premia. I use one venue, a short prospective sample and overlapping targets.
+Settlement uses a 30-minute index TWAP; thin option wings need extrapolation, and quote/index snapshots aren't atomic.
+Crypto funding, jumps and market structure can affect comparisons. I don't infer a trading edge from these results.
+
 ## Next
 
 I'll resolve the vendor OHLC discrepancy and test the variance result on a new period.

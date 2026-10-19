@@ -94,7 +94,7 @@ are a proxy for spot-index returns, so jumps, funding and basis can affect this 
 ## Evidence so far
 
 I've now captured production option quotes and hourly BTC-PERPETUAL history on
-18 October 2026. The [retained snapshot](../recordings/live-02/manifest.json) describe that
+18 October 2026. The [retained snapshot](../recordings/live-02/manifest.json) describes that
 snapshot, and its [manifest](../recordings/live-02/manifest.json) retains both inputs.
 I select the earliest accepted expiry in the latest retained snapshot for the figure,
 without choosing on fit error. The rebuilt `snapshot/snapshot.json` lists every slice,
