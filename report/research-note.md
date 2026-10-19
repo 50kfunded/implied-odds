@@ -93,9 +93,13 @@ are a proxy for spot-index returns, so jumps, funding and basis can affect this 
 
 ## Evidence so far
 
-I've now captured production option quotes and hourly BTC-PERPETUAL history on
-18 October 2026. The [retained snapshot](../recordings/live-02/manifest.json) describes that
-snapshot, and its [manifest](../recordings/live-02/manifest.json) retains both inputs.
+I captured production option quotes and hourly BTC-PERPETUAL history on
+18 October 2026 at 20:42 UTC. My [snapshot manifest](../recordings/live-02/manifest.json)
+retains both inputs. I found 928 quotes in 12 expiry slices, with 383 usable OTM
+quotes and 2,162 completed hourly closes available before capture. Four CDFs passed;
+three slices failed butterfly checks and five failed calendar checks.
+My [real smile figure](market-smile.svg) shows 19 October at 08:00 UTC, with 11
+strikes, 0.346 vol-point RMSE and 7.01% extrapolated probability mass.
 I select the earliest accepted expiry in the latest retained snapshot for the figure,
 without choosing on fit error. The rebuilt `snapshot/snapshot.json` lists every slice,
 quote rejection reason, fit diagnostic and source commit. These are exploratory
