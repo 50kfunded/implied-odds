@@ -1,40 +1,43 @@
-# Are BTC option probabilities calibrated?
+# Do BTC option prices forecast future volatility?
 
 [![tests](https://github.com/50kfunded/implied-odds/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/50kfunded/implied-odds/actions/workflows/tests.yml)
 
-I'm testing whether BTC option-implied risk-neutral probabilities match realised settlement frequencies.
-I fit checked SVI smiles to Deribit quotes and freeze their CDFs before expiry.
-I compare the frozen distributions with official delivery prices and three baselines using proper scores and dependence-aware uncertainty.
+I'm testing whether BTC option prices help forecast future volatility.
+I compared 1,967 historical forecasts and found 29.2% lower mean QLIKE loss for DVOL than trailing realised variance, with almost no extra gain from a past-only correction.
+I also build and freeze SVI probability distributions for a separate prospective calibration study.
 
 ## Status
 
-8 of 8 implementation phases complete. Prospective research is in progress.
-I've captured real option quotes and hourly history and fitted real market smiles.
-I haven't collected settled research forecasts, so calibration is still unmeasured.
-My fixed protocol requires effective N >= 60 before I draw a headline conclusion.
+8 of 8 implementation phases complete. Historical results are reproducible offline.
+One vendor OHLC check failed, so I keep the historical comparison descriptive.
+The fixed non-overlapping sample's interval includes zero.
+I haven't collected settled SVI forecasts yet, so full probability calibration is unmeasured.
 
-## Results so far
+## Historical results
 
-I captured this production snapshot on 18 October 2026 at 20:42 UTC.
-These are real quote-fit diagnostics. I keep the [inputs and hashes](recordings/live-02/manifest.json)
-and rebuild every slice, including failed fits, with `scripts/reproduce.py`.
+I use daily origins from 1 May 2021 through 18 September 2026 and subsequent 30-day
+BTC-PERPETUAL returns. I retained 48,626 hourly price candles and 1,996 daily DVOL
+candles, with no excluded origins. Lower QLIKE means lower variance forecast loss.
 
-| Check | Real market result |
+| Measure | Real historical result |
 | --- | ---: |
-| Quotes / expiry slices | 928 / 12 |
-| Usable OTM quotes | 383 |
-| Accepted SVI CDFs after all checks | 4 / 12 |
-| Butterfly / calendar rejections | 3 / 5 |
-| Completed hourly closes available before the snapshot | 2,162 |
-| Settled frozen research forecasts / effective N | 0 / 0 |
-| Calibration / primary CRPS comparison | Insufficient data |
+| Paired daily origins / effective N | 1,967 / 126.8 |
+| Mean QLIKE: DVOL / trailing 30-day variance | 0.13236 / 0.18699 |
+| Paired loss difference, DVOL minus trailing | -0.05463 |
+| Descriptive 95% interval, 60-day expected blocks | -0.09374 to -0.01459 |
+| Mean implied minus subsequent realised volatility | +7.55 volatility points |
+| Origins with lower DVOL loss | 968 / 1,967, or 49.2% |
+| Fixed non-overlapping sample | 66 targets, interval -0.09374 to +0.01071 |
+| Correction / raw DVOL loss on the same 1,357 origins | 0.09582 / 0.09611 |
+| Daily/hourly OHLC checks | 8 / 9 pass; one DVOL open differs |
 
-![Real Deribit quotes with an exploratory SVI fit for the 19 October expiry](report/market-smile.svg)
+![Real historical BTC volatility and annual paired forecast losses; descriptive results with a failed source alignment check](report/historical-variance.svg)
 
-I show the earliest accepted expiry in that snapshot, 19 October at 08:00 UTC.
-The fit has 11 strikes, 0.346 vol-point RMSE and 7.01% extrapolated probability mass.
-This exploratory fit isn't a frozen research forecast. My [research note](report/research-note.md)
-explains the gate correction, selection rule, rejected slices and remaining limits.
+DVOL does worse in 2021. Its lower average loss doesn't mean it wins on most days.
+I publish the [unchanged inputs](recordings/historical-variance/manifest.json),
+[refetch audit](recordings/historical-alignment-audit/manifest.json) and
+[annual results, timing rules and limits](report/research-note.md#historical-variance-study).
+These are historical variance results, not trading returns or a full-CDF calibration result.
 
 ## Run it
 
@@ -56,38 +59,36 @@ python3 -m venv .venv
 .venv/bin/python scripts/reproduce.py
 ```
 
-I open `results/reproduction/index.html` for the real snapshot, frozen-score report
-and separate synthetic illustration. I start and stop the local collector with the
-[live commands](report/research-note.md#running-the-pipeline). It captures options every
-five minutes, refreshes hourly history, freezes due forecasts and scores deliveries.
-I keep the PC awake and online; downtime stays visible in its heartbeat and status.
+I open `results/reproduction/index.html` for the historical study, real smile fit,
+frozen-score report and separate synthetic illustration. The historical report
+includes individual outcomes in CSV and all diagnostics in JSON. CI rebuilds the reports.
+I leave the local collector stopped; the [live commands](report/research-note.md#running-the-pipeline)
+start a separate job when I'm ready to collect prospective forecasts.
 
 ## Method and data
 
-I keep missing quote sides as nulls, convert BTC premiums with the expiry's forward,
-then check IV conventions, butterflies and calendars before extracting a risk-neutral CDF.
-My primary comparison is 24-hour USD CRPS against the same-snapshot ATM lognormal.
-The realised-vol and GARCH baselines need history fetched before the option snapshot.
-Raw gzip JSON-lines retain response bodies and request timings; SQLite holds immutable forecasts.
+I compare the previous completed DVOL close squared with trailing 720-hour realised
+variance, then score both against the next 720 hourly returns. My correction uses
+only the latest 365 completed outcomes. I use paired stationary-bootstrap intervals,
+59-day HAC lags and an effective N minimum of 60. Historical downloads aren't original data vintages.
+Raw gzip JSON-lines retain response bodies and request timings; manifests retain hashes.
 
-## Limits
-
-Risk-neutral probabilities include risk premia, so they can differ from realised frequencies.
-I use one venue and a short sample; overlapping outcomes reduce effective sample size.
-Settlement is a 30-minute index TWAP. Thin wings need extrapolation, and calendar checks
-can reject slices because of extrapolated wings. Quotes and the index aren't atomic.
-Crypto funding, jumps and market structure affect comparisons. GARCH uses a finite simulation.
-The minimum eligible expiry doesn't guarantee that every lead is listed in time.
+My SVI study checks option prices, butterflies and calendars before extracting a CDF.
+Its fixed primary comparison remains 24-hour USD CRPS against the ATM lognormal.
+The original protocol and baseline locks stay unchanged. Its [real snapshot](report/market-smile.svg)
+and [method](report/research-note.md) remain available.
 
 ## Files
 
-- `src/implied_calibration/`: my collector, pricing, forecasts, inference and reports.
-- `tests/` and `.github/workflows/tests.yml`: my offline checks on Windows and Linux.
-- `scripts/reproduce.py` and `recordings/`: my offline rebuild and small retained samples.
-- `protocol/`: my fixed choices and committed locks.
-- `report/research-note.md`: my method, input format, evidence and research limits.
+- `src/implied_calibration/`: my collection, pricing, forecasts, inference and reports.
+- `tests/` and `.github/workflows/tests.yml`: my offline checks and Windows/Linux CI.
+- `scripts/reproduce.py` and `recordings/`: my offline rebuild and retained public inputs.
+- `protocol/`: my fixed prospective locks and separate historical study choices.
+- `report/research-note.md`: my results, methods, input format and research limits.
 
 ## Next
 
-I'll collect qualifying snapshots, score settled forecasts and study calibration once enough outcomes exist.
+I'll resolve the vendor OHLC discrepancy and test the variance result on a new period.
+I'll collect prospective SVI forecasts before claiming anything about probability calibration.
+
 I haven't picked a licence yet.

@@ -5,10 +5,96 @@ settlement frequencies across expiries. Risk-neutral probabilities can differ
 from realised frequencies because of risk premia. I won't treat a difference
 as evidence of a trading edge.
 
+## Historical variance study
+
+I compared 1,967 daily BTC variance forecasts from 1 May 2021 through 18 September
+2026 with their subsequent 30-day outcomes. DVOL had 29.2% lower mean QLIKE than
+trailing 30-day realised variance in this historical sample. A correction fitted
+only on completed outcomes added almost no average gain. I keep these findings
+descriptive: one vendor OHLC check failed, and the fixed non-overlapping sample's
+interval includes zero. I don't claim full probability calibration or profit.
+
+| Origin year | n | Mean QLIKE difference, DVOL minus trailing | Descriptive 95% interval |
+| --- | ---: | ---: | ---: |
+| 2021, from May | 245 | +0.04457 | -0.06661 to +0.14294 |
+| 2022 | 365 | -0.06185 | -0.17404 to +0.03208 |
+| 2023 | 365 | -0.08108 | -0.17223 to -0.00340 |
+| 2024 | 366 | -0.05973 | -0.10594 to -0.01562 |
+| 2025 | 365 | -0.02701 | -0.08824 to +0.02987 |
+| 2026, through 18 September | 261 | -0.13211 | -0.19544 to -0.06318 |
+| Full sample | 1,967 | -0.05463 | -0.09374 to -0.01459 |
+
+I get mean QLIKE 0.13236 for DVOL and 0.18699 for trailing variance. The paired
+median difference is +0.00094, and DVOL wins on 968 origins, or 49.2%. Its lower
+average loss reflects the severity of errors rather than winning on most days.
+DVOL averages 59.52% annualised volatility against 51.97% subsequently realised,
+a gap of 7.55 volatility points; it's above realised volatility on 73.4% of origins.
+These gaps aren't returns, option mispricing estimates or a causal risk-premium measure.
+
+I score annualised variances with `QLIKE = actual/forecast - log(actual/forecast) - 1`.
+At each 00:00 UTC origin, I use the previous completed daily DVOL close divided by
+100 and squared. My trailing forecast uses the preceding 720 hourly log returns.
+The target uses exactly 720 future returns. Each window needs 721 completed closes;
+a candle's hourly tick is its opening time, and its close becomes available one hour later.
+I annualise the mean squared hourly return by 8,760, without subtracting a sample mean.
+Missing inputs exclude and count the origin; I don't fill them. No origins are missing here.
+
+My [separate study choices](../protocol/historical-variance.json) were committed
+before retrieval, in `b46b161` and `6a7c9be`. This is a retrospective analysis plan,
+not a historical preregistration or a witness of unrevised market-data vintages.
+I retrieved [the full retained inputs](../recordings/historical-variance/manifest.json)
+on 19 October 2026 in 76 successful public requests. I retained all 48,626 hourly
+price candles and 1,996 daily DVOL candles; there are no conflicting duplicates.
+I don't insert these historical observations into the prospective forecast database.
+
+I use 5,000 paired stationary-bootstrap draws with seed 314159 and 60-day expected
+blocks, plus a 59-day Newey-West cross-check. Paired-loss ESS is 126.8 against a
+minimum of 60. All intervals stay descriptive because the source gate failed.
+Annual ESS ranges from 7.0 to 30.1, so I don't make annual significance claims.
+The 30/90-day block intervals are respectively [-0.09396, -0.01605] and
+[-0.09292, -0.01557]. A fixed non-overlapping sample anchored on 1 May 2021 has
+66 outcomes, difference -0.03883 and interval [-0.09374, +0.01071]. Non-overlap
+doesn't establish independence. I withhold intervals if an accepted series has
+internal calendar gaps; forcing a bootstrap restart there would distort row weights.
+
+My declared timing sensitivities keep the same origins: a one-day older DVOL
+close gives difference -0.05126, and moving the entire future window one hour
+later gives -0.05460. Neither sensitivity changes the primary result or its gate.
+
+From 1 January 2023, I fit a scale using the latest 365 fully completed origin
+outcomes: `scale = mean(realised_variance / dvol_variance)`. I include a training
+outcome only when its 30-day target has ended. This scale minimises training QLIKE;
+it isn't the ratio of the two means. Future-outcome mutation tests check that it
+can't use unfinished targets. On the same 1,357 evaluation origins, mean QLIKE is
+0.09582 corrected, 0.09611 raw DVOL and 0.16670 trailing variance. Corrected minus
+raw is -0.00028, with descriptive interval [-0.01619, +0.01516]. I don't claim a
+meaningful correction gain. Its 365-origin training window can create dependence
+beyond the primary 60-day block, so the correction remains a secondary diagnostic.
+
+I checked daily versus hourly OHLC on three dates fixed before retrieval. The
+perpetual daily bars actually run 08:00 to 08:00 UTC, and the endpoint returns
+both bars intersecting a midnight-to-midnight request. I corrected the reader
+before calculating losses and checked all six retained daily price bars against
+their actual 24 hourly bars. All six match. DVOL daily bars use 00:00 UTC; two of
+three match all OHLC fields. On 5 September 2026, the daily open is 37.33 while
+the first hourly open is 37.96. High, low and close match. I kept the failed check
+and all original bytes. A [separate three-request refetch](../recordings/historical-alignment-audit/manifest.json)
+returns the same discrepancy. I don't relax the all-OHLC gate after seeing losses.
+The affected field isn't a forecast input, but the unresolved vendor inconsistency
+still prevents my formal superiority claim. The rebuilt report flags it visibly.
+
+I follow the official [DVOL endpoint](https://docs.deribit.com/api-reference/market-data/public-get_volatility_index_data),
+[price-candle endpoint](https://docs.deribit.com/api-reference/market-data/public-get_tradingview_chart_data)
+and [DVOL methodology](https://insights.deribit.com/exchange-updates/dvol-deribit-implied-volatility-index/).
+DVOL is a 30-day option-implied volatility index with a 365-day convention.
+Its methodology truncates wings, can use marks or trades and smooths the output.
+Method changes and later historical revisions can matter. BTC-PERPETUAL returns
+are a proxy for spot-index returns, so jumps, funding and basis can affect this study.
+
 ## Evidence so far
 
 I've now captured production option quotes and hourly BTC-PERPETUAL history on
-18 October 2026. The [README results](../README.md#results-so-far) describe that
+18 October 2026. The [retained snapshot](../recordings/live-02/manifest.json) describe that
 snapshot, and its [manifest](../recordings/live-02/manifest.json) retains both inputs.
 I select the earliest accepted expiry in the latest retained snapshot for the figure,
 without choosing on fit error. The rebuilt `snapshot/snapshot.json` lists every slice,
@@ -20,7 +106,7 @@ from 16 October 2026. These are engineering checks. Repeated quotes aren't
 independent outcomes, and this capture doesn't establish calibration.
 I include the unchanged raw recording and heartbeat under `recordings/`, with
 source hashes in the [manifest](../recordings/manifest.json). I rebuild the database
-locally. The repo's offline tests use synthetic data.
+locally. My offline tests use generated data and hash-checked public inputs.
 
 | Check | What I observed |
 | --- | --- |
@@ -440,7 +526,7 @@ correlated PITs. These are synthetic checks, not evidence of market calibration.
 ## Reproducing the reports
 
 `scripts/reproduce.py` verifies every included sample hash and rejects unlisted
-files. The raw gzip and heartbeat total 420,802 bytes, below 5 MB. I ingest them
+files. All included recordings total 1,837,121 bytes, below 5 MB. I ingest them
 into a temporary SQLite database, rebuild the report, then remove that temporary
 database. I don't create research forecasts during reproduction or change the
 working research database. I keep generated files under ignored `results/`.
@@ -451,7 +537,11 @@ cumulative paired CRPS differences and coverage. The included sample retains
 its quote-level flags and zero research scores, so unavailable panels show
 "insufficient data". Reporting never refits or replaces a frozen forecast.
 
-The separate `snapshot/` diagnostic refits my new retained market snapshot and
+The separate `historical/` study rebuilds every historical variance outcome and its
+refetch audit, with CSV, JSON, an embedded SVG and a self-contained HTML report.
+I retain the source failure and suppress the formal claim on every rebuild.
+
+The separate `snapshot/` diagnostic refits my retained market snapshot and
 writes a real smile SVG plus all slice results. It doesn't create predictions,
 baselines or scores. The synthetic report stays separate from both market outputs.
 
