@@ -1,0 +1,25 @@
+{
+  "capture_attempts": 76,
+  "captured_from_ms": 1792420955369,
+  "captured_until_ms": 1792421725069,
+  "config_hash": "b2cbf2b857ec7bd585c012d98e40f0434b80cc10586d976f766fdf8602472c4e",
+  "failed_attempts": 0,
+  "files": {
+    "alignment/raw/2026-10-19.jsonl.gz": {
+      "bytes": 3188,
+      "sha256": "24056b6e131e4d9b695b8f340afb23075ebb3b029e48bdd7c8105a99a5f0cf47"
+    },
+    "dvol/raw/2026-10-19.jsonl.gz": {
+      "bytes": 27630,
+      "sha256": "3c2151ed48e25de9ee0a48a40c51b679888230c4136cb6e9a9e39dfc3275113c"
+    },
+    "prices/raw/2026-10-19.jsonl.gz": {
+      "bytes": 1275492,
+      "sha256": "4e51b2926e60d04fe9ad0e0e2f0cb8386bcfb6d887a489457ee78de7efbabfc3"
+    }
+  },
+  "git_commit": "489632d6611d66060a3737c97a16536eb26ddedb",
+  "kind": "historical_dvol_variance_inputs",
+  "schema_version": 1,
+  "vintage": "I retrieve historical candles now. I assume their timestamped values represent the historical series; I don't claim unrevised data vintages or prospective forecasts."
+}

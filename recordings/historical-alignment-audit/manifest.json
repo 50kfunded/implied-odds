@@ -1,0 +1,11 @@
+{
+  "captured_from_ms": 1792421859483,
+  "captured_until_ms": 1792421880117,
+  "files": {
+    "raw/2026-10-19.jsonl.gz": {
+      "bytes": 1617,
+      "sha256": "df83f339206d69fd85800e715e4397ff0ca38f347919301a765fc9bf83293e1b"
+    }
+  },
+  "kind": "historical_alignment_audit"
+}
