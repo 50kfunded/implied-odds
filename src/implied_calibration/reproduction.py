@@ -95,7 +95,8 @@ def reproduce(output: Path, *, manifest_path: Path | None = None, include_synthe
     if default_sample and historical_sample.exists():
         from .historical_report import write_historical_report
         reports['historical'] = write_historical_report(historical_sample, root/'protocol'/'historical-variance.json',
-                                                       output/'historical', provenance=details)
+            output/'historical', provenance=details,
+            audit_manifest_path=root/'recordings'/'historical-alignment-audit'/'manifest.json')
     files = {f'{folder}/{name}':hashlib.sha256((output/folder/name).read_bytes()).hexdigest()
              for folder,report in reports.items() for name in report['report_files']}
     result = {'status':'reproduced','sample_kind':manifest['kind'],'as_of_ms':manifest['as_of_ms'],

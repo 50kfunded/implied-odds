@@ -8,7 +8,7 @@ import tempfile
 from unittest.mock import Mock
 
 from implied_calibration.client import ClientError, validate_response
-from implied_calibration.historical_data import DAY_MS, DVOL, fetch_dvol, load_study, read_study
+from implied_calibration.historical_data import DAY_MS, HOUR_MS, DVOL, fetch_dvol, load_study, read_study
 from implied_calibration.raw import RawWriter
 from implied_calibration.store import digest
 from test_phase1 import OfflineTest, envelope
@@ -104,3 +104,27 @@ class HistoricalDataTests(OfflineTest):
             path.write_text(json.dumps(changed), encoding='utf-8')
             with self.subTest(field=field), self.assertRaises(ValueError):
                 load_study(path)
+
+    def test_daily_price_alignment_accepts_only_intersecting_08_utc_sessions(self):
+        for offset, accepted in ((-16, True), (8, True), (0, False), (-40, False), (32, False)):
+            with self.subTest(offset=offset), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                day, stamp = 10 * DAY_MS, 20 * DAY_MS
+                writer = RawWriter(root / 'alignment/raw')
+                values = {'status': 'ok', 'ticks': [day + offset * HOUR_MS], **{name: [100.] for name in
+                          ('open', 'high', 'low', 'close', 'volume', 'cost')}}
+                writer.append({'endpoint': 'public/get_tradingview_chart_data', 'params': {'instrument_name': 'BTC-PERPETUAL',
+                    'resolution': '1D', 'start_timestamp': day, 'end_timestamp': day + DAY_MS - 1},
+                    'fetched_at_ms': stamp, 'request_sent_ms': stamp, 'response_received_ms': stamp,
+                    'http_status': 200, 'ok': True, 'body': envelope(values)})
+                manifest = {'schema_version': 1, 'kind': 'historical_dvol_variance_inputs', 'config_hash': digest(self.config),
+                    'captured_from_ms': stamp, 'captured_until_ms': stamp, 'failed_attempts': 0,
+                    'files': {p.relative_to(root).as_posix(): {'bytes': p.stat().st_size,
+                    'sha256': hashlib.sha256(p.read_bytes()).hexdigest()} for p in root.rglob('*.gz')}}
+                path = root / 'manifest.json'
+                path.write_text(json.dumps(manifest), encoding='utf-8')
+                if accepted:
+                    self.assertEqual(len(read_study(path, self.config).alignment_prices), 1)
+                else:
+                    with self.assertRaisesRegex(ValueError, 'timing'):
+                        read_study(path, self.config)

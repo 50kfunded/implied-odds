@@ -13,8 +13,10 @@ import platform
 import matplotlib as mpl
 from matplotlib.figure import Figure
 
-from .historical_data import HistoricalInputs, load_study, read_study
+from .historical_data import DVOL, HistoricalInputs, load_study, read_study
+from .client import validate_response
 from .locking import digest
+from .raw import read_raw
 from .variance_study import DAY_MS, HOUR_MS, analyse_variance
 
 
@@ -24,22 +26,70 @@ def utc_date(stamp: int) -> str:
 
 def alignment_checks(inputs: HistoricalInputs, days: list[int]) -> dict:
     checks = []
-    for day in days:
-        for name, daily, hourly in (('DVOL', inputs.dvol, inputs.alignment_dvol),
-                                    ('BTC-PERPETUAL', inputs.alignment_prices, inputs.prices)):
-            aggregate = None
-            bars = [hourly.get(day + hour * HOUR_MS) for hour in range(24)]
-            if all(bar is not None for bar in bars):
-                aggregate = [bars[0][0], max(bar[1] for bar in bars),
-                             min(bar[2] for bar in bars), bars[-1][3]]
-            candle = daily.get(day)
-            passed = bool(candle is not None and aggregate is not None and all(
-                math.isclose(a, b, rel_tol=1e-8, abs_tol=1e-8) for a, b in zip(candle, aggregate)))
-            checks.append({'source': name, 'day_ms': day, 'date': utc_date(day),
-                           'daily_ohlc': candle, 'aggregate_hourly_ohlc': aggregate, 'passed': passed})
-    return {'passed': all(row['passed'] for row in checks) and len(checks) == 6, 'checks': checks,
+    intervals = [('DVOL', day, inputs.dvol, inputs.alignment_dvol) for day in days]
+    price_days = sorted({day + offset * HOUR_MS for day in days for offset in (-16, 8)})
+    intervals += [('BTC-PERPETUAL', day, inputs.alignment_prices, inputs.prices) for day in price_days]
+    for name, day, daily, hourly in intervals:
+        aggregate = None
+        bars = [hourly.get(day + hour * HOUR_MS) for hour in range(24)]
+        if all(bar is not None for bar in bars):
+            aggregate = [bars[0][0], max(bar[1] for bar in bars),
+                         min(bar[2] for bar in bars), bars[-1][3]]
+        candle = daily.get(day)
+        passed = bool(candle is not None and aggregate is not None and all(
+            math.isclose(a, b, rel_tol=1e-8, abs_tol=1e-8) for a, b in zip(candle, aggregate)))
+        checks.append({'source': name, 'day_ms': day, 'date': utc_date(day),
+                       'daily_ohlc': candle, 'aggregate_hourly_ohlc': aggregate, 'passed': passed})
+    return {'passed': all(row['passed'] for row in checks) and len(checks) == len(days) + len(price_days), 'checks': checks,
             'relative_tolerance': 1e-8, 'absolute_tolerance': 1e-8,
-            'interpretation': "I check daily/hourly candle alignment, not original data vintages."}
+            'interpretation': "I check DVOL daily bars from 00:00 UTC and every retained perpetual daily bar from 08:00 UTC against its 24 hourly bars. I don't verify original data vintages."}
+
+
+def read_alignment_audit(manifest_path: Path, inputs: HistoricalInputs, config: dict) -> dict:
+    root = Path(manifest_path).resolve().parent
+    manifest = json.loads(Path(manifest_path).read_text(encoding='utf-8'))
+    if (manifest.get('kind') != 'historical_alignment_audit' or not isinstance(manifest.get('files'), dict)
+            or type(manifest.get('captured_from_ms')) is not int or type(manifest.get('captured_until_ms')) is not int
+            or not 0 <= manifest['captured_from_ms'] <= manifest['captured_until_ms']):
+        raise ValueError('Invalid separate alignment audit manifest')
+    inventory = {p.relative_to(root).as_posix() for p in (root / 'raw').rglob('*') if p.is_file()}
+    if inventory != set(manifest['files']):
+        raise ValueError('Alignment audit inventory differs')
+    day = config['alignment_check_days_ms'][-1]
+    daily, hourly, requests = [], [], []
+    for relative, proof in sorted(manifest['files'].items()):
+        path = (root / relative).resolve()
+        if not path.is_relative_to(root):
+            raise ValueError('Alignment audit path escapes its recording folder')
+        body = path.read_bytes()
+        if proof != {'bytes': len(body), 'sha256': hashlib.sha256(body).hexdigest()}:
+            raise ValueError('Alignment audit hash or size differs')
+        issues = []
+        for row in read_raw(path, on_issue=issues.append):
+            params = row.get('params', {})
+            stamp = row.get('fetched_at_ms')
+            if (row.get('endpoint') != DVOL or row.get('ok') is not True
+                    or set(params) != {'currency', 'resolution', 'start_timestamp', 'end_timestamp'}
+                    or params['currency'] != 'BTC' or params['resolution'] not in ('1D', '3600')
+                    or not params['start_timestamp'] <= day <= params['end_timestamp']
+                    or params['end_timestamp'] - params['start_timestamp'] > 7 * DAY_MS
+                    or type(stamp) is not int or not manifest['captured_from_ms'] <= stamp <= manifest['captured_until_ms']
+                    or not 0 <= row['request_sent_ms'] <= row['response_received_ms'] == stamp):
+                raise ValueError('Invalid separate alignment audit source or timing')
+            result = validate_response(DVOL, row['http_status'], row['body'])
+            matches = [values[1:] for values in result['data'] if values[0] == day]
+            if len(matches) != 1:
+                raise ValueError('Alignment audit lacks its comparison candle')
+            (daily if params['resolution'] == '1D' else hourly).extend(matches)
+            requests.append(params)
+        if issues:
+            raise ValueError('Corrupt alignment audit record')
+    if len(daily) != 2 or len(hourly) != 1:
+        raise ValueError('Alignment audit needs two daily queries and one hourly query')
+    repeated = all(tuple(value) == inputs.dvol[day] for value in daily) and tuple(hourly[0]) == inputs.alignment_dvol[day]
+    return {'manifest': manifest, 'requests': requests, 'day_ms': day,
+            'daily_ohlc': daily, 'first_hour_ohlc': hourly, 'same_values_on_refetch': repeated,
+            'role': "I diagnose a retained source discrepancy after seeing the first results. I don't replace inputs or reopen the failed alignment gate."}
 
 
 def variance_figure(result: dict) -> Figure:
@@ -83,6 +133,10 @@ def variance_figure(result: dict) -> Figure:
     bottom.grid(axis='y', alpha=.15)
     study = result['study']
     figure.suptitle('Real historical Deribit data | ' + utc_date(study['origin_start_ms']) + ' to ' + utc_date(study['origin_end_ms']), fontsize=14)
+    if not result['alignment']['passed']:
+        top.text(.01, .97, 'Descriptive results: daily/hourly OHLC validation failed',
+                 transform=top.transAxes, va='top', fontsize=9, color='#9f2b20',
+                 bbox={'facecolor': 'white', 'alpha': .9, 'edgecolor': 'none'})
     figure.text(.5, -.025, '95% stationary-bootstrap intervals, 60-day expected blocks, 5,000 draws. '
                 'Daily 30-day targets overlap; annual intervals are descriptive.', ha='center', fontsize=8)
     return figure
@@ -106,17 +160,22 @@ def _table(result: dict) -> str:
 
 
 def write_historical_report(manifest_path: Path, study_path: Path, output: Path,
-                            *, provenance: dict | None = None) -> dict:
+                            *, provenance: dict | None = None, audit_manifest_path: Path | None = None) -> dict:
     config = load_study(study_path)
     output = Path(output).resolve()
     if output.is_relative_to(Path(manifest_path).resolve().parent):
         raise ValueError('Historical report output must stay outside the input recording folder')
+    if audit_manifest_path is not None and output.is_relative_to(Path(audit_manifest_path).resolve().parent):
+        raise ValueError('Historical report output must stay outside the audit recording folder')
     inputs = read_study(manifest_path, config)
     result = analyse_variance(inputs.prices, inputs.dvol, config)
     result['alignment'] = alignment_checks(inputs, config['alignment_check_days_ms'])
+    result['primary']['formal_claim_eligible'] = result['primary']['status'] == 'ok' and result['alignment']['passed']
     if not result['alignment']['passed']:
         result['primary']['status'] = 'alignment check failed'
         result['primary']['conclusion'] = 'I withhold the primary claim because the candle alignment check failed.'
+    if audit_manifest_path is not None:
+        result['alignment_audit'] = read_alignment_audit(audit_manifest_path, inputs, config)
     result['study'] = config
     result['study_hash'] = digest(config)
     result['input_manifest'] = inputs.manifest
@@ -162,6 +221,8 @@ table{{border-collapse:collapse;width:100%;font-size:14px}}td,th{{padding:8px;te
 I evaluate {primary['n']} daily origins from {utc_date(config['origin_start_ms'])} through {utc_date(config['origin_end_ms'])}, with {len(result['excluded_origins'])} exclusions.
 I retrieved these historical candles on {utc_date(inputs.manifest['captured_from_ms'])}; I don't claim original data vintages or prospective forecasts.</p>
 <p><strong>{escape(primary['status'])}: {escape(primary['conclusion'])}.</strong></p>{svg}
+<p>I retain all OHLC mismatches in report.json. A failed alignment check keeps every interval descriptive, even when ESS passes.
+Any separate refetch audit diagnoses the discrepancy; it doesn't replace the original inputs or reopen that gate.</p>
 <h2>Paired forecast loss</h2><p>I use QLIKE = actual / forecast − log(actual / forecast) − 1 on annualised variances. Lower is better.
 My primary interval uses 5,000 paired stationary-bootstrap draws with 60-day expected blocks and seed 314159.
 I check ESS against 60, HAC at 59 daily lags, 30/90-day blocks and non-overlapping 30-day targets. Annual intervals stay descriptive.</p>{_table(result)}{secondary}

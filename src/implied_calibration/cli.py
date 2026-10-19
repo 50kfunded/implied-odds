@@ -73,6 +73,7 @@ def main() -> int:
     historical_report.add_argument('--manifest', type=Path, required=True)
     historical_report.add_argument('--study', type=Path, default=Path('protocol/historical-variance.json'))
     historical_report.add_argument('--output', type=Path, required=True)
+    historical_report.add_argument('--audit-manifest', type=Path)
     importer = commands.add_parser("ingest", help="Ingest an unchanged local recording into SQLite")
     importer.add_argument("--input", type=Path, required=True)
     importer.add_argument("--db", type=Path, required=True)
@@ -138,7 +139,8 @@ def main() -> int:
     try:
         if args.command == 'historical-report':
             from .historical_report import write_historical_report
-            emit(write_historical_report(args.manifest, args.study, args.output, provenance=provenance()), None)
+            emit(write_historical_report(args.manifest, args.study, args.output, provenance=provenance(),
+                                         audit_manifest_path=args.audit_manifest), None)
             return 0
         if args.command == 'historical-fetch':
             from .historical_data import capture_study

@@ -208,7 +208,11 @@ def read_study(manifest_path: Path, config: dict) -> HistoricalInputs:
             candles = result['data'] if is_dvol else list(zip(result.get('ticks', []), result.get('open', []),
                 result.get('high', []), result.get('low', []), result.get('close', [])))
             for opened, *values in candles:
-                if (opened % duration or not params['start_timestamp'] <= opened <= params['end_timestamp']
+                alignment_daily_price = folder == 'alignment' and not is_dvol
+                clock_offset = 8 * HOUR_MS if alignment_daily_price else 0
+                in_request = (opened <= params['end_timestamp'] and opened + duration > params['start_timestamp']
+                              if alignment_daily_price else params['start_timestamp'] <= opened <= params['end_timestamp'])
+                if ((opened - clock_offset) % duration or not in_request
                         or opened + duration > stamp):
                     raise ValueError('Historical candle timing or completed-bar rule differs')
                 values = tuple(float(v) for v in values)
