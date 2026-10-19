@@ -69,6 +69,10 @@ def main() -> int:
     historical = commands.add_parser('historical-fetch', help='I retain a separate retrospective DVOL variance dataset')
     historical.add_argument('--output', type=Path, required=True)
     historical.add_argument('--study', type=Path, default=Path('protocol/historical-variance.json'))
+    historical_report = commands.add_parser('historical-report', help='I reproduce the historical variance study offline')
+    historical_report.add_argument('--manifest', type=Path, required=True)
+    historical_report.add_argument('--study', type=Path, default=Path('protocol/historical-variance.json'))
+    historical_report.add_argument('--output', type=Path, required=True)
     importer = commands.add_parser("ingest", help="Ingest an unchanged local recording into SQLite")
     importer.add_argument("--input", type=Path, required=True)
     importer.add_argument("--db", type=Path, required=True)
@@ -132,6 +136,10 @@ def main() -> int:
     args = parser.parse_args()
     logging.basicConfig(level=getattr(logging, args.log_level), format="%(levelname)s %(name)s %(message)s")
     try:
+        if args.command == 'historical-report':
+            from .historical_report import write_historical_report
+            emit(write_historical_report(args.manifest, args.study, args.output, provenance=provenance()), None)
+            return 0
         if args.command == 'historical-fetch':
             from .historical_data import capture_study
             emit(capture_study(args.output, args.study), None)

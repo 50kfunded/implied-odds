@@ -91,6 +91,11 @@ def reproduce(output: Path, *, manifest_path: Path | None = None, include_synthe
         synthetic = synthetic_report(parent,extension,details['git_commit'])
         synthetic['provenance']['working_tree_dirty'] = details['working_tree_dirty']
         reports['synthetic'] = write_report(synthetic,output/'synthetic')
+    historical_sample = root/'recordings'/'historical-variance'/'manifest.json'
+    if default_sample and historical_sample.exists():
+        from .historical_report import write_historical_report
+        reports['historical'] = write_historical_report(historical_sample, root/'protocol'/'historical-variance.json',
+                                                       output/'historical', provenance=details)
     files = {f'{folder}/{name}':hashlib.sha256((output/folder/name).read_bytes()).hexdigest()
              for folder,report in reports.items() for name in report['report_files']}
     result = {'status':'reproduced','sample_kind':manifest['kind'],'as_of_ms':manifest['as_of_ms'],
@@ -101,14 +106,16 @@ def reproduce(output: Path, *, manifest_path: Path | None = None, include_synthe
     (output/'reproduction.json').write_text(json.dumps(result,indent=2,sort_keys=True,allow_nan=False)+'\n',encoding='utf-8',newline='\n')
     synthetic_link = '<p><a href="synthetic/report.html">Synthetic method illustration</a></p>' if include_synthetic else ''
     snapshot_link = ''
+    historical_link = '<p><a href="historical/report.html">Historical DVOL variance research</a></p>' if 'historical' in reports else ''
     if 'snapshot' in reports:
         figure_link = '<a href="snapshot/market-smile.svg">Real market smile, exploratory</a> · ' if 'market-smile.svg' in reports['snapshot']['report_files'] else ''
         snapshot_link = '<p>' + figure_link + '<a href="snapshot/snapshot.json">Fit diagnostics</a></p>'
     html = f'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Implied odds reports</title>
 <style>body{{font:18px/1.6 system-ui,sans-serif;max-width:760px;margin:70px auto;padding:24px;color:#183042}}a{{color:#185c80}}</style></head><body>
 <h1>Implied odds</h1><p>I rebuild these reports offline from retained or generated inputs.</p>
-<p><a href="market/report.html">Frozen-score market report</a></p>{snapshot_link}{synthetic_link}
-<p>I haven't collected settled research forecasts or measured calibration. The synthetic illustration exercises the reporting code.</p>
+<p><a href="market/report.html">Frozen-score market report</a></p>{historical_link}{snapshot_link}{synthetic_link}
+<p>I study historical variance forecasting separately from prospective option probabilities, which still have no settled scores.
+The synthetic illustration exercises the reporting code.</p>
 <p>I keep source and output hashes in reproduction.json.</p></body></html>'''
     (output/'index.html').write_text(html,encoding='utf-8',newline='\n')
     return result
