@@ -1,0 +1,46 @@
+{
+  "alignment_check_days_ms": [
+    1617580800000,
+    1672876800000,
+    1788566400000
+  ],
+  "alignment_sensitivities": [
+    "dvol_lag_one_day",
+    "future_realised_window_plus_one_hour"
+  ],
+  "annual_hours": 8760,
+  "bootstrap_resamples": 5000,
+  "bootstrap_seed": 314159,
+  "claim_scope": "I study aggregate 30-day variance using perpetual returns as a spot-index proxy. I don't test full SVI probabilities, settled option-CDF calibration or trading profit.",
+  "dvol_currency": "BTC",
+  "dvol_end_ms": 1789689600000,
+  "dvol_resolution": "1D",
+  "dvol_start_ms": 1617235200000,
+  "expected_block_days": 60,
+  "hac_lags_days": 59,
+  "horizon_hours": 720,
+  "kind": "retrospective_dvol_variance",
+  "minimum_effective_sample_size": 60,
+  "nonoverlap_anchor_ms": 1619827200000,
+  "nonoverlap_spacing_days": 30,
+  "origin_end_ms": 1789689600000,
+  "origin_spacing_ms": 86400000,
+  "origin_start_ms": 1619827200000,
+  "price_end_ms": 1792285200000,
+  "price_instrument": "BTC-PERPETUAL",
+  "price_resolution": "60",
+  "price_start_ms": 1617231600000,
+  "primary_metric": "mean_qlike_dvol_minus_trailing_realised",
+  "qlike": "actual/forecast-log(actual/forecast)-1",
+  "question": "I test whether Deribit's 30-day option-implied variance forecasts subsequent realised variance better than trailing realised variance.",
+  "recalibration_completed_origins": 365,
+  "recalibration_role": "descriptive_secondary_same_origin_comparison",
+  "recalibration_rule": "mean_completed_realised_to_implied_variance_ratio",
+  "recalibration_start_ms": 1672531200000,
+  "schema_version": 1,
+  "sensitivity_block_days": [
+    30,
+    90
+  ],
+  "vintage": "I retrieve historical candles now. I assume their timestamped values represent the historical series; I don't claim unrevised data vintages or prospective forecasts."
+}
