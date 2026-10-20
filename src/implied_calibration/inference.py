@@ -95,6 +95,8 @@ def stationary_bootstrap(values, *, resamples: int = 2000, block_length: int = 1
 
 def berkowitz_hac(pits, *, lags: int = 13, minimum_ess: float = 60, epsilon: float = 1e-6) -> dict:
     u = finite_series(pits)
+    if (not math.isfinite(minimum_ess) or minimum_ess <= 0 or type(lags) is not int or lags < 0):
+        raise ValueError('I need a positive finite ESS threshold and nonnegative integer lags')
     if np.any((u < 0) | (u > 1)) or not 0 < epsilon < .01:
         raise ValueError('PITs must lie in 0..1; transform clipping must be declared')
     z = ndtri(np.clip(u, epsilon, 1 - epsilon))
@@ -120,10 +122,17 @@ def berkowitz_hac(pits, *, lags: int = 13, minimum_ess: float = 60, epsilon: flo
 def paired_inference(expiry_ms, svi_scores, baseline_scores, lead_ms: int, *, minimum_ess: float = 60,
                      block_length: int = 14, resamples: int = 2000, seed: int = 1729,
                      primary: bool = False) -> dict:
+    if (not math.isfinite(minimum_ess) or minimum_ess <= 0
+            or type(block_length) is not int or block_length < 1
+            or type(resamples) is not int or resamples < 2000 or type(seed) is not int or seed < 0):
+        raise ValueError('I need valid finite inference settings before applying the ESS gate')
     svi, baseline = finite_series(svi_scores), finite_series(baseline_scores)
     if svi.shape != baseline.shape or len(expiry_ms) != len(svi):
         raise ValueError('Paired scores and expiry timestamps must have the same length')
-    overlap = overlap_count(np.asarray(expiry_ms, dtype=np.int64), lead_ms)
+    timestamps = np.asarray(expiry_ms)
+    if timestamps.size == 0:
+        timestamps = np.asarray([], dtype=np.int64)
+    overlap = overlap_count(timestamps, lead_ms)
     block = max(block_length, overlap)
     lags = max(block_length - 1, overlap - 1)
     differences = svi - baseline
