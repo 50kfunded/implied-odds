@@ -1,7 +1,7 @@
 {
   "anchor_limit": "I keep this anchor locally; I have no independent timestamp or external witness.",
   "anchor_scope": "I anchor all retained frozen forecasts and scores in my local ledger.",
-  "as_of_ms": 1792528633058,
+  "as_of_ms": 1792530094747,
   "baselines": {
     "accepted": 0,
     "frozen": 0,
@@ -10,12 +10,15 @@
     "status_counts": {}
   },
   "collection": {
-    "attempts": 36,
-    "cycles": 2,
+    "attempts": 34,
+    "completed_cycles": 1,
+    "cycles": 1,
     "failed_attempts": 0,
     "failed_cycles": 0,
-    "skipped_slots": 0,
-    "status": "completed"
+    "settlement_capture_attempts": 1,
+    "settlement_capture_failures": 0,
+    "skipped_slots": 1,
+    "status": "stopped"
   },
   "extension_hash": "3b7baccbdcbf7e685faf5cb49a85b6724612ee168350f3975503a756c5c4eeba",
   "forecasts": {
@@ -34,10 +37,10 @@
   "frozen_ledger": [],
   "last_cycle_failures": [],
   "liveness": {
-    "age_ms": 171015093,
-    "checked_at_ms": 1792528633058,
+    "age_ms": 102185,
+    "checked_at_ms": 1792530094747,
     "interpretation": "I check heartbeat age; I do not infer process health from a PID.",
-    "last_update_ms": 1792357617965,
+    "last_update_ms": 1792529992562,
     "stale_after_ms": 600000,
     "status": "inactive"
   },
