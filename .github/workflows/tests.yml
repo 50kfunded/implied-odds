@@ -30,6 +30,52 @@ jobs:
         run: python -m pip install -e .
       - name: offline tests
         run: python -m unittest discover -s tests -v
+  research:
+    name: research / exact Python 3.12 environment
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version-file: '.python-version'
+          cache: pip
+          cache-dependency-path: requirements-research.txt
+      - name: install exact research environment
+        run: python -m pip install -r requirements-research.txt -e '.[research,dev]'
+      - name: check installed dependencies
+        run: python -m pip check
+      - name: lint source scripts and tests
+        run: python -m ruff check src scripts tests
+      - name: check research module types
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          import sys
+          folder = Path('src/implied_calibration')
+          selected = [str(folder / name) for name in (
+              'incremental.py', 'research_plan.py', 'inference_study.py')]
+          forward = folder / 'variance_forward.py'
+          if forward.is_file():
+              selected.append(str(forward))
+          subprocess.run([sys.executable, '-m', 'mypy', *selected], check=True)
+          PY
+      - name: test exact research environment
+        run: python -m unittest discover -s tests -v
       - name: rebuild included reports
-        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.12'
         run: python scripts/reproduce.py --output results/ci
+      - name: rebuild research paper and static report
+        run: python scripts/build_research.py --output results/research
+      - name: retain static research artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: research-python-3.12
+          path: |
+            results/ci/
+            results/research/
+          if-no-files-found: error
+          retention-days: 30

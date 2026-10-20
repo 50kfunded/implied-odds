@@ -16,7 +16,7 @@ from implied_calibration.cli import main
 from implied_calibration.ingest import ingest
 from implied_calibration.instruments import parse_name
 from implied_calibration.protocol import load_protocol, validate_protocol
-from test_phase2 import BASE, DatabaseFixture, metadata, quote
+from test_phase2 import BASE, DatabaseFixture, quote
 
 
 def draft():

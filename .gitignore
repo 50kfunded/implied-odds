@@ -12,3 +12,5 @@ results/
 *.db
 *.db-wal
 *.db-shm
+.ruff_cache/
+.mypy_cache/

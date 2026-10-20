@@ -1,6 +1,5 @@
 """I check ingestion and coverage offline with synthetic records and temporary databases."""
 
-from copy import deepcopy
 from contextlib import closing
 from datetime import datetime, timezone
 import gzip

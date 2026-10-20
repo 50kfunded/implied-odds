@@ -1,0 +1,35 @@
+# I pin my Python 3.12.10 research rebuild to my retained environment.
+# I keep Python 3.11 compatibility checks on my declared dependency ranges.
+arch==8.0.0
+certifi==2026.7.22
+charset-normalizer==3.5.2
+contourpy==1.4.0
+cycler==0.12.1
+fonttools==4.67.0
+formulaic==1.2.2
+idna==3.20
+interface_meta==2.0.1
+kiwisolver==1.5.1
+matplotlib==3.11.2
+mypy==1.18.2
+mypy_extensions==1.1.0
+narwhals==2.27.1
+numpy==2.5.4
+packaging==26.3
+pandas==3.0.6
+pathspec==1.1.1
+patsy==1.0.3
+pillow==13.0.0
+pyparsing==3.3.3
+pypdf==6.1.1
+python-dateutil==2.9.0.post0
+reportlab==4.4.4
+requests==2.34.2
+ruff==0.14.1
+scipy==1.18.1
+six==1.17.0
+statsmodels==0.15.0
+typing_extensions==4.16.0
+tzdata==2026.5
+urllib3==2.8.0
+wrapt==2.5.1

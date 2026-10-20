@@ -6,7 +6,7 @@ import json
 import logging
 from pathlib import Path
 import time
-from typing import Any, Callable
+from typing import Callable
 
 from .client import PublicClient, utc_ms, validate_response
 from .collection import FileLease, write_status
