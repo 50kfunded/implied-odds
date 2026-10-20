@@ -1,0 +1,20 @@
+{
+  "anchor_scope": "I retain local hashes; an independent public timestamp is still needed.",
+  "as_of_ms": 1792528633058,
+  "conclusion": "I wait for the fixed terminal date.",
+  "formal_claim_eligible": false,
+  "frozen_hashes": [],
+  "individual_scores": [],
+  "inference_guard_hash": "43157994cb6d03c22e66cecefe5030c47592b6424afbc2687071332326d10823",
+  "kind": "prospective_variance_scoreboard",
+  "missing_origins": [],
+  "n_due": 0,
+  "n_frozen": 0,
+  "n_missing": 0,
+  "n_planned": 365,
+  "n_retained_forecast_attempts": 0,
+  "n_scored": 0,
+  "plan_hash": "8b3813897ebb2b0e8b42569063682b78b149f3cc2c89a4b831e6abfc377fd997",
+  "rejected_forecasts": [],
+  "terminal": false
+}

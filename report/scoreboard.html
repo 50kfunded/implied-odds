@@ -1,0 +1,13 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta http-equiv="refresh" content="30"><title>I track local forecasts</title>
+<style>body{font:16px system-ui;max-width:900px;margin:40px auto;padding:20px;background:#f4f7fa;color:#172c40}
+table{border-collapse:collapse}td,th{padding:8px 20px;border-bottom:1px solid #ccd6df}code{overflow-wrap:anywhere}</style>
+<h1>I track local forecasts</h1><p>I froze 0 forecasts, accepted 0, and scored 0.</p>
+<p>I published this snapshot at 2026-10-20T20:37:13.058000+00:00. I keep the separate HAR counts in <a href="variance-scoreboard.json">variance-scoreboard.json</a>.</p>
+<p>I read collector freshness as <strong id="freshness">inactive</strong>.</p>
+<p>I refresh this age check every second while this page stays open.</p>
+<table><tr><th>Forecast rejection reason</th><th>Count</th></tr></table>
+<p>I retained 0 frozen hash entries.</p><p>Head hash: <code>0000000000000000000000000000000000000000000000000000000000000000</code></p>
+<p>I keep this anchor locally; I have no independent timestamp or external witness.</p><p>I keep my baseline counts, cycle failures and complete ledger in scoreboard.json.</p>
+<script>const stamp=1792357617965;const threshold=600000;
+const active=false;
+setInterval(()=>{document.getElementById('freshness').textContent=!active?'inactive':stamp===null?'unknown':Date.now()-stamp>threshold?'stale':Date.now()-stamp < -1000?'clock_moved_backward':'fresh';},1000);</script></html>
