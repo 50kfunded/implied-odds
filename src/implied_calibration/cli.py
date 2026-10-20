@@ -207,9 +207,13 @@ def main() -> int:
                 result = freeze_predictions(args.db, locked, cutoff, now, details['git_commit'],
                                             now_ms=utc_ms, baseline_extension=extension)
             else:
-                result = score_database(args.db, locked, cutoff, now, details['git_commit'])
-                result['baselines'] = score_baselines(args.db, extension, locked, cutoff, now, details['git_commit'],
-                    parent_preview=result['scores'] if cutoff < now else None)
+                live = cutoff == now
+                result = score_database(args.db, locked, cutoff, now, details['git_commit'],
+                                        now_ms=utc_ms if live else None)
+                baseline_now = utc_ms() if live else now
+                result['baselines'] = score_baselines(args.db, extension, locked, baseline_now if live else cutoff,
+                    baseline_now, details['git_commit'], parent_preview=None if live else result['scores'],
+                    now_ms=utc_ms if live else None)
         elif args.command == 'history':
             if args.fetch:
                 if args.raw_output is None or args.as_of_ms is not None or args.start_ms is None or args.end_ms is None:

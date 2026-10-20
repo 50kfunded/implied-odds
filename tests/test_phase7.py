@@ -4,7 +4,6 @@ from copy import deepcopy
 from dataclasses import asdict
 import json
 import os
-from pathlib import Path
 import sqlite3
 import subprocess
 from unittest.mock import patch
@@ -113,6 +112,26 @@ class FrozenBaselineTests(DatabaseFixture):
         self.assertEqual(before,after)
         scored=score_baselines(self.store.path,extension_fixture(),locked_fixture(),cutoff,cutoff,COMMIT)
         self.assertEqual(scored['added'],0)
+
+    def test_terminal_inference_pins_score_availability_and_early_output_is_descriptive(self):
+        from implied_calibration.report import build_report
+        self.seed_chain()
+        self.freeze_all()
+        choices = {**locked_fixture().protocol.content['evaluation'], 'formal_decision_allowed': True,
+                   'expiry_cutoff_ms': EXPIRY, 'final_analysis_at_ms': EXPIRY+10,
+                   'stopping_amendment_hash': 'a'*64}
+        with patch('implied_calibration.research_plan.stopping_choices',return_value=choices):
+            before = infer_database(self.store.path,extension_fixture(),locked_fixture(),EXPIRY+300)
+            self.settle_score()
+            after = infer_database(self.store.path,extension_fixture(),locked_fixture(),EXPIRY+10000)
+            self.assertEqual(before,after)
+            self.assertEqual(after['as_of_ms'],EXPIRY+10)
+            report = build_report(self.store.path,locked_fixture(),extension_fixture(),EXPIRY+10000,COMMIT)
+            self.assertEqual(report['as_of_ms'],EXPIRY+10)
+            self.assertEqual(report['n_svi_scores'],0)
+        early = infer_database(self.store.path,extension_fixture(),locked_fixture(),EXPIRY+300)
+        self.assertEqual(early['primary_comparison']['decision_schedule'],'interim_descriptive')
+        self.assertIsNone(early['primary_comparison']['bootstrap'])
 
     def test_historical_scores_are_repeatable_previews_without_persisted_rows(self):
         self.seed_chain()

@@ -3,16 +3,20 @@
 from collections import Counter, defaultdict
 from dataclasses import asdict, dataclass, replace
 import json
+import hashlib
 import math
 from pathlib import Path
 import sqlite3
+import sys
 from typing import Any
 
 import numpy as np
+import scipy
 
 from .blackscholes import IVResult, implied_vol
 from .instruments import finite_number
 from .protocol import Protocol, validate_protocol
+from .store import canonical, digest
 
 
 @dataclass(frozen=True)
@@ -237,8 +241,53 @@ def clean_expiry(rows: list[dict[str, Any]], protocol: Protocol) -> dict[str, An
             'iv_diagnostic': diagnostic, 'quotes': [asdict(row) for row in cleaned]}
 
 
+def _cache_implementation() -> str:
+    """I invalidate saved inversions after code or numeric runtime changes."""
+    folder = Path(__file__).parent
+    return digest({'format': 1, 'python': sys.version, 'numpy': np.__version__, 'scipy': scipy.__version__,
+                   'sources': {name: hashlib.sha256((folder / name).read_bytes()).hexdigest()
+                               for name in ('cleaning.py', 'blackscholes.py', 'protocol.py', 'instruments.py')}})
+
+
+def _clean_groups(groups, protocol: Protocol, cache_path: Path | None) -> list[dict[str, Any]]:
+    if cache_path is None:
+        return [clean_expiry(group, protocol) for group in groups]
+    cache_path = Path(cache_path)
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    cache = sqlite3.connect(cache_path)
+    try:
+        cache.execute('CREATE TABLE IF NOT EXISTS clean_groups '
+                      '(cache_key TEXT PRIMARY KEY, payload_json TEXT NOT NULL, payload_hash TEXT NOT NULL)')
+        implementation = _cache_implementation()
+        output = []
+        with cache:
+            for group in groups:
+                key = digest([implementation, protocol.content_hash, group])
+                saved = cache.execute('SELECT payload_json,payload_hash FROM clean_groups WHERE cache_key=?',
+                                      (key,)).fetchone()
+                result = None
+                if saved is not None:
+                    try:
+                        candidate = json.loads(saved[0])
+                        if digest(candidate) == saved[1]:
+                            for quote in candidate['quotes']:
+                                quote['reasons'] = tuple(quote['reasons'])
+                                quote['flags'] = tuple(quote['flags'])
+                            result = candidate
+                    except (ValueError, TypeError, KeyError):
+                        pass
+                if result is None:
+                    result = clean_expiry(group, protocol)
+                    cache.execute('INSERT OR REPLACE INTO clean_groups VALUES (?,?,?)',
+                                  (key, canonical(result), digest(result)))
+                output.append(result)
+        return output
+    finally:
+        cache.close()
+
+
 def clean_database(path: Path, protocol: Protocol, as_of_ms: int | None = None,
-                   *, snapshot_id: str | None = None) -> dict[str, Any]:
+                   *, snapshot_id: str | None = None, cache_path: Path | None = None) -> dict[str, Any]:
     if validate_protocol(protocol.content).content_hash != protocol.content_hash:
         raise ValueError('Protocol content changed after hashing')
     if as_of_ms is not None and (type(as_of_ms) is not int or not 0 <= as_of_ms <= 9223372036854775807):
@@ -268,7 +317,9 @@ def clean_database(path: Path, protocol: Protocol, as_of_ms: int | None = None,
         groups = defaultdict(list)
         for row in rows:
             groups[(row['snapshot_id'], row['expiry_ms'])].append(dict(row))
-        output = [clean_expiry(group, protocol) for group in groups.values()]
+        if cache_path is not None and Path(cache_path).resolve() == Path(path).resolve():
+            raise ValueError('I keep my cleaning cache outside my research database')
+        output = _clean_groups(groups.values(), protocol, cache_path)
     finally:
         connection.close()
     quotes = [row for group in output for row in group['quotes']]

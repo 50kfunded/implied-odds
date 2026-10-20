@@ -7,7 +7,7 @@ import hashlib
 import json
 from pathlib import Path
 import sqlite3
-from typing import Any
+from typing import Any, Callable
 
 from .instruments import Instrument
 
@@ -139,6 +139,15 @@ CREATE TABLE IF NOT EXISTS baseline_predictions (
 CREATE TABLE IF NOT EXISTS baseline_scores (
     baseline_id TEXT PRIMARY KEY REFERENCES baseline_predictions(baseline_id), payload_json TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS score_availability (
+    source_table TEXT NOT NULL, record_id TEXT NOT NULL, payload_json TEXT NOT NULL,
+    PRIMARY KEY(source_table, record_id)
+);
+CREATE TABLE IF NOT EXISTS frozen_hash_ledger (
+    sequence INTEGER PRIMARY KEY, source_table TEXT NOT NULL, record_id TEXT NOT NULL,
+    payload_hash TEXT NOT NULL, created_at_ms INTEGER NOT NULL, previous_hash TEXT NOT NULL,
+    entry_hash TEXT NOT NULL UNIQUE, UNIQUE(source_table, record_id)
+);
 """
 
 
@@ -158,11 +167,13 @@ class Store:
                     "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").fetchone():
                 raise ValueError("I won't initialise an unrelated nonempty database; use a new --db path")
             self.connection.execute("PRAGMA journal_mode=WAL")
+            self.connection.execute("PRAGMA synchronous=FULL")
             self.connection.execute("PRAGMA foreign_keys=ON")
             self.connection.executescript(SCHEMA)
             for table in ('predictions', 'scores', 'score_records', 'delivery_prices', 'delivery_sources',
                           'delivery_observations', 'evaluation_protocols', 'history_sources', 'hourly_observations',
-                          'baseline_protocols', 'baseline_predictions', 'baseline_scores'):
+                          'baseline_protocols', 'baseline_predictions', 'baseline_scores', 'frozen_hash_ledger',
+                          'score_availability'):
                 for action in ('UPDATE', 'DELETE'):
                     self.connection.execute(f"CREATE TRIGGER IF NOT EXISTS immutable_{table}_{action} "
                                             f"BEFORE {action} ON {table} BEGIN "
@@ -173,11 +184,19 @@ class Store:
                         'evaluation_protocols': ('protocol_hash',), 'history_sources': ('source_id',),
                         'hourly_observations': ('open_ms', 'fetched_at_ms', 'source_id'),
                         'baseline_protocols': ('extension_hash',), 'baseline_predictions': ('baseline_id',),
-                        'baseline_scores': ('baseline_id',)}[table]
+                        'baseline_scores': ('baseline_id',), 'frozen_hash_ledger': ('sequence',),
+                        'score_availability': ('source_table', 'record_id')}[table]
                 match = ' AND '.join(f'{key}=NEW.{key}' for key in keys)
                 self.connection.execute(f'CREATE TRIGGER IF NOT EXISTS immutable_{table}_INSERT '
                                         f'BEFORE INSERT ON {table} WHEN EXISTS (SELECT 1 FROM {table} WHERE {match}) '
                                         "BEGIN SELECT RAISE(ABORT, 'I never replace evaluation rows'); END")
+            self.connection.execute("CREATE TRIGGER IF NOT EXISTS frozen_hash_ledger_append "
+                "BEFORE INSERT ON frozen_hash_ledger WHEN "
+                "NEW.sequence != (SELECT COALESCE(MAX(sequence),0)+1 FROM frozen_hash_ledger) OR "
+                "NEW.previous_hash != COALESCE((SELECT entry_hash FROM frozen_hash_ledger ORDER BY sequence DESC LIMIT 1), '" + '0' * 64 + "') OR "
+                "EXISTS (SELECT 1 FROM frozen_hash_ledger WHERE source_table=NEW.source_table AND record_id=NEW.record_id) OR "
+                "EXISTS (SELECT 1 FROM frozen_hash_ledger WHERE entry_hash=NEW.entry_hash) "
+                "BEGIN SELECT RAISE(ABORT, 'I only append the next frozen hash entry'); END")
             self.connection.execute("PRAGMA user_version=3")
             existing = self.connection.execute(
                 "SELECT value FROM settings WHERE name='max_days_to_expiry'").fetchone()
@@ -286,3 +305,46 @@ def evaluation_store(path: Path) -> Store:
         finally:
             connection.close()
     return Store(path, horizon)
+
+
+SCORE_KEYS = {'score_records': 'prediction_id', 'baseline_scores': 'baseline_id'}
+
+
+def score_available(connection: sqlite3.Connection, table: str, record: dict, as_of_ms: int) -> bool:
+    """I require a hash-linked receipt observed after the score transaction committed."""
+    key = SCORE_KEYS[table]
+    if connection.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='score_availability'").fetchone() is None:
+        return False
+    row = connection.execute('SELECT payload_json FROM score_availability WHERE source_table=? AND record_id=?',
+                             (table, record[key])).fetchone()
+    if row is None:
+        return False
+    receipt = json.loads(row[0])
+    body = {name: value for name, value in receipt.items() if name != 'content_hash'}
+    available = receipt.get('available_at_ms')
+    if (receipt.get('content_hash') != digest(body) or receipt.get('source_table') != table
+            or receipt.get('record_id') != record[key] or receipt.get('payload_hash') != record['content_hash']
+            or receipt.get('completed_at_ms') != record['created_at_ms'] or type(available) is not int
+            or available < record['created_at_ms']):
+        raise ValueError('I found a changed or invalid score availability receipt')
+    return available <= as_of_ms
+
+
+def retain_score_availability(connection: sqlite3.Connection, table: str, records: list[dict],
+                              now_ms: Callable[[], int]) -> None:
+    """I timestamp durable scores after commit; a restart never backdates a missing receipt."""
+    if connection.in_transaction:
+        raise ValueError('I only receipt a score after its transaction commits')
+    key = SCORE_KEYS[table]
+    with connection:
+        for record in records:
+            if score_available(connection, table, record, 9223372036854775807):
+                continue
+            available = now_ms()
+            if type(available) is not int or not record['created_at_ms'] <= available <= 9223372036854775807:
+                raise ValueError('Clock moved backward after the score transaction committed')
+            receipt = {'source_table': table, 'record_id': record[key], 'payload_hash': record['content_hash'],
+                       'completed_at_ms': record['created_at_ms'], 'available_at_ms': available}
+            receipt['content_hash'] = digest(receipt)
+            connection.execute('INSERT INTO score_availability VALUES (?,?,?)',
+                               (table, record[key], canonical(receipt)))

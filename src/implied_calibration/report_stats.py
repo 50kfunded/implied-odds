@@ -66,7 +66,7 @@ def cumulative_comparison(rows: list[ReportObservation], choices: dict, *, max_p
     lead, baseline = choices['primary_lead_ms'], choices['primary_baseline']
     paired: dict[str, dict[str, ReportObservation]] = defaultdict(dict)
     for row in rows:
-        if row.lead_ms == lead and row.model in ('svi', baseline):
+        if row.lead_ms == lead and row.model in ('svi', baseline) and row.expiry_ms <= choices.get('expiry_cutoff_ms', 9223372036854775807):
             if row.model in paired[row.prediction_id]:
                 raise ValueError('Duplicate model score in a report pair')
             paired[row.prediction_id][row.model] = row
@@ -77,8 +77,14 @@ def cumulative_comparison(rows: list[ReportObservation], choices: dict, *, max_p
     svi = [p['svi'].metrics['crps_usd'] for p in complete]
     other = [p[baseline].metrics['crps_usd'] for p in complete]
     arguments = {'minimum_ess':choices['minimum_effective_sample_size'], 'block_length':choices['expected_block_length'],
-                 'resamples':choices['bootstrap_resamples'], 'seed':choices['bootstrap_seed'], 'primary':True}
+                  'resamples':choices['bootstrap_resamples'], 'seed':choices['bootstrap_seed'],
+                  'primary':choices.get('formal_decision_allowed', False)}
     final = paired_inference(times, svi, other, lead, **arguments)
+    final['decision_schedule'] = 'terminal' if arguments['primary'] else 'interim_descriptive'
+    final['final_analysis_at_ms'] = choices.get('final_analysis_at_ms')
+    final['stopping_amendment_hash'] = choices.get('stopping_amendment_hash')
+    if not arguments['primary'] and final['status'] == 'ok':
+        final['conclusion'] = 'descriptive only; I wait for the fixed terminal analysis'
     points = []
     prefixes = np.unique(np.linspace(1, len(times), min(len(times), max_points), dtype=int)) if times else []
     for n in prefixes:
@@ -93,6 +99,7 @@ def cumulative_comparison(rows: list[ReportObservation], choices: dict, *, max_p
 
 
 def report_statistics(rows: list[ReportObservation], choices: dict, epsilon: float) -> dict:
+    rows = [row for row in rows if row.expiry_ms <= choices.get('expiry_cutoff_ms',9223372036854775807)]
     seen = set()
     for row in rows:
         identity = (row.prediction_id, row.model)

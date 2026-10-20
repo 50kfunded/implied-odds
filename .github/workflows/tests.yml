@@ -58,7 +58,8 @@ jobs:
           import sys
           folder = Path('src/implied_calibration')
           selected = [str(folder / name) for name in (
-              'incremental.py', 'research_plan.py', 'inference_study.py')]
+              'incremental.py', 'research_plan.py', 'inference_study.py',
+              'store.py', 'evaluation.py')]
           forward = folder / 'variance_forward.py'
           if forward.is_file():
               selected.append(str(forward))

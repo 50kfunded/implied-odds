@@ -20,7 +20,7 @@ from .locking import LockedProtocol
 from .predictions import checked_prediction
 from .report_stats import ReportObservation, report_statistics, tail_events
 from .scoring import FrozenCDF
-from .store import digest
+from .store import digest, score_available
 
 
 def report_versions() -> dict:
@@ -37,12 +37,14 @@ def _records(connection: sqlite3.Connection, table: str, as_of_ms: int) -> list[
     rows = connection.execute(f"SELECT payload_json FROM {table} WHERE json_extract(payload_json,'$.created_at_ms')<=?",
                                (as_of_ms,)).fetchall()
     output = [checked_prediction(row[0]) for row in rows]
+    if table in ('score_records', 'baseline_scores'):
+        output = [record for record in output if score_available(connection, table, record, as_of_ms)]
     assert all(r['created_at_ms'] <= as_of_ms for r in output)
     return output
 
 
 def build_report(db: Path, parent: LockedProtocol, extension: LockedBaselines, as_of_ms: int | None,
-                 git_commit: str) -> dict:
+                 git_commit: str, *, clean_cache_path: Path | None = None) -> dict:
     extension.validate(parent)
     connection = sqlite3.connect(Path(db).resolve().as_uri()+'?mode=ro',uri=True)
     connection.row_factory = sqlite3.Row
@@ -55,23 +57,31 @@ def build_report(db: Path, parent: LockedProtocol, extension: LockedBaselines, a
             for table in ('predictions','baseline_predictions','score_records','baseline_scores'):
                 if connection.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",(table,)).fetchone():
                     times.append(connection.execute(f"SELECT COALESCE(MAX(json_extract(payload_json,'$.created_at_ms')),0) FROM {table}").fetchone()[0])
+            if connection.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='score_availability'").fetchone():
+                times.append(connection.execute("SELECT COALESCE(MAX(json_extract(payload_json,'$.available_at_ms')),0) FROM score_availability").fetchone()[0])
             as_of_ms = max(times)
         if type(as_of_ms) is not int or not 0 <= as_of_ms <= 9223372036854775807:
             raise ValueError('I need a nonnegative integer report cutoff')
+        from .research_plan import stopping_choices
+        decision_choices = stopping_choices(parent.protocol.content['evaluation'], parent.protocol.content_hash,
+                                             extension.content_hash, as_of_ms)
+        if decision_choices['formal_decision_allowed']:
+            as_of_ms = min(as_of_ms, decision_choices['final_analysis_at_ms'])
         predictions = {r['prediction_id']:r for r in _records(connection,'predictions',as_of_ms)
                        if r['protocol_hash'] == parent.protocol.content_hash}
         baselines = {r['baseline_id']:r for r in _records(connection,'baseline_predictions',as_of_ms)
                      if r['extension_hash'] == extension.content_hash}
         svi_scores = {r['prediction_id']:r for r in _records(connection,'score_records',as_of_ms)
                       if r['protocol_hash'] == parent.protocol.content_hash}
-        base_scores = [r for r in _records(connection,'baseline_scores',as_of_ms) if r['extension_hash'] == extension.content_hash]
+        base_scores = [r for r in _records(connection,'baseline_scores',as_of_ms)
+                       if r['extension_hash'] == extension.content_hash and r['prediction_id'] in svi_scores]
         deliveries = {r[0] for r in connection.execute('SELECT expiry_ms FROM delivery_prices WHERE fetched_at_ms<=?',(as_of_ms,))}
         issues = dict(connection.execute('SELECT i.reason,COUNT(*) FROM issues i LEFT JOIN raw_records r ON r.record_id=i.source_id '
             'WHERE i.fetched_at_ms<=? OR (i.fetched_at_ms IS NULL AND r.fetched_at_ms<=?) GROUP BY i.reason ORDER BY i.reason',
             (as_of_ms,as_of_ms)).fetchall())
     finally:
         connection.close()
-    cleaned = clean_database(db,parent.protocol,as_of_ms)
+    cleaned = clean_database(db,parent.protocol,as_of_ms,cache_path=clean_cache_path)
     if any(q['status'] == 'rejected' and not q['reasons'] for g in cleaned['groups'] for q in g['quotes']):
         raise ValueError('I need a recorded reason for every rejected report quote')
     observations, skipped = [], Counter()
@@ -141,7 +151,7 @@ def build_report(db: Path, parent: LockedProtocol, extension: LockedBaselines, a
     missing_svi = Counter('not_settled' if r['expiry_ms'] > as_of_ms else 'no_delivery_price'
         if r['expiry_ms'] not in deliveries else 'score_not_computed' for r in predictions.values()
         if r['status'] == 'ok' and r['prediction_id'] not in svi_scores)
-    statistics = report_statistics(observations,parent.protocol.content['evaluation'],parent.protocol.content['scoring']['pit_transform_epsilon'])
+    statistics = report_statistics(observations,decision_choices,parent.protocol.content['scoring']['pit_transform_epsilon'])
     return {'schema_version':1,'synthetic':False,'dataset_label':'Retained public-market recording and frozen research records',
             'status':statistics['status'],'as_of_ms':as_of_ms,'protocol_hash':parent.protocol.content_hash,
             'extension_hash':extension.content_hash,'provenance':{'git_commit':git_commit,'versions':report_versions()},

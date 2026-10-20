@@ -33,4 +33,7 @@ files = [
     "src/implied_calibration/incremental.py",
     "src/implied_calibration/research_plan.py",
     "src/implied_calibration/inference_study.py",
+    "src/implied_calibration/variance_forward.py",
+    "src/implied_calibration/store.py",
+    "src/implied_calibration/evaluation.py",
 ]

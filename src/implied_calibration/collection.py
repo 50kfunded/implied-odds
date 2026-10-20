@@ -1,6 +1,7 @@
 """I collect prospective market inputs and freeze due forecasts in one local job."""
 
 from contextlib import ExitStack
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 import json
 import logging
@@ -18,16 +19,24 @@ from .evaluation import score_database
 from .history import HOUR_MS, fetch_history, ingest_history, trailing_returns
 from .ingest import ingest, validate_heartbeat
 from .locking import LockedProtocol, load_locked_protocol
+from .operational_status import build_scoreboard, write_scoreboard
 from .predictions import freeze_predictions
 from .raw import RawWriter, day_name
 from .recorder import SystemClock
 from .report import build_report, write_report
 from .schedule import Anchor, boundary_ms
-from .settlement import fetch_delivery_pages, ingest_deliveries
+from .settlement import RecoverableDeliveryCaptureError, fetch_delivery_pages, ingest_deliveries
 from .store import Store, canonical, digest, evaluation_store
 
 
 LOGGER = logging.getLogger(__name__)
+
+
+def _render_report(config: 'CollectionConfig', parent: LockedProtocol, extension: LockedBaselines,
+                   as_of_ms: int, git_commit: str) -> dict:
+    data = build_report(config.db, parent, extension, as_of_ms, git_commit,
+                        clean_cache_path=config.report_output / 'clean-cache.sqlite')
+    return write_report(data, config.report_output)
 
 
 class FileLease:
@@ -111,6 +120,45 @@ class CollectionJob:
         self.metadata_hour: int | None = None
         self.delivery_hour: int | None = None
         self.attempts = self.failed_attempts = self.skipped_slots = self.clock_changes = 0
+        self.settlement_capture_attempts = self.settlement_capture_failures = 0
+        self.report_executor = None
+        self.report_future = None
+        self.report_requested_ms = None
+        self.report_state: dict[str, Any] = {'status': 'not_requested'}
+
+    def poll_report(self) -> dict:
+        if self.report_future is not None and self.report_future.done():
+            try:
+                self.report_state = {'status': 'completed', 'result': self.report_future.result()}
+            except Exception as exc:
+                self.report_state = {'status': 'failed', 'error_type': type(exc).__name__}
+                LOGGER.warning('I failed to render my local report: %s', exc)
+            self.report_future = None
+        if self.report_future is None and self.report_requested_ms is not None:
+            if self.report_executor is None:
+                self.report_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='local-report')
+            cutoff = self.report_requested_ms
+            self.report_requested_ms = None
+            self.report_future = self.report_executor.submit(_render_report, self.config, self.parent,
+                                                            self.extension, cutoff, self.git_commit)
+            self.report_state = {'status': 'rendering', 'as_of_ms': cutoff}
+        return dict(self.report_state)
+
+    def close_reports(self) -> dict:
+        pending = self.report_requested_ms
+        self.report_requested_ms = None
+        if self.report_executor is not None:
+            self.report_executor.shutdown(wait=True)
+            self.report_executor = None
+        self.poll_report()
+        if pending is not None:
+            try:
+                self.report_state = {'status': 'completed', 'result': _render_report(
+                    self.config, self.parent, self.extension, pending, self.git_commit)}
+            except Exception as exc:
+                self.report_state = {'status': 'failed', 'error_type': type(exc).__name__}
+                LOGGER.warning('I failed to render my final local report: %s', exc)
+        return dict(self.report_state)
 
     def event(self, event: str, **fields: Any) -> None:
         record = {'event': event, 'fetched_at_ms': self.clock.now_ms(), 'run_id': self.session,
@@ -137,9 +185,9 @@ class CollectionJob:
     def _client(self, output: Path):
         writer = RawWriter(output / 'raw')
         def retain(row):
-            writer.append(row.to_dict())
             self.attempts += 1
             self.failed_attempts += int(not row.ok)
+            writer.append(row.to_dict())
         return self.client_factory(on_attempt=retain,
                                    now_ms=self.clock.now_ms, monotonic=self.clock.monotonic,
                                    sleep=self.clock.sleep)
@@ -216,24 +264,32 @@ class CollectionJob:
         if self.delivery_hour != hour:
             output = segment / 'settlements'
             client = self._client(output)
+            self.settlement_capture_attempts += 1
             try:
                 captured = fetch_delivery_pages(client, sleep=self.clock.sleep)
                 result['settlements'] = {'capture': captured,
                     'ingestion': ingest_deliveries(output, self.config.db, self.clock.now_ms())}
                 self.delivery_hour = hour
-            except ClientError as exc:
+            except (ClientError, RecoverableDeliveryCaptureError) as exc:
+                self.settlement_capture_failures += 1
                 result['failures'].append('settlements:' + exc.reason)
-                LOGGER.warning('Settlement capture failed: %s', exc)
+                result['settlements'] = {'status': 'retry_next_cycle', 'reason': exc.reason}
+                LOGGER.warning('I will retry my settlement capture: %s', exc)
+            except (ValueError, sqlite3.Error, OSError):
+                self.settlement_capture_failures += 1
+                raise
             finally:
                 client.close()
         now = self.clock.now_ms()
-        scores = score_database(self.config.db, self.parent, now, now, self.git_commit)
-        baselines = score_baselines(self.config.db, self.extension, self.parent, now, now, self.git_commit)
+        scores = score_database(self.config.db, self.parent, now, now, self.git_commit, now_ms=self.clock.now_ms)
+        now = self.clock.now_ms()
+        baselines = score_baselines(self.config.db, self.extension, self.parent, now, now, self.git_commit,
+                                    now_ms=self.clock.now_ms)
         result['scores'] = {k: v for k, v in scores.items() if k != 'scores'}
         result['baseline_scores'] = {k: v for k, v in baselines.items() if k != 'scores'}
         if scores['added'] or baselines['added']:
-            result['report'] = write_report(build_report(self.config.db, self.parent, self.extension,
-                                                         now, self.git_commit), self.config.report_output)
+            self.report_requested_ms = self.clock.now_ms()
+        result['report'] = self.poll_report()
         self.event('cycle', ok=not result['failures'], scheduled_ms=scheduled_ms,
                    cycle_started_ms=started, cycle_finished_ms=self.clock.now_ms(), result=result)
         return result
@@ -266,7 +322,7 @@ def collect(config: CollectionConfig, *, clock=None, client_factory=PublicClient
         state = {'status': 'starting', 'pid': os.getpid(), 'session': job.session,
                  'db': str(config.db.resolve()), 'git_commit': job.git_commit,
                  'interval_seconds': config.interval, 'seconds': config.seconds,
-                 'started_at_ms': job.clock.now_ms(), 'cycles': 0, 'failed_cycles': 0,
+                 'started_at_ms': job.clock.now_ms(), 'cycles': 0, 'completed_cycles': 0, 'failed_cycles': 0,
                  'attempts': 0, 'failed_attempts': 0, 'skipped_slots': 0, 'clock_changes': 0,
                  'last_scheduled_ms': previous.get('last_scheduled_ms')}
         write_status(status_path, state)
@@ -284,6 +340,7 @@ def collect(config: CollectionConfig, *, clock=None, client_factory=PublicClient
             job.event('gap', reason='restart_or_downtime', first_slot_ms=last + interval_ms,
                       count=(slot - last) // interval_ms - 1)
         try:
+            cycle_in_progress = False
             while job.clock.monotonic() < stop and not (config.output / 'STOP').exists():
                 now = job.clock.now_ms()
                 drift = anchor.drift_ms(now, job.clock.monotonic())
@@ -299,14 +356,22 @@ def collect(config: CollectionConfig, *, clock=None, client_factory=PublicClient
                     slot += skipped * interval_ms
                 state['status'] = 'collecting'
                 state['updated_at_ms'] = now
+                state['cycles'] += 1
+                state['last_scheduled_ms'] = slot
+                cycle_in_progress = True
                 write_status(status_path, state)
                 result = job.cycle(slot)
-                state.update(cycles=state['cycles'] + 1, last_scheduled_ms=slot,
+                cycle_in_progress = False
+                state.update(completed_cycles=state['completed_cycles'] + 1,
                              failed_cycles=state['failed_cycles'] + int(bool(result['failures'])),
                              attempts=job.attempts, failed_attempts=job.failed_attempts,
                              skipped_slots=job.skipped_slots, clock_changes=job.clock_changes,
                              last_cycle=result, updated_at_ms=job.clock.now_ms(), status='waiting')
+                state.update(settlement_capture_attempts=job.settlement_capture_attempts,
+                             settlement_capture_failures=job.settlement_capture_failures)
                 write_status(status_path, state)
+                write_scoreboard(build_scoreboard(config.db, parent.protocol.content_hash, extension.content_hash,
+                                                  state, job.clock.now_ms()), config.report_output)
                 slot += interval_ms
                 finished = job.clock.now_ms()
                 if finished >= slot:
@@ -319,13 +384,20 @@ def collect(config: CollectionConfig, *, clock=None, client_factory=PublicClient
             state['status'] = 'interrupted'
             raise
         except (OSError, ValueError, sqlite3.Error, ClientError) as exc:
+            if cycle_in_progress:
+                state['failed_cycles'] += 1
             state.update(status='failed', error_type=type(exc).__name__, error=str(exc))
             raise
         finally:
+            state['report'] = job.close_reports()
             state['updated_at_ms'] = job.clock.now_ms()
             state.update(attempts=job.attempts, failed_attempts=job.failed_attempts,
-                         skipped_slots=job.skipped_slots, clock_changes=job.clock_changes)
+                         skipped_slots=job.skipped_slots, clock_changes=job.clock_changes,
+                         settlement_capture_attempts=job.settlement_capture_attempts,
+                         settlement_capture_failures=job.settlement_capture_failures)
             write_status(status_path, state)
+            write_scoreboard(build_scoreboard(config.db, parent.protocol.content_hash, extension.content_hash,
+                                              state, job.clock.now_ms()), config.report_output)
             job.event('session_end', ok=state['status'] in ('completed', 'stopped') and state['failed_cycles'] == 0
                       and job.failed_attempts == 0 and job.skipped_slots == 0 and job.clock_changes == 0,
                       status=state['status'])

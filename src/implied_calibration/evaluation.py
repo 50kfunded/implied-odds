@@ -2,20 +2,19 @@
 
 from collections import Counter, defaultdict
 from dataclasses import asdict
-import json
 from pathlib import Path
 import re
 from statistics import mean
-from typing import Any
+from typing import Any, Callable
 
 from .locking import LockedProtocol
 from .predictions import checked_prediction, register_protocol
 from .scoring import FrozenCDF, ScoreSettings, score_distribution
-from .store import canonical, digest, evaluation_store
+from .store import canonical, digest, evaluation_store, retain_score_availability
 
 
 def score_database(db: Path, locked: LockedProtocol, as_of_ms: int, created_at_ms: int,
-                   git_commit: str) -> dict[str, Any]:
+                   git_commit: str, *, now_ms: Callable[[], int] | None = None) -> dict[str, Any]:
     locked.validate()
     if (type(as_of_ms) is not int or type(created_at_ms) is not int or not 0 <= as_of_ms <= created_at_ms
             or not re.fullmatch('[0-9a-f]{40}', git_commit)):
@@ -23,6 +22,7 @@ def score_database(db: Path, locked: LockedProtocol, as_of_ms: int, created_at_m
     store = evaluation_store(db)
     output, completed = [], []
     added = existing_count = 0
+    persist = created_at_ms == as_of_ms
     try:
         with store.connection:
             register_protocol(store.connection, locked)
@@ -35,15 +35,18 @@ def score_database(db: Path, locked: LockedProtocol, as_of_ms: int, created_at_m
                 prediction = checked_prediction(row['payload_json'])
                 assert prediction['created_at_ms'] <= as_of_ms and prediction['expiry_ms'] <= as_of_ms
                 identity = row['prediction_id']
-                old = store.connection.execute('SELECT payload_json FROM score_records WHERE prediction_id=? '
-                    "AND json_extract(payload_json, '$.created_at_ms')<=?", (identity, as_of_ms)).fetchone()
+                old = store.connection.execute('SELECT payload_json FROM score_records WHERE prediction_id=?',
+                                               (identity,)).fetchone()
                 if old is not None:
                     record = checked_prediction(old['payload_json'])
                     if record['created_at_ms'] <= as_of_ms:
                         output.append(record)
                         completed.append(record)
                         existing_count += 1
-                    continue
+                        continue
+                    if persist:
+                        output.append({'prediction_id': identity, 'status': 'score_unavailable_at_cutoff'})
+                        continue
                 if prediction['status'] != 'ok':
                     output.append({'prediction_id': identity, 'status': 'forecast_unavailable',
                                    'forecast_status': prediction['status']})
@@ -61,18 +64,24 @@ def score_database(db: Path, locked: LockedProtocol, as_of_ms: int, created_at_m
                 if score.status != 'ok':
                     output.append({'prediction_id': identity, 'status': score.status, 'score': asdict(score)})
                     continue
+                finished = created_at_ms if now_ms is None or not persist else now_ms()
+                if type(finished) is not int or not created_at_ms <= finished <= 9223372036854775807:
+                    raise ValueError('Clock moved backward during score calculation')
                 record = {'prediction_id': identity, 'prediction_content_hash': prediction['content_hash'],
                           'protocol_hash': locked.protocol.content_hash, 'git_commit': git_commit,
-                          'created_at_ms': created_at_ms, 'as_of_ms': as_of_ms, 'expiry_ms': prediction['expiry_ms'],
+                          'created_at_ms': finished, 'as_of_ms': as_of_ms, 'expiry_ms': prediction['expiry_ms'],
                           'lead_ms': prediction['lead_ms'], 'status': 'ok', 'delivery': dict(delivery), 'score': asdict(score)}
                 record['content_hash'] = digest(record)
-                if created_at_ms == as_of_ms:
+                if persist:
                     store.connection.execute('INSERT INTO score_records VALUES (?, ?)', (identity, canonical(record)))
                     for metric, value in score.metrics.items():
                         store.connection.execute('INSERT INTO scores VALUES (?, ?, ?)', (identity, metric, value))
                     added += 1
                 output.append(record)
                 completed.append(record)
+        if persist:
+            retain_score_availability(store.connection, 'score_records', completed,
+                                      now_ms if now_ms is not None else lambda: created_at_ms)
     finally:
         store.close()
     classified: dict[tuple[str, int], list[dict[str, Any]]] = defaultdict(list)
@@ -92,7 +101,7 @@ def score_database(db: Path, locked: LockedProtocol, as_of_ms: int, created_at_m
                           mean(record['score']['metrics']['negative_log_score_log_return'] for record in records),
                           'log_mean_status': 'infinite' if infinite else 'undefined' if unavailable else 'finite'})
     return {'status': 'ok' if completed else 'no_scorable_forecasts', 'as_of_ms': as_of_ms,
-            'mode': 'persist' if created_at_ms == as_of_ms else 'historical_preview',
+            'mode': 'persist' if persist else 'historical_preview',
             'created_at_ms': created_at_ms, 'protocol_hash': locked.protocol.content_hash,
             'added': added, 'existing': existing_count,
             'status_counts': dict(sorted(Counter(row['status'] for row in output).items())),

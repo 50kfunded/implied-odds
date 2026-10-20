@@ -14,7 +14,7 @@ from .inference import berkowitz_hac, paired_inference
 from .locking import LockedProtocol
 from .predictions import checked_prediction
 from .scoring import ScoreSettings, score_distribution
-from .store import canonical, digest, evaluation_store
+from .store import canonical, digest, evaluation_store, retain_score_availability, score_available
 
 
 def register_baselines(connection: sqlite3.Connection, extension: LockedBaselines, parent: LockedProtocol) -> None:
@@ -97,12 +97,14 @@ def freeze_baselines(connection: sqlite3.Connection, prediction: dict, extension
 
 
 def score_baselines(db: Path, extension: LockedBaselines, parent: LockedProtocol, as_of_ms: int,
-                    created_at_ms: int, git_commit: str, *, parent_preview: list[dict] | None = None) -> dict:
+                    created_at_ms: int, git_commit: str, *, parent_preview: list[dict] | None = None,
+                    now_ms: Callable[[], int] | None = None) -> dict:
     if type(as_of_ms) is not int or type(created_at_ms) is not int or not 0 <= as_of_ms <= created_at_ms:
         raise ValueError('Invalid baseline score cutoff')
     store = evaluation_store(db)
     output = []
     added = 0
+    persist = created_at_ms == as_of_ms
     preview = {r['prediction_id']: r for r in (parent_preview or []) if r['status'] == 'ok'}
     if preview and created_at_ms == as_of_ms:
         raise ValueError('I only accept temporary parent scores for historical previews')
@@ -116,13 +118,16 @@ def score_baselines(db: Path, extension: LockedBaselines, parent: LockedProtocol
             for row in rows:
                 prediction = checked_prediction(row['payload_json'])
                 identity = row['baseline_id']
-                old = store.connection.execute('SELECT payload_json FROM baseline_scores WHERE baseline_id=? '
-                    "AND json_extract(payload_json, '$.created_at_ms')<=?", (identity, as_of_ms)).fetchone()
+                old = store.connection.execute('SELECT payload_json FROM baseline_scores WHERE baseline_id=?',
+                                               (identity,)).fetchone()
                 if old is not None:
                     record = checked_prediction(old[0])
                     if record['created_at_ms'] <= as_of_ms:
                         output.append(record)
-                    continue
+                        continue
+                    if persist:
+                        output.append({'baseline_id': identity, 'status': 'score_unavailable_at_cutoff'})
+                        continue
                 if prediction['status'] != 'ok':
                     output.append({'baseline_id': identity, 'status': prediction['status']})
                     continue
@@ -160,25 +165,37 @@ def score_baselines(db: Path, extension: LockedBaselines, parent: LockedProtocol
                         else 'right' if k > distribution.parameters['knots'][-1] else None)
                 record = {k: prediction[k] for k in ('baseline_id', 'prediction_id', 'baseline_name', 'extension_hash',
                                                        'protocol_hash', 'expiry_ms', 'lead_ms')}
-                record.update(status='ok', created_at_ms=created_at_ms, as_of_ms=as_of_ms, git_commit=git_commit,
+                finished = created_at_ms if now_ms is None or not persist else now_ms()
+                if type(finished) is not int or not created_at_ms <= finished <= 9223372036854775807:
+                    raise ValueError('Clock moved backward during baseline score calculation')
+                record.update(status='ok', created_at_ms=finished, as_of_ms=as_of_ms, git_commit=git_commit,
                               baseline_content_hash=prediction['content_hash'], svi_score_content_hash=svi['content_hash'],
                               delivery=svi['delivery'], score=score)
                 record['content_hash'] = digest(record)
-                if created_at_ms == as_of_ms:
+                if persist:
                     store.connection.execute('INSERT INTO baseline_scores VALUES (?, ?)', (identity, canonical(record)))
                     added += 1
                 output.append(record)
+        if persist:
+            retain_score_availability(store.connection, 'baseline_scores',
+                                      [record for record in output if record['status'] == 'ok'],
+                                      now_ms if now_ms is not None else lambda: created_at_ms)
     finally:
         store.close()
     return {'status': 'ok' if any(r['status'] == 'ok' for r in output) else 'no_scorable_baselines',
-            'mode': 'persist' if created_at_ms == as_of_ms else 'historical_preview',
+            'mode': 'persist' if persist else 'historical_preview',
             'added': added, 'status_counts': dict(sorted(Counter(r['status'] for r in output).items())), 'scores': output}
 
 
 def infer_database(db: Path, extension: LockedBaselines, parent: LockedProtocol, as_of_ms: int) -> dict:
+    from .research_plan import stopping_choices
     extension.validate(parent)
     if type(as_of_ms) is not int or as_of_ms < 0:
         raise ValueError('Invalid inference cutoff')
+    choices = stopping_choices(parent.protocol.content['evaluation'], parent.protocol.content_hash,
+                               extension.content_hash, as_of_ms)
+    if choices['formal_decision_allowed']:
+        as_of_ms = min(as_of_ms, choices['final_analysis_at_ms'])
     # I read inference inputs without migrating or changing the research database.
     connection = sqlite3.connect(Path(db).resolve().as_uri() + '?mode=ro', uri=True)
     connection.row_factory = sqlite3.Row
@@ -198,6 +215,10 @@ def infer_database(db: Path, extension: LockedBaselines, parent: LockedProtocol,
                 missing[prediction['status'] if prediction['status'] != 'ok' else 'unscored_pair'] += 1
                 continue
             base, svi = checked_prediction(base[0]), checked_prediction(svi[0])
+            if (not score_available(connection, 'baseline_scores', base, as_of_ms)
+                    or not score_available(connection, 'score_records', svi, as_of_ms)):
+                missing['score_unavailable_at_cutoff'] += 1
+                continue
             assert max(base['delivery']['fetched_at_ms'], svi['delivery']['fetched_at_ms']) <= as_of_ms
             if base['svi_score_content_hash'] != svi['content_hash'] or base['delivery'] != svi['delivery']:
                 raise ValueError('Paired score provenance differs')
@@ -208,16 +229,17 @@ def infer_database(db: Path, extension: LockedBaselines, parent: LockedProtocol,
             paired[key].append((base, svi))
     finally:
         connection.close()
-    choices = parent.protocol.content['evaluation']
     groups = []
     for lead in choices['lead_times_ms']:
         for name in choices['baseline_names']:
-            rows = sorted(paired[(lead, name)], key=lambda pair: pair[0]['expiry_ms'])
+            rows = sorted((pair for pair in paired[(lead, name)] if pair[0]['expiry_ms'] <= choices['expiry_cutoff_ms']),
+                          key=lambda pair: pair[0]['expiry_ms'])
             classes = ['all', 'daily', 'weekly', 'monthly', 'quarterly']
             for classification in classes:
                 selected = [pair for pair in rows if classification == 'all' or pair[0]['score']['expiry_class'] == classification]
                 times = [pair[0]['expiry_ms'] for pair in selected]
-                primary = (lead == choices['primary_lead_ms'] and name == choices['primary_baseline'] and classification == 'all')
+                declared_primary = (lead == choices['primary_lead_ms'] and name == choices['primary_baseline'] and classification == 'all')
+                primary = declared_primary and choices['formal_decision_allowed']
                 result = paired_inference(times, [pair[1]['score']['metrics']['crps_usd'] for pair in selected],
                     [pair[0]['score']['metrics']['crps_usd'] for pair in selected], lead,
                     minimum_ess=choices['minimum_effective_sample_size'], block_length=choices['expected_block_length'],
@@ -233,9 +255,12 @@ def infer_database(db: Path, extension: LockedBaselines, parent: LockedProtocol,
                 log_status = {model: {'infinite': sum(pair[index]['score']['diagnostics']['negative_log_score_is_infinite'] for pair in selected),
                     'undefined_at_atom': sum(pair[index]['score']['diagnostics']['log_score_status'] == 'support_atom' for pair in selected)}
                     for index, model in ((1, 'svi'), (0, name))}
+                result['declared_primary'] = declared_primary
+                result['decision_schedule'] = 'terminal' if choices['formal_decision_allowed'] else 'interim_descriptive'
+                result['final_analysis_at_ms'] = choices['final_analysis_at_ms']
                 groups.append({'lead_ms': lead, 'baseline': name, 'expiry_class': classification,
                                'crps_comparison': result, 'pit_diagnostics': pits, 'log_loss_counts': log_status})
-    primary = next(g['crps_comparison'] for g in groups if g['crps_comparison']['comparison_role'] == 'single_declared_primary')
+    primary = next(g['crps_comparison'] for g in groups if g['crps_comparison']['declared_primary'])
     return {'status': primary['status'], 'as_of_ms': as_of_ms, 'protocol_hash': parent.protocol.content_hash,
             'extension_hash': extension.content_hash, 'primary_comparison': primary,
             'multiple_testing': 'one_declared_primary; all_other_outputs_descriptive',

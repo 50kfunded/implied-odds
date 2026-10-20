@@ -101,3 +101,10 @@ class ReportStatisticsTests(OfflineTest):
             histogram([1.1],self.choices,1e-6)
         with self.assertRaises(ValueError):
             report_statistics([observation(0),observation(0)],self.choices,1e-6)
+
+    def test_terminal_expiry_cohort_applies_to_every_panel(self):
+        rows = [r for i in range(2) for r in (observation(i),observation(i,'same_snapshot_atm_lognormal'))]
+        result = report_statistics(rows,{**self.choices,'expiry_cutoff_ms':DAY},1e-6)
+        self.assertEqual(result['crps']['primary']['n_pairs'],1)
+        self.assertEqual(result['pit']['n'],1)
+        self.assertTrue(all(item['n'] == 1 for item in result['coverage']))

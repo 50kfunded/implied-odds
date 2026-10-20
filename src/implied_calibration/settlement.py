@@ -11,6 +11,14 @@ from .raw import RawWriter, read_raw
 from .store import canonical, digest, evaluation_store
 
 
+class RecoverableDeliveryCaptureError(ValueError):
+    """I retry an inconsistent page sequence in a fresh capture."""
+
+    def __init__(self, reason: str, message: str) -> None:
+        super().__init__(message)
+        self.reason = reason
+
+
 def delivery_expiry_ms(value: str) -> int:
     day = date.fromisoformat(value)
     return int(datetime(day.year, day.month, day.day, 8, tzinfo=timezone.utc).timestamp() * 1000)
@@ -26,20 +34,24 @@ def fetch_delivery_pages(client: PublicClient, *, count: int = 1000, max_pages: 
         result = response.result
         total, rows = result['records_total'], result['data']
         if expected_total is not None and total != expected_total:
-            raise ValueError('Delivery pagination total changed; I retain the raw pages and retry in a new capture')
+            raise RecoverableDeliveryCaptureError('pagination_total_changed',
+                'I retain the raw pages and retry the changed total in a fresh capture')
         expected_total = total
         if len(rows) > count or offset + len(rows) > total or not rows and offset < total:
-            raise ValueError('Delivery pagination made no progress or exceeded count')
+            raise RecoverableDeliveryCaptureError('pagination_no_progress',
+                'I retry delivery pagination after no progress or an exceeded count')
         dates = [row['date'] for row in rows]
         if len(set(dates)) != len(dates) or seen.intersection(dates):
-            raise ValueError('Delivery pagination repeated or overlapped dates')
+            raise RecoverableDeliveryCaptureError('pagination_overlap',
+                'I retry delivery pagination after repeated or overlapping dates')
         seen.update(dates)
         offset += len(rows)
         pages += 1
         if offset >= total:
             return {'status': 'ok', 'pages': pages, 'records': offset, 'records_total': total}
         sleep(10.0)
-    raise ValueError('Delivery pagination reached its page limit before completion')
+    raise RecoverableDeliveryCaptureError('pagination_page_limit',
+        'I retry delivery pagination after reaching the page limit')
 
 
 def capture_deliveries(output: Path) -> dict[str, Any]:
