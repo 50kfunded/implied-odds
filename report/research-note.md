@@ -1,5 +1,28 @@
 # Research note
 
+I present the current matched HAR experiment in my [five-page paper](research-paper.pdf)
+and [machine-readable results](incremental-results.json). I retain the earlier study
+below so its observations, source failure and protocol choices stay visible.
+
+I use 365 completed labels for both HAR regressions and one matched evaluation cohort.
+The augmentation's mean QLIKE difference is -0.01424 with interval [-0.03490, +0.00505].
+I have no clear incremental result. My [future plan](../protocol/incremental-variance-v1.json)
+starts on 21 October 2026. My [inference amendment](../protocol/inference-validation-v1.json)
+disables formal claims after the declared simulations exposed poor size and no gate passes
+at one year. I keep the fixed terminal date even if the result stays inconclusive.
+
+My [SVI stopping amendment](../protocol/forward-inference-v1.json) keeps interim inference
+descriptive, fixes the expiry cohort and pins terminal data availability. I preserve
+the original locks. I publish counts, rejection reasons and local hash anchors in
+my [scoreboard snapshot](scoreboard.html); these hashes have no independent timestamp.
+
+I run bounded supervised sessions with
+`python scripts/collect_variance.py --seconds 600` for the HAR inputs, and the
+`collect` command below for SVI. I check `data/variance-forward/status.json` and
+`data/live/status.json` for completed cycles and failures. I stop both jobs after
+validation. I publish counts with `python scripts/publish_scoreboard.py`.
+I don't backfill a missed pre-target forecast after restarting this PC.
+
 I'm studying whether BTC option-implied probabilities line up with realised
 settlement frequencies across expiries. Risk-neutral probabilities can differ
 from realised frequencies because of risk premia. I won't treat a difference
@@ -312,8 +335,9 @@ leaves more than half the mean beyond k=64 and correctly reports unresolved tail
 Tiny tail probability alone doesn't establish that the omitted mean is small.
 
 The `cdf` command reuses the as-of cleaning and fit gates, retains every group and
-returns exit 2 when no CDF passes. My saved capture produces zero distributions;
-its 120 groups remain blocked before fitting. Finite grids can miss violations,
+returns exit 2 when no CDF passes. My earlier ten-minute smoke capture has no
+research forecasts; the later 18 October snapshot supplies the four exploratory
+CDFs reported above. Finite grids can miss violations,
 and PAVA doesn't preserve option prices or the martingale mean. My scoring convention
 for accepted analytic CDFs is below.
 
