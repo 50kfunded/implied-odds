@@ -1,6 +1,6 @@
 # Does DVOL add information beyond HAR?
 
-[Five-page paper](report/research-paper.pdf) · [Results and diagnostics](report/incremental-results.json) · [![tests](https://github.com/50kfunded/implied-odds/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/50kfunded/implied-odds/actions/workflows/tests.yml)
+[Five-page paper](report/latex/main.pdf) · [LaTeX source](report/latex/main.tex) · [Results and diagnostics](report/incremental-results.json) · [![tests](https://github.com/50kfunded/implied-odds/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/50kfunded/implied-odds/actions/workflows/tests.yml)
 
 I'm testing whether option-implied BTC variance adds information to a price-history forecast.
 I compared HAR with the same regression plus DVOL on 1,357 matched 30-day forecasts.
