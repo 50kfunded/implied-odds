@@ -152,7 +152,7 @@ def validate_response(endpoint: str, status: int, body: Any) -> Any:
             except (ValueError, OverflowError) as exc:
                 raise ClientError('schema_error', f'Invalid delivery row: {exc}') from exc
     else:
-        raise ClientError("unsupported_endpoint", f"No Phase 1 schema for {endpoint}")
+        raise ClientError("unsupported_endpoint", f"No schema for {endpoint}")
     return result
 
 
@@ -189,7 +189,7 @@ class PublicClient:
             "public/get_book_summary_by_currency", "public/get_index_price", "public/get_instruments",
             "public/get_delivery_prices", "public/get_tradingview_chart_data", "public/get_volatility_index_data"
         ):
-            raise ValueError(f"Unsupported Phase 1 endpoint: {endpoint}")
+            raise ValueError(f"Unsupported endpoint: {endpoint}")
         for attempt in range(1, self.max_retries + 2):
             sent, started = self.now_ms(), self.monotonic()
             body, status, text, error = None, None, None, None
