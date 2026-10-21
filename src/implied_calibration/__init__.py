@@ -1,1 +1,1 @@
-"""I'm studying BTC option probability calibration, one phase at a time."""
+"""I'm studying BTC volatility forecasts and option probability calibration."""

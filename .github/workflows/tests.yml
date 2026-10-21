@@ -69,8 +69,20 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: rebuild included reports
         run: python scripts/reproduce.py --output results/ci
-      - name: rebuild research paper and static report
+      - name: rebuild quantitative research results
         run: python scripts/build_research.py --output results/research
+      - name: install LaTeX and PDF renderer
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y latexmk lmodern texlive-latex-extra texlive-fonts-recommended poppler-utils
+      - name: compile checked LaTeX manuscript and preview
+        run: |
+          mkdir -p results/research/latex
+          cp report/latex/main.tex report/latex/references.bib report/latex/figure-1.pdf results/research/latex/
+          cd results/research/latex
+          latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex
+          pdftoppm -f 1 -singlefile -r 120 -png main.pdf paper-preview
+          python -c "from pypdf import PdfReader; assert len(PdfReader('main.pdf').pages) == 5"
       - name: retain static research artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
