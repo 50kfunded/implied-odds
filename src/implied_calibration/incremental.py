@@ -1,4 +1,4 @@
-"""I test incremental DVOL information with identical completed training labels."""
+"""Incremental DVOL comparisons use identical completed training labels."""
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -22,7 +22,7 @@ class VarianceCase:
 
 def features_at(prices: dict, dvol: dict, cutoff: int) -> tuple[float, float, float, float] | None:
     if type(cutoff) is not int or cutoff % DAY_MS:
-        raise ValueError('I need midnight UTC completed features')
+        raise ValueError('Expected midnight UTC completed features')
     values = [hourly_variance(prices, cutoff - days * DAY_MS, cutoff, 8760)[0] for days in (1, 7, 30)]
     candle = dvol.get(cutoff - DAY_MS)
     if any(v is None for v in values) or candle is None or not math.isfinite(candle[3]) or candle[3] <= 0:
@@ -35,7 +35,7 @@ def features_at(prices: dict, dvol: dict, cutoff: int) -> tuple[float, float, fl
 
 def build_cases(prices: dict, dvol: dict, start: int, end: int, *, target_shift_hours: int = 0) -> list[VarianceCase]:
     if target_shift_hours not in (0, 1):
-        raise ValueError('I need a declared target alignment')
+        raise ValueError('Expected a declared target alignment')
     output = []
     for cutoff in range(start, end + DAY_MS, DAY_MS):
         features = features_at(prices, dvol, cutoff)
@@ -58,7 +58,7 @@ def fit_forecasts(cases: list[VarianceCase], cutoff: int, features: tuple, plan:
     y = np.asarray([r.actual for r in train], dtype=float)
     current = np.asarray(features, dtype=float)
     if x.shape != (window, 4) or current.shape != (4,) or not np.isfinite(x).all() or not np.isfinite(y).all() or not np.isfinite(current).all():
-        raise ValueError('I need finite matched features and completed targets')
+        raise ValueError('Expected finite matched features and completed targets')
     forecasts = {'trailing': float(current[2]), 'dvol': float(current[3])}
     fits = {}
     for name, count in (('har', 3), ('har_dvol', 4)):
@@ -68,7 +68,7 @@ def fit_forecasts(cases: list[VarianceCase], cutoff: int, features: tuple, plan:
         beta, _, rank, singular = np.linalg.lstsq(design, y, rcond=None)
         raw = float(np.r_[1., (current[:count] - mean) / scale] @ beta)
         if not math.isfinite(raw):
-            raise ValueError('I cannot freeze a nonfinite regression prediction')
+            raise ValueError('Cannot freeze a nonfinite regression prediction')
         forecasts[name] = max(plan['forecast_floor_variance'], raw)
         fits[name] = {'raw_prediction': raw, 'floor_hit': raw < plan['forecast_floor_variance'],
                       'coefficients_scaled': beta.tolist(), 'feature_mean': mean.tolist(), 'feature_scale': scale.tolist(),
@@ -79,7 +79,7 @@ def fit_forecasts(cases: list[VarianceCase], cutoff: int, features: tuple, plan:
 
 
 def regression_diagnostic(y: np.ndarray, x: np.ndarray, null: np.ndarray, lags: int = 59) -> dict:
-    """I report level-regression HAC diagnostics as descriptive checks."""
+    """Report level-regression HAC diagnostics as descriptive checks."""
     y, x = np.asarray(y, dtype=float), np.asarray(x, dtype=float)
     if x.ndim != 2 or len(x) != len(y) or len(x) <= max(lags, x.shape[1]):
         return {'status': 'insufficient data'}
@@ -100,7 +100,7 @@ def regression_diagnostic(y: np.ndarray, x: np.ndarray, null: np.ndarray, lags: 
             'hac_standard_errors': se.tolist(), 'joint_null': null.tolist(), 'joint_wald': statistic,
             'asymptotic_p_value': float(chi2.sf(statistic, len(beta))) if valid else None,
             'hac_lags': lags, 'role': 'exploratory_no_multiple_testing_claim',
-            'limit': 'I use contemporaneous level residuals; overlapping targets and generated rolling forecasts affect inference.'}
+            'limit': 'Diagnostics use contemporaneous level residuals; overlapping targets and generated rolling forecasts affect inference.'}
 
 
 def risk_budget(actual: float, forecast: float, plan: dict) -> dict:
@@ -135,7 +135,7 @@ def loss_concentration(records: list[dict], difference: np.ndarray) -> dict:
         'leave_one_year_out': {key: {'n': len(difference)-len(x), 'mean': (total-math.fsum(x))/(len(difference)-len(x))}
                               for key,x in years.items() if len(x) < len(difference)},
         'worst_absolute_origins': [{'origin_ms': records[i]['origin_ms'], 'difference': float(difference[i])} for i in descending[:10]],
-        'interpretation': "I identify large contributions after seeing losses. I don't infer an ex-ante trading regime."}
+        'interpretation': "Large contributions are identified after inspection of losses and do not define an ex-ante trading regime."}
 
 
 def analyse_incremental(prices: dict, dvol: dict, historical: dict, plan: dict) -> dict:
@@ -155,7 +155,7 @@ def analyse_incremental(prices: dict, dvol: dict, historical: dict, plan: dict) 
                         'feature_cutoff_ms': row.feature_cutoff_ms, 'features': list(row.features), 'actual': row.actual,
                         **fit, 'losses': losses, 'decision': decisions})
     if not records:
-        raise ValueError('I have no matched incremental-information observations')
+        raise ValueError('No matched incremental-information observations are available')
     names = ['qlike_'+name for name in plan['models']] + ['qlike_har_dvol_minus_har', 'qlike_dvol_minus_har',
              'risk_budget_har_dvol_minus_har']
     values = np.asarray([[*[r['losses'][name] for name in plan['models']],

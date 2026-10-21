@@ -1,4 +1,4 @@
-"""I build same-snapshot reference distributions without fetching data."""
+"""Reference distributions use the selected snapshot and retained inputs."""
 
 from dataclasses import asdict, dataclass
 import math
@@ -32,7 +32,7 @@ class BaselineCDF:
             if (k.ndim != 1 or len(k) < 17 or k.shape != p.shape or not np.isfinite(k).all()
                     or not np.isfinite(p).all() or np.any(np.diff(k) <= 0) or np.any(np.diff(p) <= 0)
                     or p[0] != 0 or p[-1] != 1):
-                raise ValueError('I need strictly increasing finite simulation knots with 0/1 endpoints')
+                raise ValueError('Expected strictly increasing finite simulation knots with 0/1 endpoints')
         else:
             raise ValueError('Unknown baseline distribution')
 
@@ -143,7 +143,7 @@ def simulate_garch(state: dict, hours: float, settings: BaselineSettings, *, gap
             terminal += innovation * math.sqrt(hour_overlap(step,gap_hours,hours))
             variance = omega + alpha * innovation ** 2 + beta * variance
         if not np.isfinite(terminal).all() or not np.isfinite(variance).all():
-            raise ValueError('GARCH simulation produced nonfinite paths; I keep none of this forecast')
+            raise ValueError('GARCH simulation produced nonfinite paths; the entire forecast is rejected')
     return terminal, {'hours': hours, 'whole_hours': whole, 'fractional_hour': fraction,
                       'path_count': n, 'seed': settings.simulation_seed, 'discarded_gap_hours': gap_hours,
                       'gap_fractional_hour': gap_hours-math.floor(gap_hours)}

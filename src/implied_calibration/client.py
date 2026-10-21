@@ -1,4 +1,4 @@
-"""I retain each public REST attempt before deciding whether to retry."""
+"""Every public REST attempt is retained before retry decisions."""
 
 from __future__ import annotations
 
@@ -56,7 +56,7 @@ class ApiResponse:
 
 
 def validate_response(endpoint: str, status: int, body: Any) -> Any:
-    """I keep all response-schema checks here, without changing the body."""
+    """Keep all response-schema checks here, without changing the body."""
     if isinstance(body, dict) and "testnet" in body and body["testnet"] is not False:
         raise ClientError("testnet_rejected", "testnet must be the boolean false")
     if status != 200:
@@ -144,7 +144,7 @@ def validate_response(endpoint: str, status: int, body: Any) -> Any:
                 raise ClientError('schema_error', f'delivery row: missing keys={sorted(fields-actual)}; unexpected keys={sorted(actual-fields)}')
             try:
                 if not isinstance(row['date'], str) or not re.fullmatch('[0-9]{4}-[0-9]{2}-[0-9]{2}', row['date']):
-                    raise ValueError('I need YYYY-MM-DD')
+                    raise ValueError('Expected YYYY-MM-DD')
                 date.fromisoformat(row['date'])
                 value = row['delivery_price']
                 if type(value) not in (int, float) or not math.isfinite(value) or value <= 0:
@@ -227,7 +227,7 @@ class PublicClient:
                 "ok" if error is None else error.reason,
                 "" if error is None else str(error), text,
             )
-            # I let storage errors escape here so they never trigger network retries.
+            # Storage errors escape here and cannot trigger network retries.
             if self.on_attempt is not None:
                 self.on_attempt(record)
             if interrupted:

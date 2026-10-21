@@ -1,4 +1,4 @@
-"""I publish local forecast counts, frozen hashes and collector freshness."""
+"""Local operational reports include forecast counts, frozen hashes and freshness."""
 
 from collections import Counter
 from datetime import datetime, timezone
@@ -32,7 +32,7 @@ def liveness_check(state: dict, now_ms: int) -> dict:
         status = 'fresh'
     return {'status': status, 'checked_at_ms': now_ms, 'last_update_ms': stamp,
             'age_ms': age, 'stale_after_ms': threshold,
-            'interpretation': 'I check heartbeat age; I do not infer process health from a PID.'}
+            'interpretation': 'Heartbeat age measures freshness; a PID does not establish process health.'}
 
 
 def _frozen_records(connection) -> dict[tuple[str, str], dict]:
@@ -41,7 +41,7 @@ def _frozen_records(connection) -> dict[tuple[str, str], dict]:
         for row in connection.execute(f'SELECT {key},payload_json FROM {table} ORDER BY {key}'):
             record = checked_prediction(row[1])
             if record[key] != row[0]:
-                raise ValueError('I found a frozen record identity mismatch')
+                raise ValueError('Detected a frozen record identity mismatch')
             records[(table, row[0])] = record
     return records
 
@@ -58,7 +58,7 @@ def _sync_ledger(connection, records: dict) -> tuple[list[dict], dict]:
                 or digest(entry) != claimed or identity in recorded or record is None
                 or record['content_hash'] != entry['payload_hash']
                 or record['created_at_ms'] != entry['created_at_ms']):
-            raise ValueError('I found a frozen hash ledger mismatch')
+            raise ValueError('Detected a frozen hash ledger mismatch')
         entry['entry_hash'] = claimed
         entries.append(entry)
         recorded.add(identity)
@@ -110,8 +110,8 @@ def build_scoreboard(db: Path, protocol_hash: str, extension_hash: str, state: d
                     'settlement_capture_failures') if key in state},
                 'last_cycle_failures': state.get('last_cycle', {}).get('failures', []),
                 'liveness': liveness_check(state, now_ms), 'frozen_anchor': anchor, 'frozen_ledger': entries,
-                'anchor_scope': 'I anchor all retained frozen forecasts and scores in my local ledger.',
-                'anchor_limit': 'I keep this anchor locally; I have no independent timestamp or external witness.'}
+                'anchor_scope': 'The local ledger anchors all retained frozen forecasts and scores.',
+                'anchor_limit': 'This local anchor has no independent timestamp or external witness.'}
     finally:
         store.close()
 
@@ -126,11 +126,11 @@ def _write_json(path: Path, value: dict) -> None:
 def _check_anchor_prefix(anchor: dict, ledger: list[dict]) -> None:
     count = anchor.get('entries')
     if type(count) is not int or not 0 <= count <= len(ledger):
-        raise ValueError('I found a frozen anchor rollback or changed prefix')
+        raise ValueError('Detected a frozen anchor rollback or changed prefix')
     expected = GENESIS_HASH if count == 0 else ledger[count - 1]['entry_hash']
     if (anchor.get('head_hash') != expected or anchor.get('genesis_hash') != GENESIS_HASH
             or anchor.get('schema_version') != 1):
-        raise ValueError('I found a frozen anchor rollback or changed prefix')
+        raise ValueError('Detected a frozen anchor rollback or changed prefix')
 
 
 def write_scoreboard(data: dict, output: Path) -> None:
@@ -151,7 +151,7 @@ def write_scoreboard(data: dict, output: Path) -> None:
     retained = canonical(anchor) + '\n'
     if archive.exists():
         if archive.read_text(encoding='utf-8') != retained:
-            raise ValueError('I found a changed retained frozen anchor')
+            raise ValueError('Detected a changed retained frozen anchor')
     else:
         with archive.open('x', encoding='utf-8', newline='\n') as target:
             target.write(retained)
@@ -161,16 +161,16 @@ def write_scoreboard(data: dict, output: Path) -> None:
     observed_at = datetime.fromtimestamp(data['as_of_ms']/1000,timezone.utc).isoformat()
     rows = ''.join(f'<tr><td>{escape(reason)}</td><td>{count}</td></tr>'
                    for reason, count in counts['rejection_reason_counts'].items())
-    html = f'''<!doctype html><html lang="en"><meta charset="utf-8"><meta http-equiv="refresh" content="30"><title>I track local forecasts</title>
+    html = f'''<!doctype html><html lang="en"><meta charset="utf-8"><meta http-equiv="refresh" content="30"><title>Local forecast counts</title>
 <style>body{{font:16px system-ui;max-width:900px;margin:40px auto;padding:20px;background:#f4f7fa;color:#172c40}}
 table{{border-collapse:collapse}}td,th{{padding:8px 20px;border-bottom:1px solid #ccd6df}}code{{overflow-wrap:anywhere}}</style>
-<h1>I track local forecasts</h1><p>I froze {counts['frozen']} forecasts, accepted {counts['accepted']}, and scored {counts['scored']}.</p>
-<p>I published this snapshot at {escape(observed_at)}. I keep the separate HAR counts in <a href="variance-scoreboard.json">variance-scoreboard.json</a>.</p>
-<p>I read collector freshness as <strong id="freshness">{escape(data['liveness']['status'])}</strong>.</p>
-<p>I refresh this age check every second while this page stays open.</p>
+<h1>Local forecast counts</h1><p>Frozen: {counts['frozen']}; accepted: {counts['accepted']}; scored: {counts['scored']}.</p>
+<p>Published at {escape(observed_at)}. Separate HAR counts appear in <a href="variance-scoreboard.json">variance-scoreboard.json</a>.</p>
+<p>Collector freshness: <strong id="freshness">{escape(data['liveness']['status'])}</strong>.</p>
+<p>This age check refreshes every second while the page stays open.</p>
 <table><tr><th>Forecast rejection reason</th><th>Count</th></tr>{rows}</table>
-<p>I retained {anchor['entries']} frozen hash entries.</p><p>Head hash: <code>{anchor['head_hash']}</code></p>
-<p>{escape(data['anchor_limit'])}</p><p>I keep my baseline counts, cycle failures and complete ledger in scoreboard.json.</p>
+<p>Retained frozen hash entries: {anchor['entries']}.</p><p>Head hash: <code>{anchor['head_hash']}</code></p>
+<p>{escape(data['anchor_limit'])}</p><p>Baseline counts, cycle failures and the complete ledger appear in scoreboard.json.</p>
 <script>const stamp={json.dumps(data['liveness']['last_update_ms'])};const threshold={data['liveness']['stale_after_ms']};
 const active={json.dumps(data['collection'].get('status') in ('starting','collecting','waiting'))};
 setInterval(()=>{{document.getElementById('freshness').textContent=!active?'inactive':stamp===null?'unknown':Date.now()-stamp>threshold?'stale':Date.now()-stamp < -1000?'clock_moved_backward':'fresh';}},1000);</script></html>'''

@@ -1,4 +1,4 @@
-"""I estimate compressed daily disk use from the recording observed so far."""
+"""Estimate compressed daily disk use from observed recording time."""
 
 import argparse
 import json
@@ -33,7 +33,7 @@ def estimate(directory: Path) -> dict[str, int | float | None]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="I estimate disk use from observed recording time.")
+    parser = argparse.ArgumentParser(description="Estimate disk use from observed recording time.")
     parser.add_argument("directory", type=Path)
     args = parser.parse_args()
     if not args.directory.is_dir():

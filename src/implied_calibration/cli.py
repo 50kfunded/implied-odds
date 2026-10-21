@@ -1,4 +1,4 @@
-"""I record, ingest, and inspect my captured BTC option data."""
+"""Record, ingest and inspect captured BTC option data."""
 
 import argparse
 from dataclasses import asdict
@@ -49,14 +49,14 @@ def emit(result: dict, output: Path | None) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="I record public BTC option data locally.")
+    parser = argparse.ArgumentParser(description="Record public BTC option data locally.")
     parser.add_argument("--log-level", choices=("DEBUG", "INFO", "WARNING", "ERROR"), default="INFO")
     commands = parser.add_subparsers(dest="command", required=True)
     recorder = commands.add_parser("record", help="Record production BTC option responses")
     recorder.add_argument("--output", type=Path, required=True)
     recorder.add_argument("--interval", type=int, default=300)
     recorder.add_argument("--seconds", type=int)
-    collector = commands.add_parser('collect', help='I collect inputs, freeze due forecasts and score deliveries')
+    collector = commands.add_parser('collect', help='Collect inputs, freeze due forecasts and score deliveries')
     collector.add_argument('--output', type=Path, required=True)
     collector.add_argument('--db', type=Path, required=True)
     collector.add_argument('--report-output', type=Path, default=Path('results/live'))
@@ -64,12 +64,12 @@ def main() -> int:
     collector.add_argument('--baselines', type=Path, default=Path('protocol/baselines.json'))
     collector.add_argument('--interval', type=int, default=300)
     collector.add_argument('--seconds', type=int)
-    stopper = commands.add_parser('collect-stop', help='I ask the collection job to stop after its current cycle')
+    stopper = commands.add_parser('collect-stop', help='Stop the collection job after its current cycle')
     stopper.add_argument('--output', type=Path, required=True)
-    historical = commands.add_parser('historical-fetch', help='I retain a separate retrospective DVOL variance dataset')
+    historical = commands.add_parser('historical-fetch', help='Retain a separate retrospective DVOL variance dataset')
     historical.add_argument('--output', type=Path, required=True)
     historical.add_argument('--study', type=Path, default=Path('protocol/historical-variance.json'))
-    historical_report = commands.add_parser('historical-report', help='I reproduce the historical variance study offline')
+    historical_report = commands.add_parser('historical-report', help='Reproduce the historical variance study offline')
     historical_report.add_argument('--manifest', type=Path, required=True)
     historical_report.add_argument('--study', type=Path, default=Path('protocol/historical-variance.json'))
     historical_report.add_argument('--output', type=Path, required=True)
@@ -83,29 +83,29 @@ def main() -> int:
     coverage.add_argument("--db", type=Path, required=True)
     coverage.add_argument("--as-of-ms", type=int)
     coverage.add_argument("--output", type=Path)
-    cleaner = commands.add_parser("clean", help="I classify captured quotes and check IV conventions")
+    cleaner = commands.add_parser("clean", help="Classify captured quotes and check IV conventions")
     cleaner.add_argument("--db", type=Path, required=True)
     cleaner.add_argument("--as-of-ms", type=int)
     cleaner.add_argument("--protocol", type=Path, default=Path("protocol/protocol.json"))
     cleaner.add_argument("--output", type=Path)
-    fitter = commands.add_parser("fit", help="I fit cleaned smiles after the IV gate clears")
+    fitter = commands.add_parser("fit", help="Fit cleaned smiles after the IV gate clears")
     fitter.add_argument("--db", type=Path, required=True)
     fitter.add_argument("--as-of-ms", type=int)
     fitter.add_argument("--protocol", type=Path, default=Path("protocol/protocol.json"))
     fitter.add_argument("--output", type=Path)
-    cdf = commands.add_parser("cdf", help="I extract risk-neutral distributions from accepted fits")
+    cdf = commands.add_parser("cdf", help="Extract risk-neutral distributions from accepted fits")
     cdf.add_argument("--db", type=Path, required=True)
     cdf.add_argument("--as-of-ms", type=int)
     cdf.add_argument("--protocol", type=Path, default=Path("protocol/protocol.json"))
     cdf.add_argument("--output", type=Path)
     for name in ('predict', 'score', 'infer'):
-        command = commands.add_parser(name, help=f'I {name} with the committed evaluation protocol')
+        command = commands.add_parser(name, help=f'{name} with the committed evaluation protocol')
         command.add_argument('--db', type=Path, required=True)
         command.add_argument('--as-of-ms', type=int)
         command.add_argument('--protocol', type=Path, default=Path('protocol/protocol.json'))
         command.add_argument('--baselines', type=Path, default=Path('protocol/baselines.json'))
         command.add_argument('--output', type=Path)
-    settler = commands.add_parser('settle', help='I ingest retained official delivery pages or capture them explicitly')
+    settler = commands.add_parser('settle', help='Ingest retained official delivery pages or capture them explicitly')
     settler.add_argument('--db', type=Path, required=True)
     source = settler.add_mutually_exclusive_group(required=True)
     source.add_argument('--input', type=Path)
@@ -113,7 +113,7 @@ def main() -> int:
     settler.add_argument('--raw-output', type=Path)
     settler.add_argument('--as-of-ms', type=int)
     settler.add_argument('--output', type=Path)
-    historian = commands.add_parser('history', help='I ingest retained hourly candles or capture them explicitly')
+    historian = commands.add_parser('history', help='Ingest retained hourly candles or capture them explicitly')
     historian.add_argument('--db', type=Path, required=True)
     history_source = historian.add_mutually_exclusive_group(required=True)
     history_source.add_argument('--input', type=Path)
@@ -123,13 +123,13 @@ def main() -> int:
     historian.add_argument('--end-ms', type=int)
     historian.add_argument('--as-of-ms', type=int)
     historian.add_argument('--output', type=Path)
-    reporter = commands.add_parser('report',help='I write figures and an offline report from immutable research records')
+    reporter = commands.add_parser('report',help='Write figures and an offline report from immutable research records')
     reporter.add_argument('--db',type=Path,required=True)
     reporter.add_argument('--as-of-ms',type=int)
     reporter.add_argument('--protocol',type=Path,default=Path('protocol/protocol.json'))
     reporter.add_argument('--baselines',type=Path,default=Path('protocol/baselines.json'))
     reporter.add_argument('--output',type=Path,required=True)
-    snapshot = commands.add_parser('snapshot-report', help='I inspect a real snapshot without freezing forecasts')
+    snapshot = commands.add_parser('snapshot-report', help='Inspect a real snapshot without freezing forecasts')
     snapshot.add_argument('--db', type=Path, required=True)
     snapshot.add_argument('--protocol', type=Path, default=Path('protocol/protocol.json'))
     snapshot.add_argument('--as-of-ms', type=int)
@@ -194,13 +194,13 @@ def main() -> int:
         elif args.command in ('predict', 'score', 'infer'):
             details = provenance()
             if details['git_commit'] is None or details['working_tree_dirty'] is not False:
-                raise ValueError('I need a clean Git checkout to freeze or score research forecasts')
+                raise ValueError('Expected a clean Git checkout to freeze or score research forecasts')
             now = utc_ms()
             locked = load_locked_protocol(args.protocol)
             extension = load_locked_baselines(args.baselines, locked)
             cutoff = now if args.as_of_ms is None else args.as_of_ms
             if cutoff > now:
-                raise ValueError('I cannot use a future as-of time')
+                raise ValueError('Cannot use a future as-of time')
             if args.command == 'infer':
                 result = infer_database(args.db, extension, locked, cutoff)
             elif args.command == 'predict':
@@ -219,7 +219,7 @@ def main() -> int:
                 if args.raw_output is None or args.as_of_ms is not None or args.start_ms is None or args.end_ms is None:
                     raise ValueError('Live history needs --raw-output, --start-ms and --end-ms with actual capture time')
                 if args.end_ms > utc_ms():
-                    raise ValueError('I only request completed history intervals')
+                    raise ValueError('History requests require completed intervals')
                 captured = capture_history(args.raw_output, args.start_ms, args.end_ms)
                 result = ingest_history(args.raw_output, args.db, utc_ms())
                 result['capture'] = captured

@@ -1,4 +1,4 @@
-"""I check dependence calculations against known inputs and seeded AR(1) experiments."""
+"""Known-input dependence calculations and seeded AR(1) experiments."""
 
 import math
 import numpy as np

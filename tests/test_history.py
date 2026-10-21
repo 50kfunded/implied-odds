@@ -1,4 +1,4 @@
-"""I check hourly-candle provenance, schema and rolling-window availability offline."""
+"""Offline hourly-candle provenance, schema and rolling-window availability checks."""
 
 from copy import deepcopy
 from unittest.mock import Mock

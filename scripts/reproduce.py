@@ -1,4 +1,4 @@
-"""I rebuild the retained market report and a separate synthetic illustration offline."""
+"""Rebuild retained market reports and a separate synthetic illustration offline."""
 
 import logging
 import sqlite3

@@ -1,4 +1,4 @@
-"""I read frozen research records and write an offline report without changing the database."""
+"""Offline reports read frozen research records without changing the database."""
 
 from collections import Counter
 from dataclasses import asdict
@@ -61,7 +61,7 @@ def build_report(db: Path, parent: LockedProtocol, extension: LockedBaselines, a
                 times.append(connection.execute("SELECT COALESCE(MAX(json_extract(payload_json,'$.available_at_ms')),0) FROM score_availability").fetchone()[0])
             as_of_ms = max(times)
         if type(as_of_ms) is not int or not 0 <= as_of_ms <= 9223372036854775807:
-            raise ValueError('I need a nonnegative integer report cutoff')
+            raise ValueError('Expected a nonnegative integer report cutoff')
         from .research_plan import stopping_choices
         decision_choices = stopping_choices(parent.protocol.content['evaluation'], parent.protocol.content_hash,
                                              extension.content_hash, as_of_ms)
@@ -83,7 +83,7 @@ def build_report(db: Path, parent: LockedProtocol, extension: LockedBaselines, a
         connection.close()
     cleaned = clean_database(db,parent.protocol,as_of_ms,cache_path=clean_cache_path)
     if any(q['status'] == 'rejected' and not q['reasons'] for g in cleaned['groups'] for q in g['quotes']):
-        raise ValueError('I need a recorded reason for every rejected report quote')
+        raise ValueError('Expected a recorded reason for every rejected report quote')
     observations, skipped = [], Counter()
     baseline_models = {}
     for identity, baseline in baselines.items():
@@ -102,7 +102,7 @@ def build_report(db: Path, parent: LockedProtocol, extension: LockedBaselines, a
     for identity, score in sorted(svi_scores.items()):
         prediction = predictions.get(identity)
         if prediction is None or prediction['status'] != 'ok' or score['status'] != 'ok':
-            raise ValueError('I need the matching accepted frozen prediction for every SVI score')
+            raise ValueError('Expected the matching accepted frozen prediction for every SVI score')
         if (score['prediction_content_hash'] != prediction['content_hash']
                 or any(score[key] != prediction[key] for key in ('expiry_ms','lead_ms')) or score['expiry_ms'] > as_of_ms
                 or score['delivery']['fetched_at_ms'] > as_of_ms):
@@ -115,7 +115,7 @@ def build_report(db: Path, parent: LockedProtocol, extension: LockedBaselines, a
         prediction = predictions.get(score['prediction_id'])
         svi_score = svi_scores.get(score['prediction_id'])
         if baseline is None or prediction is None or svi_score is None:
-            raise ValueError('I need all hash-linked records for a baseline report score')
+            raise ValueError('Expected all hash-linked records for a baseline report score')
         if (baseline['status'] != 'ok' or score['status'] != 'ok'
                 or baseline['prediction_content_hash'] != prediction['content_hash']
                 or score['baseline_content_hash'] != baseline['content_hash']
@@ -156,7 +156,7 @@ def build_report(db: Path, parent: LockedProtocol, extension: LockedBaselines, a
             'status':statistics['status'],'as_of_ms':as_of_ms,'protocol_hash':parent.protocol.content_hash,
             'extension_hash':extension.content_hash,'provenance':{'git_commit':git_commit,'versions':report_versions()},
             'capture':summary,'coverage':coverage_report(db,as_of_ms),'ingestion_issue_counts':issues,
-            'undated_issue_policy':"I only attribute an undated issue when its retained source has a bounded fetch timestamp.",
+            'undated_issue_policy':"Undated issues are attributed only when their retained source has a bounded fetch timestamp.",
             'prediction_status_counts':dict(sorted(Counter(r['status'] for r in predictions.values()).items())),
             'baseline_status_counts':dict(sorted(Counter(r['status'] for r in baselines.values()).items())),
             'missing_baseline_score_counts':dict(sorted(skipped.items())), 'n_svi_scores':len(svi_scores),
@@ -166,7 +166,7 @@ def build_report(db: Path, parent: LockedProtocol, extension: LockedBaselines, a
             'observations':[asdict(r) for r in sorted(observations,key=lambda r:(r.expiry_ms,r.lead_ms,r.model))],
             'checklist':{'protocol_lock_precedes_first_decision':parent.witness_at_ms+999 < parent.lock['first_expiry_ms']-max(parent.protocol.content['evaluation']['lead_times_ms']),
                          'baseline_lock_precedes_first_decision':extension.witness_at_ms+999 < extension.content['first_expiry_ms']-max(parent.protocol.content['evaluation']['lead_times_ms']),
-                         'raw_retention':'I verify retained files separately; SQLite alone cannot prove raw retention.',
+                         'raw_retention':'Retained files are verified separately; SQLite alone cannot prove raw retention.',
                          'quote_reasons_counted':sum(summary['quote_status_counts'].values()) == summary['n_quotes']}}
 
 
@@ -195,9 +195,9 @@ def write_report(data: dict, output: Path) -> dict:
     prefix = 'Synthetic illustration' if data['synthetic'] else 'Implied odds'
     capture = data.get('capture',{})
     status = 'Synthetic illustration only' if data['synthetic'] else data['status']
-    headline = ('I generated these inputs to exercise the reporting code. These are not market results.' if data['synthetic'] else
-                'I haven\'t collected enough settled research forecasts to draw a calibration conclusion.' if data['status'] != 'ok' else
-                'I reserve headline inference for the declared 24-hour ATM comparison on USD CRPS.')
+    headline = ('Generated inputs exercise the reporting code. These are not market results.' if data['synthetic'] else
+                'Settled research forecasts are insufficient for a calibration conclusion.' if data['status'] != 'ok' else
+                'The declared primary comparison is SVI against ATM at the 24-hour lead on USD CRPS.')
     crps = data['statistics']['crps']['primary']
     primary_text = 'insufficient data' if crps['status'] != 'ok' else crps['conclusion']
     reasons = ''.join(f'<tr><td>{escape(name)}</td><td>{count}</td></tr>' for name,count in capture.get('reason_counts',{}).items())
@@ -211,17 +211,20 @@ section,.summary{{background:white;border:1px solid #d4dee4;border-radius:8px;pa
 .grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}}.metric{{background:#f3f6f8;padding:15px}}strong{{display:block;font-size:24px}}
 table{{border-collapse:collapse;width:100%}}td,th{{padding:6px 10px;border-bottom:1px solid #dce3e8;text-align:left}}code{{overflow-wrap:anywhere;font-size:13px}}small{{color:#435d6f}}
 </style></head><body><main><small>BTC option probability study · {time_text}</small><h1>{prefix}</h1>
-<p class="status">{escape(status)}</p><p>{headline}</p><p>{escape(data['dataset_label'])}</p>
+<p class="status">{escape(status)}</p>
+<p>Stochastic volatility inspired (SVI) fits an option variance smile. Its cumulative distribution function (CDF), the probability of settlement at or below a price, is compared with at-the-money (ATM), trailing-variance and generalised autoregressive conditional heteroskedasticity (GARCH) forecasts. The continuous ranked probability score (CRPS) measures distribution forecast error in USD; lower is better.</p>
+<p>{headline}</p><p>{escape(data['dataset_label'])}</p>
 <div class="summary"><div class="grid"><div class="metric">Captured quotes<strong>{capture.get('n_quotes',0):,}</strong></div>
 <div class="metric">Scored SVI forecasts<strong>{data.get('n_svi_scores',0):,}</strong></div>
 <div class="metric">Primary paired ESS<strong>{crps['effective_sample_size']:.1f}</strong></div></div>
-<p>Primary result: {escape(primary_text)}</p><p>I keep risk-neutral probabilities separate from realised frequencies. I don't interpret a gap as a trading opportunity.</p></div>
-{''.join(panels)}<section><h2>Reasons and limits</h2><p>I retain quote rejection counts and ingestion issues in report.json. A quote can have several reasons.</p>
+<p>Primary result: {escape(primary_text)}</p><p>ESS is a dependence-adjusted effective sample size.</p></div>
+{''.join(panels)}<section><h2>Reasons and limits</h2><p>Quote rejection counts and ingestion issues remain in report.json. A quote can have several reasons.</p>
 <table><thead><tr><th>Quote reason</th><th>Count</th></tr></thead><tbody>{reasons or '<tr><td>No quote reasons recorded</td><td>0</td></tr>'}</tbody></table>
-<p>I use one venue and a short sample. Overlapping forecasts reduce effective sample size. Settlement is a 30-minute TWAP. Thin wings need extrapolation, snapshots aren't atomic, and crypto funding, jumps and market structure can affect comparisons.</p>
-<p>I use PIT binomial bands only as an iid reference. My dependence-aware checks retain the ESS gate. The GARCH CDF uses a finite simulation approximation.</p></section>
+<p>Risk-neutral probabilities reflect option prices and risk premia; realised frequencies can differ without a trading opportunity. This study uses one venue and a short sample. Overlapping forecasts reduce effective sample size. Settlement is a 30-minute time-weighted average price. Thin wings need extrapolation, snapshots aren't atomic, and crypto funding, jumps and market structure can affect comparisons.</p>
+<p>The smile and CDF use one frozen forecast and its exact quote snapshot. CDF shading marks prices beyond observed strikes. The probability integral transform, or PIT, evaluates the forecast CDF at settlement. Its binomial bands are pointwise references under independent uniform outcomes, rather than calibration tests for overlapping observations.</p>
+<p>Tail events include quantile boundaries. Their stationary-bootstrap intervals require ESS &gt;= 60. Cumulative-mean CRPS intervals are pointwise, with an ESS check at each prefix, rather than simultaneous bands or extra headline tests. Coverage retains every model, lead and expiry class; infinite and undefined log losses remain counted in report.json. The GARCH CDF is a finite simulation approximation.</p></section>
 <section><h2>Provenance</h2><p>Protocol: <code>{escape(data['protocol_hash'])}</code><br>Baseline extension: <code>{escape(data['extension_hash'])}</code><br>
-Commit: <code>{escape(str(data['provenance']['git_commit']))}</code></p><p>I keep the complete scores, figure hashes and checklist in report.json.</p></section>
+Commit: <code>{escape(str(data['provenance']['git_commit']))}</code></p><p>Complete scores, figure hashes and the checklist remain in report.json.</p></section>
 </main></body></html>'''
     (output/'report.html').write_text(html,encoding='utf-8',newline='\n')
     return {'status':data['status'],'synthetic':data['synthetic'],'report_files':['report.html','report.json',*hashes],

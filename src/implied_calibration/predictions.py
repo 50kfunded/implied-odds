@@ -1,4 +1,4 @@
-"""I freeze each due forecast once, including missing or rejected forecasts."""
+"""Each due forecast is frozen once, including missing and rejected outcomes."""
 
 from collections import Counter
 from dataclasses import asdict, dataclass, replace
@@ -75,7 +75,7 @@ def freeze_predictions(db: Path, locked: LockedProtocol, as_of_ms: int, created_
     locked.validate()
     if (type(as_of_ms) is not int or type(created_at_ms) is not int or not 0 <= as_of_ms <= created_at_ms
             or not re.fullmatch('[0-9a-f]{40}', git_commit)):
-        raise ValueError('I need bounded integer timestamps and a Git commit for freezing')
+        raise ValueError('Expected bounded integer timestamps and a Git commit for freezing')
     choices = locked.protocol.content['evaluation']
     store = evaluation_store(db)
     added, existing_count, not_due, ineligible = 0, 0, 0, 0
@@ -148,7 +148,7 @@ def freeze_predictions(db: Path, locked: LockedProtocol, as_of_ms: int, created_
                                 prediction = replace(prediction, message='The latest snapshot is older than the locked tolerance')
                     completed_at_ms = created_at_ms if now_ms is None else now_ms()
                     if type(completed_at_ms) is not int or completed_at_ms < created_at_ms:
-                        raise ValueError('Clock moved backward while I was freezing a forecast')
+                        raise ValueError('Clock moved backward during forecast freezing')
                     prediction = replace(prediction, created_at_ms=completed_at_ms)
                     if completed_at_ms > target + choices['freeze_delay_tolerance_ms']:
                         prediction = replace(prediction, status='late_freeze', distribution=None, scoring_support=None,

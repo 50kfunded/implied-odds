@@ -1,4 +1,4 @@
-"""I generate a separate method illustration without creating research database rows."""
+"""Generated method illustrations stay outside the research database."""
 
 from dataclasses import asdict
 from datetime import datetime, timezone
@@ -21,7 +21,7 @@ def synthetic_report(parent: LockedProtocol, extension: LockedBaselines, git_com
                      *, n: int = 240, seed: int = 314159) -> dict:
     extension.validate(parent)
     if type(n) is not int or n < 1 or type(seed) is not int or seed < 0:
-        raise ValueError('I need a positive synthetic sample size and nonnegative seed')
+        raise ValueError('Expected a positive synthetic sample size and nonnegative seed')
     choices = parent.protocol.content['evaluation']
     lead = choices['primary_lead_ms']
     maturity = lead/(365*86400000)

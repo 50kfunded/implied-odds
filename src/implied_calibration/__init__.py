@@ -1,1 +1,1 @@
-"""I'm studying BTC volatility forecasts and option probability calibration."""
+"""BTC volatility forecasting and option probability calibration research."""

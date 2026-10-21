@@ -1,4 +1,4 @@
-"""I keep UTC slot arithmetic separate from clocks and file access."""
+"""UTC slot arithmetic stays separate from clocks and file access."""
 
 from dataclasses import dataclass
 

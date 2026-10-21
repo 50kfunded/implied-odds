@@ -1,4 +1,4 @@
-"""I test live-job ordering, crash recovery and snapshot isolation without a network."""
+"""Offline live-job ordering, crash recovery and snapshot-isolation checks."""
 
 from contextlib import ExitStack
 from dataclasses import replace

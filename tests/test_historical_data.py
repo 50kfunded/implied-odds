@@ -1,4 +1,4 @@
-"""I check retrospective source integrity and pagination without network calls."""
+"""Offline source-integrity and pagination checks for retrospective inputs."""
 
 from copy import deepcopy
 import hashlib

@@ -1,4 +1,4 @@
-"""I score frozen risk-neutral CDFs without reading files or fetching prices."""
+"""Frozen risk-neutral CDFs are scored without file I/O or price requests."""
 
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
@@ -105,7 +105,7 @@ def expiry_class(expiry_ms: int) -> str:
         raise ValueError('Expiry must be integer UTC milliseconds')
     expiry = datetime.fromtimestamp(expiry_ms / 1000, timezone.utc)
     if (expiry.hour, expiry.minute, expiry.second, expiry.microsecond) != (8, 0, 0, 0):
-        raise ValueError('I only classify 08:00 UTC expiries')
+        raise ValueError('Expiry classification requires 08:00 UTC expiries')
     if expiry.weekday() != 4:
         return 'daily'
     if (expiry + timedelta(days=7)).month == expiry.month:
@@ -125,7 +125,7 @@ class FrozenCDF:
         support = record['scoring_support']
         diagnostics = model.to_record()['diagnostics']
         if diagnostics['status'] != 'ok' or diagnostics['repaired']:
-            raise ValueError('I only score unrepaired, resolved CDFs')
+            raise ValueError('Scoring requires unrepaired, resolved CDFs')
         expected = cls.for_model(model)
         if support != expected.support_record():
             raise ValueError('Frozen scoring support differs from its declared CDF')
@@ -198,7 +198,7 @@ class ScoreRow:
 def score_distribution(distribution: FrozenCDF, observed_usd: float, expiry_ms: int,
                        settings: ScoreSettings = ScoreSettings()) -> ScoreRow:
     if type(observed_usd) not in (int, float) or not math.isfinite(observed_usd) or observed_usd <= 0:
-        raise ValueError('I need a finite positive official delivery price')
+        raise ValueError('Expected a finite positive official delivery price')
     cdf, _ = distribution.probabilities(observed_usd)
     pit = float(cdf)
     transformed = min(max(pit, settings.pit_transform_epsilon), 1 - settings.pit_transform_epsilon)

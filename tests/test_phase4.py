@@ -1,4 +1,4 @@
-"""I check SVI fitting on labelled synthetic smiles and offline database fixtures."""
+"""SVI fitting checks use labelled synthetic smiles and offline database fixtures."""
 
 from copy import deepcopy
 from contextlib import redirect_stdout

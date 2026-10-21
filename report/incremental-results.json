@@ -1,5 +1,5 @@
 {
-  "audited_close_rule": "I preserve the original all-OHLC failure; the three audited DVOL closes agree, with limited date coverage.",
+  "audited_close_rule": "The original all-OHLC check fails; the three audited DVOL closes agree, with limited date coverage.",
   "block_sensitivities": {
     "180": {
       "calendar_gaps": 0,
@@ -396,7 +396,7 @@
   },
   "concentration": {
     "dvol": {
-      "interpretation": "I identify large contributions after seeing losses. I don't infer an ex-ante trading regime.",
+      "interpretation": "Large contributions are identified after inspection of losses and do not define an ex-ante trading regime.",
       "leave_one_year_out": {
         "2023": {
           "mean": -0.06673565698480302,
@@ -549,7 +549,7 @@
       ]
     },
     "har_dvol": {
-      "interpretation": "I identify large contributions after seeing losses. I don't infer an ex-ante trading regime.",
+      "interpretation": "Large contributions are identified after inspection of losses and do not define an ex-ante trading regime.",
       "leave_one_year_out": {
         "2023": {
           "mean": -0.012334471578303642,
@@ -756,7 +756,7 @@
     ],
     "joint_null_scope": "HAR calibration plus zero increment coefficient",
     "joint_wald": 19.561492689284023,
-    "limit": "I use contemporaneous level residuals; overlapping targets and generated rolling forecasts affect inference.",
+    "limit": "Diagnostics use contemporaneous level residuals; overlapping targets and generated rolling forecasts affect inference.",
     "n": 1357,
     "role": "exploratory_no_multiple_testing_claim",
     "status": "descriptive"
@@ -796,7 +796,7 @@
   "historical_role": "exploratory_after_inspection",
   "inference_simulations": {
     "kind": "synthetic_finite_sample_inference_diagnostic",
-    "limit": "I simulate mean-zero overlapping loss processes and a 365-day persistence component, not the entire fitted market pipeline. Size and power here don't certify market inference.",
+    "limit": "The simulation uses mean-zero overlapping losses and a 365-day persistence component, rather than the entire fitted market pipeline. Its size and power estimates do not certify market inference.",
     "rows": [
       {
         "conditional_mc_interval_95": null,
@@ -1127,7 +1127,7 @@
         1.0
       ],
       "joint_wald": 68.52451739817916,
-      "limit": "I use contemporaneous level residuals; overlapping targets and generated rolling forecasts affect inference.",
+      "limit": "Diagnostics use contemporaneous level residuals; overlapping targets and generated rolling forecasts affect inference.",
       "n": 1357,
       "role": "exploratory_no_multiple_testing_claim",
       "status": "descriptive"
@@ -1148,7 +1148,7 @@
         1.0
       ],
       "joint_wald": 17.385374050318475,
-      "limit": "I use contemporaneous level residuals; overlapping targets and generated rolling forecasts affect inference.",
+      "limit": "Diagnostics use contemporaneous level residuals; overlapping targets and generated rolling forecasts affect inference.",
       "n": 1357,
       "role": "exploratory_no_multiple_testing_claim",
       "status": "descriptive"
@@ -1169,7 +1169,7 @@
         1.0
       ],
       "joint_wald": 9.416610020009202,
-      "limit": "I use contemporaneous level residuals; overlapping targets and generated rolling forecasts affect inference.",
+      "limit": "Diagnostics use contemporaneous level residuals; overlapping targets and generated rolling forecasts affect inference.",
       "n": 1357,
       "role": "exploratory_no_multiple_testing_claim",
       "status": "descriptive"
@@ -1190,7 +1190,7 @@
         1.0
       ],
       "joint_wald": 61.54737478049731,
-      "limit": "I use contemporaneous level residuals; overlapping targets and generated rolling forecasts affect inference.",
+      "limit": "Diagnostics use contemporaneous level residuals; overlapping targets and generated rolling forecasts affect inference.",
       "n": 1357,
       "role": "exploratory_no_multiple_testing_claim",
       "status": "descriptive"
@@ -1515,7 +1515,7 @@
         "source": "BTC-PERPETUAL"
       }
     ],
-    "interpretation": "I check DVOL daily bars from 00:00 UTC and every retained perpetual daily bar from 08:00 UTC against its 24 hourly bars. I don't verify original data vintages.",
+    "interpretation": "DVOL daily bars from 00:00 UTC and every retained perpetual daily bar from 08:00 UTC are checked against their 24 hourly bars. Original data vintages remain unverified.",
     "passed": false,
     "relative_tolerance": 1e-08
   },

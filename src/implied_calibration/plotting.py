@@ -1,4 +1,4 @@
-"""I draw smile diagnostics and label synthetic inputs explicitly."""
+"""Smile diagnostics identify synthetic inputs explicitly."""
 
 import numpy as np
 from matplotlib.backends.backend_agg import FigureCanvasAgg

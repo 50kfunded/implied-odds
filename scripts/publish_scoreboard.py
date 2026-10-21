@@ -1,4 +1,4 @@
-"""I publish public counts and hashes without copying private collector files."""
+"""Publish public counts and hashes while keeping private collector files local."""
 
 import argparse
 import json
@@ -21,7 +21,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     if not args.db.is_file() or not args.status.is_file():
-        parser.error('I need an existing collector database and status file')
+        parser.error('Expected an existing collector database and status file')
     parent = load_locked_protocol(root/'protocol/protocol.json')
     baseline = load_locked_baselines(root/'protocol/baselines.json',parent)
     now = utc_ms()

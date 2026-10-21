@@ -1,4 +1,4 @@
-"""I check readonly reporting and deterministic reproduction without network access."""
+"""Read-only reporting and deterministic reproduction checks run offline."""
 
 from copy import deepcopy
 from contextlib import redirect_stdout

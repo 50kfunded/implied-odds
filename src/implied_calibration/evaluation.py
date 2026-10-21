@@ -1,4 +1,4 @@
-"""I score immutable forecasts only after their official delivery observation exists."""
+"""Immutable forecasts are scored after official delivery observations arrive."""
 
 from collections import Counter, defaultdict
 from dataclasses import asdict
@@ -18,7 +18,7 @@ def score_database(db: Path, locked: LockedProtocol, as_of_ms: int, created_at_m
     locked.validate()
     if (type(as_of_ms) is not int or type(created_at_ms) is not int or not 0 <= as_of_ms <= created_at_ms
             or not re.fullmatch('[0-9a-f]{40}', git_commit)):
-        raise ValueError('I need bounded integer timestamps and a Git commit for scoring')
+        raise ValueError('Expected bounded integer timestamps and a Git commit for scoring')
     store = evaluation_store(db)
     output, completed = [], []
     added = existing_count = 0

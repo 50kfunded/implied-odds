@@ -1,4 +1,4 @@
-"""I check CDF extraction with labelled synthetic slices and offline database fixtures."""
+"""CDF extraction checks use labelled synthetic slices and offline database fixtures."""
 
 from contextlib import redirect_stdout
 from copy import deepcopy

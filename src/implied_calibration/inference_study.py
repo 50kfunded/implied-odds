@@ -1,4 +1,4 @@
-"""I measure finite-sample inference behaviour under declared loss processes."""
+"""Finite-sample inference diagnostics use declared loss processes."""
 
 import math
 
@@ -38,7 +38,7 @@ def loss_process(n: int, name: str, rng) -> np.ndarray:
         shocks = rng.binomial(1,.005,n+29)*rng.choice([-10.,10.],n+29)
         tails = np.convolve(shocks,np.ones(30)/math.sqrt(30),mode='valid')
         return (overlap+tails)/math.sqrt(1+.005*100)
-    raise ValueError('I need a declared simulation process')
+    raise ValueError('Expected a declared simulation process')
 
 
 def wilson(successes: int, total: int) -> list[float] | None:
@@ -57,7 +57,7 @@ def simulation_report(plan: dict) -> dict:
     for n in config['sample_sizes']:
         for name in config['dgp']:
             for shift in config['power_mean_shifts']:
-                # I use independent stationary draws; I never centre a realised sample.
+                # Independent stationary draws preserve the population null; realised samples stay uncentred.
                 rng = np.random.default_rng(config['seed']+n+len(output)*10000)
                 rejected = passed = gated = 0
                 for _ in range(config['replications']):
@@ -77,4 +77,4 @@ def simulation_report(plan: dict) -> dict:
                     'conditional_rejection_given_gate':gated/passed if passed else None,
                     'conditional_mc_interval_95':wilson(gated,passed)})
     return {'kind':'synthetic_finite_sample_inference_diagnostic','synthetic':True,'settings':config,
-        'rows':output,'limit':"I simulate mean-zero overlapping loss processes and a 365-day persistence component, not the entire fitted market pipeline. Size and power here don't certify market inference."}
+        'rows':output,'limit':"The simulation uses mean-zero overlapping losses and a 365-day persistence component, rather than the entire fitted market pipeline. Its size and power estimates do not certify market inference."}

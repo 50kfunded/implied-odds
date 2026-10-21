@@ -1,4 +1,4 @@
-"""I verify a fixed protocol against its immutable lock and a Git witness."""
+"""Fixed protocols are verified against immutable locks and Git witnesses."""
 
 from dataclasses import dataclass
 import json
@@ -47,7 +47,7 @@ def load_locked_protocol(path: Path) -> LockedProtocol:
     def git(*args: str) -> str:
         result = subprocess.run(['git', '-C', str(root), *args], capture_output=True, text=True, check=False)
         if result.returncode:
-            raise ValueError('I need the committed protocol and lock in this Git checkout')
+            raise ValueError('Expected the committed protocol and lock in this Git checkout')
         return result.stdout.strip()
 
     config = json.loads(git('show', f"{lock['git_commit']}:{relative}"))
@@ -60,7 +60,7 @@ def load_locked_protocol(path: Path) -> LockedProtocol:
             witness = commit
             break
     if witness is None:
-        raise ValueError('I need a committed matching protocol lock before prediction or scoring')
+        raise ValueError('Expected a committed matching protocol lock before prediction or scoring')
     result = LockedProtocol(protocol, lock, witness, int(git('show', '-s', '--format=%ct', witness)) * 1000)
     result.validate()
     return result

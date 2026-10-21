@@ -1,4 +1,4 @@
-"""I test recovery, saved inversions and local operational evidence offline."""
+"""Offline recovery, saved inversions and local operational evidence checks."""
 
 from contextlib import ExitStack, closing
 from copy import deepcopy

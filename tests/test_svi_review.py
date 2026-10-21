@@ -1,4 +1,4 @@
-"""I challenge SVI derivatives, weighting, bounded starts, and calendar flags independently."""
+"""Independent SVI derivative, weighting, bounded-start and calendar-flag checks."""
 
 from dataclasses import replace
 from decimal import Decimal, localcontext

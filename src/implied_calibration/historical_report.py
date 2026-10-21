@@ -1,4 +1,4 @@
-"""I rebuild a historical variance study from hash-verified public responses."""
+"""Historical variance reports rebuild from hash-verified public responses."""
 
 import csv
 from datetime import datetime, timezone
@@ -42,7 +42,7 @@ def alignment_checks(inputs: HistoricalInputs, days: list[int]) -> dict:
                        'daily_ohlc': candle, 'aggregate_hourly_ohlc': aggregate, 'passed': passed})
     return {'passed': all(row['passed'] for row in checks) and len(checks) == len(days) + len(price_days), 'checks': checks,
             'relative_tolerance': 1e-8, 'absolute_tolerance': 1e-8,
-            'interpretation': "I check DVOL daily bars from 00:00 UTC and every retained perpetual daily bar from 08:00 UTC against its 24 hourly bars. I don't verify original data vintages."}
+            'interpretation': "DVOL daily bars from 00:00 UTC and every retained perpetual daily bar from 08:00 UTC are checked against their 24 hourly bars. Original data vintages remain unverified."}
 
 
 def read_alignment_audit(manifest_path: Path, inputs: HistoricalInputs, config: dict) -> dict:
@@ -89,7 +89,7 @@ def read_alignment_audit(manifest_path: Path, inputs: HistoricalInputs, config: 
     repeated = all(tuple(value) == inputs.dvol[day] for value in daily) and tuple(hourly[0]) == inputs.alignment_dvol[day]
     return {'manifest': manifest, 'requests': requests, 'day_ms': day,
             'daily_ohlc': daily, 'first_hour_ohlc': hourly, 'same_values_on_refetch': repeated,
-            'role': "I diagnose a retained source discrepancy after seeing the first results. I don't replace inputs or reopen the failed alignment gate."}
+            'role': "This audit diagnoses a retained source discrepancy after inspection of the first results. Original inputs and the failed alignment gate remain unchanged."}
 
 
 def variance_figure(result: dict) -> Figure:
@@ -133,12 +133,6 @@ def variance_figure(result: dict) -> Figure:
     bottom.grid(axis='y', alpha=.15)
     study = result['study']
     figure.suptitle('Real historical Deribit data | ' + utc_date(study['origin_start_ms']) + ' to ' + utc_date(study['origin_end_ms']), fontsize=14)
-    if not result['alignment']['passed']:
-        top.text(.01, .97, 'Descriptive results: daily/hourly OHLC validation failed',
-                 transform=top.transAxes, va='top', fontsize=9, color='#9f2b20',
-                 bbox={'facecolor': 'white', 'alpha': .9, 'edgecolor': 'none'})
-    figure.text(.5, -.025, '95% stationary-bootstrap intervals, 60-day expected blocks, 5,000 draws. '
-                'Daily 30-day targets overlap; annual intervals are descriptive.', ha='center', fontsize=8)
     return figure
 
 
@@ -173,7 +167,7 @@ def write_historical_report(manifest_path: Path, study_path: Path, output: Path,
     result['primary']['formal_claim_eligible'] = result['primary']['status'] == 'ok' and result['alignment']['passed']
     if not result['alignment']['passed']:
         result['primary']['status'] = 'alignment check failed'
-        result['primary']['conclusion'] = 'I withhold the primary claim because the candle alignment check failed.'
+        result['primary']['conclusion'] = 'The failed candle-alignment check withholds the primary claim.'
     if audit_manifest_path is not None:
         result['alignment_audit'] = read_alignment_audit(audit_manifest_path, inputs, config)
     result['study'] = config
@@ -207,30 +201,31 @@ def write_historical_report(manifest_path: Path, study_path: Path, output: Path,
     secondary = ''
     if correction['metrics']:
         cm = correction['metrics']
-        secondary = f'''<h2>Past-only correction, descriptive</h2><p>I compare the same {correction['n']} origins from 2023 onward.
+        secondary = f'''<h2>Past-only correction</h2><p>The correction comparison uses the same {correction['n']} origins from 2023 onward.
 Mean QLIKE is {cm['qlike_corrected']['mean']:.4f} after correction, {cm['qlike_dvol']['mean']:.4f} for raw DVOL
-and {cm['qlike_trailing']['mean']:.4f} for trailing variance. I fit the scale on the latest 365 completed origin outcomes.
-The rolling training window can create persistence beyond the primary 60-day block, so I don't make a significance claim here.</p>'''
+and {cm['qlike_trailing']['mean']:.4f} for trailing variance. The scale uses the latest 365 completed origin outcomes.
+That rolling window can create persistence beyond the primary 60-day block; this is a secondary diagnostic.</p>'''
     svg = (output / 'historical-variance.svg').read_text(encoding='utf-8')
     svg = svg[svg.index('<svg'):]
     html = f'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>BTC historical variance research</title><style>body{{font:17px/1.6 system-ui,sans-serif;max-width:1080px;margin:45px auto;padding:24px;color:#183042}}
 table{{border-collapse:collapse;width:100%;font-size:14px}}td,th{{padding:8px;text-align:right;border-bottom:1px solid #ccd5df}}td:first-child,th:first-child{{text-align:left}}svg{{width:100%;height:auto}}</style></head><body>
 <h1>Does BTC option-implied variance beat trailing realised variance?</h1>
-<p>I compare historical BTC DVOL with subsequent 30-day realised variance from hourly BTC-PERPETUAL returns.
-I evaluate {primary['n']} daily origins from {utc_date(config['origin_start_ms'])} through {utc_date(config['origin_end_ms'])}, with {len(result['excluded_origins'])} exclusions.
-I retrieved these historical candles on {utc_date(inputs.manifest['captured_from_ms'])}; I don't claim original data vintages or prospective forecasts.</p>
-<p><strong>{escape(primary['status'])}: {escape(primary['conclusion'])}.</strong></p>{svg}
-<p>I retain all OHLC mismatches in report.json. A failed alignment check keeps every interval descriptive, even when ESS passes.
-Any separate refetch audit diagnoses the discrepancy; it doesn't replace the original inputs or reopen that gate.</p>
-<h2>Paired forecast loss</h2><p>I use QLIKE = actual / forecast − log(actual / forecast) − 1 on annualised variances. Lower is better.
-My primary interval uses 5,000 paired stationary-bootstrap draws with 60-day expected blocks and seed 314159.
-I check ESS against 60, HAC at 59 daily lags, 30/90-day blocks and non-overlapping 30-day targets. Annual intervals stay descriptive.</p>{_table(result)}{secondary}
-<h2>What this measures</h2><p>{escape(config['claim_scope'])} {escape(config['vintage'])}
+<p>Historical BTC DVOL, Deribit's option-implied volatility index, is compared with subsequent 30-day realised variance from hourly BTC-PERPETUAL returns.
+The sample contains {primary['n']} daily origins from {utc_date(config['origin_start_ms'])} through {utc_date(config['origin_end_ms'])}, with {len(result['excluded_origins'])} exclusions.
+The historical candles were retrieved on {utc_date(inputs.manifest['captured_from_ms'])}.</p>{svg}
+<h2>Paired forecast loss</h2><p>QLIKE = actual / forecast − log(actual / forecast) − 1 measures annualised-variance forecast error. Lower is better.
+The primary interval uses 5,000 paired stationary-bootstrap draws, resampling adjacent loss blocks to retain dependence, with 60-day expected blocks and seed 314159.
+Effective sample size, or ESS, is checked against 60. Heteroskedasticity and autocorrelation consistent, or HAC, variance uses 59 daily lags.
+Sensitivity checks use 30/90-day blocks and non-overlapping 30-day targets.</p>{_table(result)}{secondary}
+<h2>Scope and source limits</h2><p><strong>{escape(primary['status'])}: {escape(primary['conclusion'])}</strong></p>
+<p>All open/high/low/close mismatches remain in report.json. A failed alignment check keeps every interval descriptive even when ESS passes; annual intervals are also descriptive.
+A separate refetch diagnoses the discrepancy while preserving the original inputs and gate. Historical downloads do not establish original data vintages or prospective forecasts.</p>
+<p>{escape(config['claim_scope'])} {escape(config['vintage'])}
 DVOL includes an option risk premium and methodology choices. Perpetual returns are a proxy for spot-index returns.
 An implied/realised gap alone doesn't establish mispricing, a causal risk premium or trading profit.</p>
-<p>I retain every requested origin and exclusion reason in report.json, along with alignment checks, sensitivity results,
-input hashes, capture times and software versions. I provide individual outcomes in observations.csv.</p>
+<p>Every requested origin and exclusion reason is retained in report.json, along with alignment checks, sensitivity results,
+input hashes, capture times and software versions. Individual outcomes appear in observations.csv.</p>
 </body></html>'''
     (output / 'report.html').write_text(html, encoding='utf-8', newline='\n')
     return {'status': 'reproduced', 'research_status': primary['status'], 'n_origins': primary['n'],

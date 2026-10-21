@@ -1,4 +1,4 @@
-"""I test post-commit score availability at the fixed analysis boundary offline."""
+"""Offline score-availability checks at the fixed analysis boundary."""
 
 from contextlib import contextmanager, redirect_stdout
 import io

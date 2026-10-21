@@ -1,4 +1,4 @@
-"""I check the complete frozen-baseline path and its immutable evaluation inputs."""
+"""Frozen-baseline checks cover the complete path and immutable evaluation inputs."""
 
 from copy import deepcopy
 from dataclasses import asdict

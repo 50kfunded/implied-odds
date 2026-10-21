@@ -1,4 +1,4 @@
-"""I freeze paired variance forecasts before outcomes and count missed dates."""
+"""Paired variance forecasts are frozen before outcomes; missed dates are counted."""
 
 import hashlib
 import json
@@ -35,7 +35,7 @@ def write_immutable(path: Path, payload: dict) -> dict:
         old = json.loads(path.read_text(encoding='utf-8'))
         claimed = old.pop('content_hash')
         if digest(old) != claimed or old != payload:
-            raise ValueError('I refuse to change an immutable prospective record')
+            raise ValueError('Refusing to change an immutable prospective record')
         return record
     with path.open('x',encoding='utf-8',newline='\n') as handle:
         handle.write(json.dumps(record,indent=2,sort_keys=True,allow_nan=False)+'\n')
@@ -48,7 +48,7 @@ def read_immutable(path: Path) -> dict:
     record = json.loads(path.read_text(encoding='utf-8'))
     body = {k:v for k,v in record.items() if k != 'content_hash'}
     if record.get('content_hash') != digest(body):
-        raise ValueError('I found a changed frozen variance record')
+        raise ValueError('Detected a changed frozen variance record')
     return record
 
 
@@ -57,19 +57,19 @@ def freeze_record(cases: list, features: tuple, plan: dict, origin: int, now: in
     if (not future['origin_start_ms'] <= origin <= future['origin_end_ms']
             or (origin-future['origin_start_ms']) % DAY_MS
             or not origin-future['freeze_start_before_origin_ms'] <= now <= origin-future['freeze_end_before_origin_ms']):
-        raise ValueError('I only freeze in the declared pre-target window; I never backfill')
+        raise ValueError('Freezing requires the declared pre-target window; backfill is prohibited')
     cutoff = origin-future['feature_cutoff_before_origin_ms']
     if (proof.get('feature_cutoff_ms') != cutoff or proof.get('latest_fetch_ms',now+1) > now
             or proof.get('daily_close') != proof.get('last_hourly_close') or proof.get('daily_close') is None):
-        raise ValueError('I need retained matching DVOL closes before freezing')
+        raise ValueError('Expected retained matching DVOL closes before freezing')
     if not math.isclose(features[3],(proof['daily_close']/100)**2,rel_tol=1e-12):
-        raise ValueError('I need features matching the retained DVOL close')
+        raise ValueError('Expected features matching the retained DVOL close')
     fitted = fit_forecasts(cases,cutoff,features,plan)
     if fitted is None:
-        raise ValueError('I need 365 completed matched training outcomes')
+        raise ValueError('Expected 365 completed matched training outcomes')
     completed = completed_now_ms() if completed_now_ms is not None else now
     if not now <= completed <= origin-future['freeze_end_before_origin_ms']:
-        raise ForecastUnavailable('I cannot backdate a fit completed after the freeze window')
+        raise ForecastUnavailable('Cannot backdate a fit completed after the freeze window')
     return {'schema_version':1,'kind':'prospective_incremental_variance','plan_hash':digest(plan),
             'origin_ms':origin,'feature_cutoff_ms':cutoff,'target_end_ms':origin+30*DAY_MS,
             'frozen_at_ms':completed,'features':list(features),'source_proof':proof,**fitted}
@@ -90,7 +90,7 @@ def recover_forecast_receipt(directory: Path, record: dict, plan: dict, now_ms) 
     now = now_ms()
     future = plan['future']
     if not origin-future['freeze_start_before_origin_ms'] <= now <= origin-future['freeze_end_before_origin_ms']:
-        raise ForecastUnavailable('I cannot recover a missing receipt outside the freeze window')
+        raise ForecastUnavailable('Cannot recover a missing receipt outside the freeze window')
     publish_forecast(directory,{k:v for k,v in record.items() if k != 'content_hash'},plan,now_ms)
 
 
@@ -106,12 +106,12 @@ def verify_source_proof(record: dict, directory: Path, expected_seed_hash: str) 
             or not isinstance(close,(int,float)) or not math.isfinite(close) or close <= 0
             or close != proof.get('last_hourly_close') or not math.isclose(record['features'][3],(close/100)**2,rel_tol=1e-12)
             or not isinstance(files,dict) or not files):
-        raise ValueError('I found an invalid frozen source proof')
+        raise ValueError('Detected an invalid frozen source proof')
     for relative, expected in files.items():
         path = (directory/relative).resolve()
         if (not path.is_relative_to(directory.resolve()) or not path.is_file()
                 or hashlib.sha256(path.read_bytes()).hexdigest() != expected):
-            raise ValueError('I found a missing or changed frozen raw source')
+            raise ValueError('Detected a missing or changed frozen raw source')
 
 
 def refresh_start(mapping: dict, duration: int, end_ms: int) -> int:
@@ -142,7 +142,7 @@ def forward_summary(directory: Path, plan: dict, now: int, guard: dict) -> dict:
     forecasts = accepted
     by_origin = {r['origin_ms']:r for r in forecasts}
     if len(by_origin) != len(forecasts):
-        raise ValueError('I found duplicate prospective origins')
+        raise ValueError('Detected duplicate prospective origins')
     future = plan['future']
     for forecast in forecasts:
         origin = forecast['origin_ms']
@@ -150,10 +150,10 @@ def forward_summary(directory: Path, plan: dict, now: int, guard: dict) -> dict:
                 or (origin-future['origin_start_ms']) % DAY_MS
                 or not origin-future['freeze_start_before_origin_ms'] <= forecast['frozen_at_ms'] <= origin-future['freeze_end_before_origin_ms']
                 or forecast['training']['latest_target_end_ms'] > forecast['feature_cutoff_ms']):
-            raise ValueError('I found an invalid prospective freeze or training cutoff')
+            raise ValueError('Detected an invalid prospective freeze or training cutoff')
         verify_source_proof(forecast,directory,expected_seed_hash)
     if len({r['origin_ms'] for r in scores}) != len(scores):
-        raise ValueError('I found duplicate prospective scores')
+        raise ValueError('Detected duplicate prospective scores')
     durable_scores = []
     for score in scores:
         receipt_path = directory/'score-receipts'/f"{score['origin_ms']}.json"
@@ -166,7 +166,7 @@ def forward_summary(directory: Path, plan: dict, now: int, guard: dict) -> dict:
         linked_forecast = by_origin.get(score['origin_ms'])
         if (linked_forecast is None or score['forecast_hash'] != linked_forecast['content_hash']
                 or score['scored_at_ms'] < linked_forecast['target_end_ms'] or linked_forecast['frozen_at_ms'] >= linked_forecast['origin_ms']):
-            raise ValueError('I need hash-linked forecasts frozen before outcomes')
+            raise ValueError('Expected hash-linked forecasts frozen before outcomes')
     scheduled = list(range(future['origin_start_ms'],future['origin_end_ms']+DAY_MS,DAY_MS))
     due = [t for t in scheduled if now > t-future['freeze_end_before_origin_ms']]
     missing = [t for t in due if t not in by_origin]
@@ -175,11 +175,11 @@ def forward_summary(directory: Path, plan: dict, now: int, guard: dict) -> dict:
               'n_planned':len(scheduled),'n_due':len(due),'n_frozen':len(forecasts),'n_scored':len(scores),
               'n_retained_forecast_attempts':len(retained_forecasts),'rejected_forecasts':rejected,
               'missing_origins':missing,'n_missing':len(missing),'terminal':terminal,
-              'formal_claim_eligible':False,'conclusion':'I wait for the fixed terminal date.',
+              'formal_claim_eligible':False,'conclusion':'Fixed terminal date pending.',
               'inference_guard_hash':digest(guard),'frozen_hashes':[{'origin_ms':r['origin_ms'],'hash':r['content_hash']} for r in forecasts],
-              'individual_scores':scores,'anchor_scope':'I retain local hashes; an independent public timestamp is still needed.'}
+              'individual_scores':scores,'anchor_scope':'Local hashes are retained; an independent public timestamp is still needed.'}
     if terminal:
-        result['conclusion'] = 'inconclusive: I keep formal inference disabled under the validation amendment'
+        result['conclusion'] = 'inconclusive: formal inference remains disabled under the validation amendment'
         if len(scores) == len(scheduled) and {r['origin_ms'] for r in scores} == set(scheduled):
             values = np.array([[r['losses']['har_dvol']-r['losses']['har']] for r in sorted(scores,key=lambda r:r['origin_ms'])])
             result['descriptive_terminal'] = _metric_summary(values,np.array(scheduled),['qlike_har_dvol_minus_har'],plan)
@@ -192,7 +192,7 @@ class VarianceForwardJob:
         self.plan = load_plan(self.root/'protocol/incremental-variance-v1.json')
         self.guard = load_plan(self.root/'protocol/inference-validation-v1.json')
         if self.guard['parent_plan_sha256'] != digest(self.plan) or self.guard['formal_claims_enabled'] is not False:
-            raise ValueError('I need the matching conservative inference amendment')
+            raise ValueError('Expected the matching conservative inference amendment')
         historical = load_study(self.root/'protocol/historical-variance.json')
         inputs = read_study(self.root/'recordings/historical-variance/manifest.json',historical)
         self.prices, self.dvol = dict(inputs.prices), dict(inputs.dvol)
@@ -210,19 +210,19 @@ class VarianceForwardJob:
             for record in read_raw(path,on_issue=issues.append):
                 self.ingest(record)
             if issues:
-                raise ValueError('I found a corrupt retained prospective response')
+                raise ValueError('Detected a corrupt retained prospective response')
 
     def ingest(self, row: dict) -> None:
         if not row.get('ok'):
             return
         fetched = row['fetched_at_ms']
         if fetched > self.now_ms():
-            raise ValueError('I cannot ingest a response from the future')
+            raise ValueError('Cannot ingest a response from the future')
         result = validate_response(row['endpoint'],row['http_status'],row['body'])
         params = row['params']
         if row['endpoint'] == PRICES:
             if params.get('resolution') != '60' or params.get('instrument_name') != 'BTC-PERPETUAL':
-                raise ValueError('I need the declared perpetual hourly source')
+                raise ValueError('Expected the declared perpetual hourly source')
             candles = zip(result.get('ticks',[]),result.get('open',[]),result.get('high',[]),result.get('low',[]),result.get('close',[]))
             destination, duration = self.prices, HOUR_MS
         elif row['endpoint'] == DVOL and params.get('currency') == 'BTC':
@@ -230,23 +230,23 @@ class VarianceForwardJob:
             destination = self.dvol if params['resolution'] == '1D' else self.hourly_dvol
             duration = DAY_MS if params['resolution'] == '1D' else HOUR_MS
         else:
-            raise ValueError('I found an unexpected prospective source')
+            raise ValueError('Detected an unexpected prospective source')
         for opened,*values in candles:
             if opened+duration > fetched:
                 continue
             if opened % duration or not params['start_timestamp'] <= opened <= params['end_timestamp']:
-                raise ValueError('I found an invalid prospective candle clock')
+                raise ValueError('Detected an invalid prospective candle clock')
             a,b,c,d = (float(v) for v in values)
             candle = (a,b,c,d)
             if opened in destination and destination[opened][3] != candle[3]:
-                raise ValueError('I retain conflicting close revisions as a fatal source failure')
+                raise ValueError('Conflicting close revisions are a fatal source failure')
             destination[opened] = candle
         self.latest_fetch_ms = max(self.latest_fetch_ms,fetched)
 
     def retain(self, attempt) -> None:
         record = attempt.to_dict()
         if self.writer is None:
-            raise ValueError('I need a fresh immutable capture segment')
+            raise ValueError('Expected a fresh immutable capture segment')
         self.writer.append(record)
         self.ingest(record)
 
@@ -277,10 +277,10 @@ class VarianceForwardJob:
                 and origin-future['freeze_start_before_origin_ms'] <= now <= origin-future['freeze_end_before_origin_ms']):
             features = features_at(self.prices,self.dvol,cutoff)
             if features is None:
-                raise ForecastUnavailable('I retry incomplete midnight features within the freeze window')
+                raise ForecastUnavailable('Incomplete midnight features may be retried within the freeze window')
             daily, hourly = self.dvol.get(cutoff-DAY_MS), self.hourly_dvol.get(cutoff-HOUR_MS)
             if daily is None or hourly is None or daily[3] != hourly[3]:
-                raise ForecastUnavailable('I retry an unavailable or unmatched DVOL close within the freeze window')
+                raise ForecastUnavailable('An unavailable or unmatched DVOL close may be retried within the freeze window')
             proof = {'feature_cutoff_ms':cutoff,'latest_fetch_ms':self.latest_fetch_ms,'seed_manifest_hash':self.seed_hash,
                      'daily_close':daily[3] if daily else None,'last_hourly_close':hourly[3] if hourly else None,
                      'git_commit':self.state.get('git_commit'),
@@ -299,7 +299,7 @@ class VarianceForwardJob:
             if score_path.exists() and not score_receipt_path.exists():
                 score = read_immutable(score_path)
                 if score['forecast_hash'] != forecast['content_hash'] or score['scored_at_ms'] < forecast['target_end_ms']:
-                    raise ValueError('I cannot recover a score with invalid provenance')
+                    raise ValueError('Cannot recover a score with invalid provenance')
                 write_immutable(score_receipt_path,{'origin_ms':forecast['origin_ms'],'score_hash':score['content_hash'],
                                                    'durable_at_ms':self.now_ms()})
             if now < forecast['target_end_ms'] or score_path.exists():
@@ -322,7 +322,7 @@ class VarianceForwardJob:
         from .cli import provenance
         details = provenance()
         if details['working_tree_dirty'] is not False or details['git_commit'] is None:
-            raise ValueError('I need committed code before live collection')
+            raise ValueError('Expected committed code before live collection')
         stop = time.monotonic()+seconds
         with FileLease(self.directory/'.variance-collector.lock'):
             try:

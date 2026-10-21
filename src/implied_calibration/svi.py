@@ -1,4 +1,4 @@
-"""I fit raw SVI smiles and check their variance curves without doing I/O."""
+"""Raw SVI smiles and variance-curve checks, with no I/O."""
 
 from dataclasses import asdict, dataclass, replace
 import math
@@ -148,7 +148,7 @@ def _decode(vector: np.ndarray, settings: SVISettings) -> SVIParams:
 
 def _settings_error(settings: SVISettings) -> str | None:
     if not isinstance(settings, SVISettings):
-        return 'I need SVISettings'
+        return 'Expected SVISettings'
     integer_fields = {'n_starts', 'seed', 'max_nfev', 'grid_points', 'local_grid_points',
                       'minimum_strikes', 'minimum_strikes_each_side'}
     for field, value in asdict(settings).items():
@@ -173,25 +173,25 @@ def _settings_error(settings: SVISettings) -> str | None:
 
 def fit_svi(k: Sequence[float], iv_bid: Sequence[float], iv_ask: Sequence[float],
             iv_mid: Sequence[float], t_years: float, settings: SVISettings = SVISettings()) -> FitResult:
-    """I select the lowest weighted error among converged starts, then test it."""
+    """Select the lowest weighted error among converged starts, then test it."""
     n_strikes = 0
     try:
         arrays = [np.asarray(values, dtype=float) for values in (k, iv_bid, iv_ask, iv_mid)]
         x, bid, ask, mid = arrays
         if any(a.ndim != 1 for a in arrays) or len({a.size for a in arrays}) != 1:
-            return FitResult('invalid_input', message='I need equal one-dimensional quote arrays')
+            return FitResult('invalid_input', message='Expected equal one-dimensional quote arrays')
         n_strikes = x.size
         settings_error = _settings_error(settings)
         if settings_error:
             return FitResult('invalid_input', n_strikes=n_strikes, message=settings_error)
         if (not all(np.all(np.isfinite(a)) for a in arrays) or not math.isfinite(t_years)
                 or t_years <= 0 or np.any(bid <= 0) or np.any(bid > mid) or np.any(mid > ask)):
-            return FitResult('invalid_input', n_strikes=n_strikes, message='I need finite ordered positive IV quotes and T')
+            return FitResult('invalid_input', n_strikes=n_strikes, message='Expected finite ordered positive IV quotes and T')
         if (n_strikes < settings.minimum_strikes or np.unique(x).size != n_strikes
                 or np.sum(x < 0) < settings.minimum_strikes_each_side
                 or np.sum(x > 0) < settings.minimum_strikes_each_side):
             return FitResult('insufficient_strikes', n_strikes=n_strikes,
-                             message='I need distinct strikes and enough strikes strictly on both sides')
+                             message='Expected distinct strikes and enough strikes strictly on both sides')
         order = np.argsort(x)
         x, bid, ask, mid = [a[order] for a in arrays]
         weights = spread_weights(bid, ask, settings)
@@ -253,7 +253,7 @@ def fit_svi(k: Sequence[float], iv_bid: Sequence[float], iv_ask: Sequence[float]
 
 
 def check_calendars(slices: Sequence[SmileSlice], settings: SVISettings = SVISettings()) -> list[SmileSlice]:
-    """I compare each expiry pair on a shared snapshot grid and leave parameters alone."""
+    """Compare each expiry pair on a shared snapshot grid and leave parameters alone."""
     output = list(slices)
     settings_error = _settings_error(settings)
     if settings_error:

@@ -1,4 +1,4 @@
-"""I validate research choices and hash their exact canonical content."""
+"""Research choices are validated and hashed in their exact canonical form."""
 
 from dataclasses import dataclass
 import json
@@ -38,7 +38,7 @@ def validate_protocol(content: dict[str, Any]) -> Protocol:
         actual = set(content) if isinstance(content, dict) else set()
         raise ValueError(f'protocol: missing keys={sorted(expected - actual)}; unexpected keys={sorted(actual - expected)}')
     if type(content['version']) is not int or content['version'] != 1 or content['status'] not in ('draft', 'fixed'):
-        raise ValueError('I only accept version 1 draft or fixed research settings')
+        raise ValueError('Expected version 1 draft or fixed research settings')
     integer_fields = {'minimum_unique_strikes', 'minimum_strikes_each_side', 'max_iterations',
                       'minimum_mark_comparisons', 'n_starts', 'seed', 'max_nfev', 'grid_points',
                       'local_grid_points', 'crps_initial_points', 'crps_max_refinements'}
@@ -85,7 +85,7 @@ def validate_protocol(content: dict[str, Any]) -> Protocol:
     if not isinstance(evaluation, dict) or set(evaluation) != fields:
         raise ValueError('Invalid evaluation fields')
     if evaluation['lead_times_ms'] != [86400000, 604800000]:
-        raise ValueError('I fix leads at 24 hours and 7 days')
+        raise ValueError('Supported leads are 24 hours and 7 days')
     for field in ('snapshot_tolerance_ms', 'freeze_delay_tolerance_ms', 'first_expiry_ms',
                   'primary_lead_ms', 'bootstrap_resamples', 'bootstrap_seed',
                   'expected_block_length', 'minimum_effective_sample_size'):

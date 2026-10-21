@@ -1,4 +1,4 @@
-"""I check baseline distributions, drift and seeded GARCH paths on synthetic inputs."""
+"""Synthetic baseline distributions, drift conventions and seeded GARCH paths."""
 
 from dataclasses import asdict, replace
 import math

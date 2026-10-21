@@ -1,4 +1,4 @@
-"""I generate a labelled synthetic smile check without using captured market quotes."""
+"""Generate a labelled SVI smile check from synthetic quotes."""
 
 import argparse
 from dataclasses import asdict
@@ -15,7 +15,7 @@ from implied_calibration.svi import SVIParams, fit_svi, total_variance
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description='I draw an explicitly synthetic SVI example.')
+    parser = argparse.ArgumentParser(description='Draw an explicitly synthetic SVI example.')
     parser.add_argument('--protocol', type=Path, default=Path('protocol/protocol.json'))
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--plot', type=Path, required=True)

@@ -1,4 +1,4 @@
-"""I check retained official delivery pages using synthetic responses only."""
+"""Retained official-delivery-page checks use synthetic responses."""
 
 from unittest.mock import Mock
 

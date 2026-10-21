@@ -1,4 +1,4 @@
-"""I use synthetic responses and injected clocks; these tests make no network calls."""
+"""Synthetic responses and injected clocks exercise recording without network calls."""
 
 from copy import deepcopy
 import gzip
