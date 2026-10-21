@@ -1,4 +1,4 @@
-"""I test historical timing, variance units and past-only correction on generated prices."""
+"""Historical timing, variance units and past-only correction on generated prices."""
 
 from copy import deepcopy
 from dataclasses import replace

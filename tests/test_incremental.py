@@ -1,4 +1,4 @@
-"""I challenge completed-label fitting, decision units and research locks."""
+"""Completed-label fitting, decision units and research-lock checks."""
 
 from dataclasses import replace
 from pathlib import Path

@@ -1,4 +1,4 @@
-"""I check report statistics, tail conventions and prefix-specific uncertainty."""
+"""Report statistics, tail conventions and prefix-specific uncertainty checks."""
 
 from dataclasses import replace
 

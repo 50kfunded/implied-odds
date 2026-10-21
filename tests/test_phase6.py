@@ -1,4 +1,4 @@
-"""I test frozen forecasts and proper scores with synthetic data and no network."""
+"""Frozen-forecast and proper-score checks use synthetic data without network access."""
 
 from copy import deepcopy
 from contextlib import closing

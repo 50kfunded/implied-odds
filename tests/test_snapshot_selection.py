@@ -1,4 +1,4 @@
-"""I check that a forecast only cleans its selected snapshot and keeps each expiry gate."""
+"""Each forecast cleans its selected snapshot and keeps every expiry gate."""
 
 from unittest.mock import patch
 

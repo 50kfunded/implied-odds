@@ -1,4 +1,4 @@
-"""I reject backfilled forecasts, changed records and late terminal outcomes."""
+"""Backfill rejection, immutable records and late terminal-outcome checks."""
 
 from pathlib import Path
 import hashlib

@@ -1,4 +1,4 @@
-"""I challenge tail pricing with a separate high-precision Gaussian calculation."""
+"""Independent high-precision Gaussian checks for tail pricing."""
 
 from decimal import Decimal, localcontext
 import math
@@ -8,7 +8,7 @@ from test_phase1 import OfflineTest
 
 
 def decimal_normal_cdf(value: Decimal) -> Decimal:
-    """I use a power series or a continued fraction, independent of production pricing."""
+    """Use a power series or a continued fraction, independent of production pricing."""
     pi = Decimal('3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679')
     positive = abs(value)
     if positive >= 8:

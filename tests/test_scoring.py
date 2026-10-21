@@ -1,4 +1,4 @@
-"""I check proper scores on synthetic normal, lognormal and SVI distributions."""
+"""Proper-score checks for synthetic normal, lognormal and SVI distributions."""
 
 from dataclasses import asdict, replace
 from datetime import datetime, timezone

@@ -1,4 +1,4 @@
-"""I check ingestion and coverage offline with synthetic records and temporary databases."""
+"""Offline ingestion and coverage checks use synthetic records and temporary databases."""
 
 from contextlib import closing
 from datetime import datetime, timezone

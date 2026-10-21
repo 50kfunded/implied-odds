@@ -1,4 +1,4 @@
-"""I test clock alignment, offline report bytes and failed-alignment claims."""
+"""Clock alignment, deterministic report bytes and failed-alignment claims."""
 
 from dataclasses import replace
 import hashlib

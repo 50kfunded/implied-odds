@@ -1,4 +1,4 @@
-"""I check cleaning offline with synthetic option chains and captured-row fixtures."""
+"""Offline cleaning checks use synthetic option chains and captured-row fixtures."""
 
 from copy import deepcopy
 from contextlib import redirect_stdout
