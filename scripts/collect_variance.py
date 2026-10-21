@@ -1,4 +1,4 @@
-"""I collect a bounded supervised prospective variance session."""
+"""Run a bounded supervised prospective variance session."""
 
 import argparse
 import json
@@ -13,6 +13,6 @@ if __name__ == '__main__':
     parser.add_argument('--seconds',type=int,default=600)
     args = parser.parse_args()
     if args.seconds < 1:
-        parser.error('I need a positive bounded session length')
+        parser.error('Expected a positive bounded session length')
     job = VarianceForwardJob(Path(__file__).resolve().parents[1],args.output)
     print(json.dumps(job.run(args.seconds),indent=2))

@@ -1,4 +1,4 @@
-"""I rebuild the matched historical HAR experiment offline."""
+"""Rebuild the matched historical HAR experiment offline."""
 
 import argparse
 import json

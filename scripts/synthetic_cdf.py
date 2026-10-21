@@ -1,4 +1,4 @@
-"""I draw a labelled synthetic CDF without using or fitting captured quotes."""
+"""Generate a labelled risk-neutral CDF check from a synthetic slice."""
 
 import argparse
 from dataclasses import asdict
@@ -13,7 +13,7 @@ from implied_calibration.svi import SVIParams
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description='I check an explicitly synthetic risk-neutral CDF.')
+    parser = argparse.ArgumentParser(description='Check an explicitly synthetic risk-neutral CDF.')
     parser.add_argument('--protocol', type=Path, default=Path('protocol/protocol.json'))
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--plot', type=Path, required=True)
