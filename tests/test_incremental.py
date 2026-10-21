@@ -2,15 +2,18 @@
 
 from dataclasses import replace
 from pathlib import Path
+from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 
-from implied_calibration.incremental import VarianceCase, fit_forecasts, risk_budget, regression_diagnostic
+from implied_calibration.incremental import VarianceCase, analyse_incremental, fit_forecasts, risk_budget, regression_diagnostic
+from implied_calibration.incremental_report import headline_figure
 from implied_calibration.inference import paired_inference, berkowitz_hac
 from implied_calibration.inference_study import bootstrap_interval, loss_process, wilson
 from implied_calibration.research_plan import load_plan, stopping_choices
-from implied_calibration.variance_study import DAY_MS
+from implied_calibration.variance_study import DAY_MS, _metric_summary, bootstrap_means
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -82,3 +85,64 @@ class IncrementalTests(unittest.TestCase):
         self.assertEqual(len(x),365)
         self.assertEqual(wilson(0,0),None)
         self.assertGreater(wilson(0,200)[1],0)
+
+    def test_raw_dvol_comparison_preserves_old_metrics_and_plots_paired_losses(self):
+        rng = np.random.default_rng(17)
+        cases = []
+        for i in range(540):
+            x = tuple(rng.uniform(.02,.3,4))
+            cases.append(VarianceCase(i*DAY_MS,i*DAY_MS,(i+30)*DAY_MS,x,
+                                     .01+.2*x[0]+.3*x[1]+.4*x[2]+.5*x[3]+rng.normal(0,.005)))
+        plan = {**self.plan, 'historical_origin_start_ms':420*DAY_MS,
+                'historical_origin_end_ms':499*DAY_MS, 'bootstrap_resamples':2000}
+        with patch('implied_calibration.incremental.build_cases',return_value=cases):
+            result = analyse_incremental({}, {}, {'origin_start_ms':0,'origin_end_ms':539*DAY_MS}, plan)
+        records = result['records']
+        times = np.array([r['origin_ms'] for r in records])
+        raw = np.array([r['losses']['dvol'] for r in records])
+        augmented = np.array([r['losses']['har_dvol'] for r in records])
+        difference = raw-augmented
+        metric = result['summary']['metrics']['qlike_dvol_minus_har_dvol']
+        self.assertFalse(result['formal_claim_eligible'])
+        self.assertAlmostEqual(metric['mean'],float(difference.mean()))
+        samples = bootstrap_means(np.column_stack((raw,augmented)),times,spacing_ms=DAY_MS,
+                                  block_rows=60,resamples=2000,seed=plan['bootstrap_seed'])
+        expected_interval = np.quantile(samples[:,0]-samples[:,1],[.025,.975])
+        np.testing.assert_allclose(metric['confidence_interval_95'],expected_interval,atol=1e-14)
+        old_names = ['qlike_'+name for name in plan['models']]+['qlike_har_dvol_minus_har',
+                    'qlike_dvol_minus_har','risk_budget_har_dvol_minus_har']
+        old_values = np.array([[*[r['losses'][name] for name in plan['models']],
+            r['losses']['har_dvol']-r['losses']['har'],r['losses']['dvol']-r['losses']['har'],
+            r['decision']['har_dvol']['squared_variance_budget_error']-
+            r['decision']['har']['squared_variance_budget_error']] for r in records])
+        for block in (60,*plan['sensitivity_block_days']):
+            expected = _metric_summary(old_values,times,old_names,plan,block_days=block)
+            observed = result['summary'] if block==60 else result['block_sensitivities'][str(block)]
+            for name in old_names:
+                self.assertEqual(observed['metrics'][name],expected['metrics'][name])
+        with TemporaryDirectory() as folder, patch('implied_calibration.incremental_report.plt.close'):
+            headline_figure(result,Path(folder))
+            import matplotlib.pyplot as plt
+            figure = plt.gcf()
+            line = next(line for line in figure.axes[2].lines
+                        if line.get_label()=='Raw DVOL minus (HAR + DVOL)')
+            np.testing.assert_allclose(line.get_ydata(),np.cumsum(difference),atol=1e-14)
+            self.assertAlmostEqual(line.get_ydata()[-1],len(records)*metric['mean'])
+            interval_line = next(line for line in figure.axes[1].lines
+                                 if line.get_label()=='Raw DVOL minus (HAR + DVOL) interval')
+            np.testing.assert_allclose(interval_line.get_xdata(),metric['confidence_interval_95'])
+        plt.close(figure)
+
+    def test_constant_paired_difference_has_degenerate_interval_and_gaps_withhold_it(self):
+        raw = np.linspace(.1,1.,80)
+        values = np.column_stack((raw,raw+.025,np.full(80,-.025)))
+        names = ['raw','har_dvol','qlike_dvol_minus_har_dvol']
+        times = np.arange(80)*DAY_MS
+        plan = {**self.plan,'bootstrap_resamples':2000}
+        metric = _metric_summary(values,times,names,plan)['metrics'][names[-1]]
+        np.testing.assert_allclose(metric['confidence_interval_95'],[-.025,-.025],atol=1e-14)
+        times[40:] += DAY_MS
+        metric = _metric_summary(values,times,names,plan)['metrics'][names[-1]]
+        self.assertIsNone(metric['confidence_interval_95'])
+        self.assertIsNone(metric['hac_standard_error'])
+        self.assertFalse(metric['ess_gate_passed'])
