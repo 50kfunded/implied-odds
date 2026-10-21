@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "implied-odds"
 version = "0.1.0"
-description = "I test BTC volatility forecasts with HAR and DVOL, and collect option quotes for SVI calibration."
+description = "BTC volatility forecasting with HAR and DVOL, plus option-quote capture for SVI calibration."
 requires-python = ">=3.11"
 dependencies = ["requests>=2.31,<3", "numpy>=2,<3", "scipy>=1.14,<2", "matplotlib>=3.9,<4", "arch>=8,<9"]
 
