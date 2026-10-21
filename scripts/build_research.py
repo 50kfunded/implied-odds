@@ -1,4 +1,4 @@
-"""I rebuild the quantitative research results from retained public inputs."""
+"""Rebuild the quantitative research results from retained public inputs."""
 
 import argparse
 import json
@@ -12,7 +12,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, default=Path('results/research'))
     parser.add_argument('--publish', action='store_true',
-                        help='I refresh the checked-in results and figure; I compile the paper separately.')
+                        help='Refresh the checked-in results and figure; compile the paper separately.')
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     result = write_incremental_report(root, args.output)
