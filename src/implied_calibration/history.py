@@ -1,4 +1,4 @@
-"""I retain hourly BTC perpetual candles and read only history available at a snapshot."""
+"""Retained hourly BTC perpetual candles respect snapshot-time availability."""
 
 from collections import Counter
 from pathlib import Path
@@ -20,7 +20,7 @@ def fetch_history(client: PublicClient, start_ms: int, end_ms: int, *,
                   sleep: Callable[[float], None] = time.sleep) -> dict:
     if (type(start_ms) is not int or type(end_ms) is not int or not 0 <= start_ms < end_ms
             or start_ms % HOUR_MS or end_ms % HOUR_MS):
-        raise ValueError('I need an increasing hour-aligned history interval')
+        raise ValueError('Expected an increasing hour-aligned history interval')
     pages = no_data = 0
     for start in range(start_ms, end_ms, 720 * HOUR_MS):
         if pages:
@@ -44,10 +44,10 @@ def capture_history(output: Path, start_ms: int, end_ms: int) -> dict:
 
 def ingest_history(directory: Path, db: Path, as_of_ms: int) -> dict:
     if type(as_of_ms) is not int or as_of_ms < 0:
-        raise ValueError('I need nonnegative UTC milliseconds')
+        raise ValueError('Expected nonnegative UTC milliseconds')
     paths = sorted(Path(directory).rglob('*.jsonl.gz'))
     if not paths:
-        raise ValueError('I need retained hourly history pages')
+        raise ValueError('Expected retained hourly history pages')
     store = evaluation_store(db)
     reasons: Counter = Counter()
     added = pages = unchanged = 0

@@ -1,4 +1,4 @@
-"""I report real quote-fit diagnostics without creating retrospective forecasts."""
+"""Exploratory quote-fit diagnostics remain separate from retrospective forecasts."""
 
 from datetime import datetime, timezone
 import hashlib
@@ -24,7 +24,7 @@ def snapshot_report(db: Path, protocol: Protocol, output: Path, git_commit: str 
         cutoff = as_of_ms if as_of_ms is not None else connection.execute(
             'SELECT MAX(fetched_at_ms) FROM snapshots').fetchone()[0]
         if type(cutoff) is not int or cutoff < 0:
-            raise ValueError('I need a retained snapshot and an integer UTC cutoff')
+            raise ValueError('Expected a retained snapshot and an integer UTC cutoff')
         snapshot = connection.execute('SELECT snapshot_id, fetched_at_ms FROM snapshots WHERE fetched_at_ms<=? '
                                       'ORDER BY fetched_at_ms DESC, snapshot_id LIMIT 1', (cutoff,)).fetchone()
         if snapshot is None:
@@ -51,7 +51,7 @@ def snapshot_report(db: Path, protocol: Protocol, output: Path, git_commit: str 
               'group_status_counts': cleaned['group_status_counts'], 'reason_counts': cleaned['reason_counts'],
               'iv_diagnostic': cleaned['iv_diagnostic'], 'n_completed_hourly_closes_available': closes,
               'garch_history_status': history['status'],
-              'note': "I report exploratory fits to real quotes. I haven't frozen these as research forecasts or measured calibration.",
+              'note': "Exploratory fits use real quotes; these are neither frozen research forecasts nor measured calibration outcomes.",
               'selection_rule': 'earliest expiry with accepted CDF in the latest retained snapshot',
               'selected_expiry_ms': chosen['expiry_ms'] if chosen else None,
               'groups': groups}

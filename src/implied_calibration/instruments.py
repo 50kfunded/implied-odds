@@ -1,4 +1,4 @@
-"""I parse inverse BTC identities and check them against instrument metadata."""
+"""Inverse BTC identities are parsed and checked against instrument metadata."""
 
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ def parse_name(name: str) -> InstrumentName:
         raise InstrumentError("invalid_instrument_name", "instrument_name must be a string")
     match = re.fullmatch(r"BTC-([0-9]{1,2})([A-Z]{3})([0-9]{2})-([0-9]+)-([CP])", name)
     if match is None:
-        raise InstrumentError("invalid_instrument_name", f"I only accept inverse BTC option names: {name!r}")
+        raise InstrumentError("invalid_instrument_name", f"Expected an inverse BTC option name: {name!r}")
     day, month, year, strike_text, side = match.groups()
     months = {"JAN": 1, "FEB": 2, "MAR": 3, "APR": 4, "MAY": 5, "JUN": 6,
               "JUL": 7, "AUG": 8, "SEP": 9, "OCT": 10, "NOV": 11, "DEC": 12}
@@ -63,7 +63,7 @@ def finite_number(value: Any) -> bool:
 
 
 def validate_metadata(row: dict[str, Any], fetched_at_ms: int) -> Instrument:
-    """I validate metadata in one place and reject identity conflicts explicitly."""
+    """Validate metadata in one place and reject identity conflicts explicitly."""
     required = {"instrument_name", "expiration_timestamp", "strike", "option_type",
                 "tick_size", "contract_size", "is_active"}
     missing = sorted(required - row.keys())

@@ -1,4 +1,4 @@
-"""I record attempts, cycle outcomes, and gaps without catching up missed slots."""
+"""Recording preserves attempts, cycle outcomes and gaps without catching up missed slots."""
 
 from __future__ import annotations
 
@@ -88,7 +88,7 @@ def record(
     lock = output / ".record.lock"
     try:
         with lock.open("x", encoding="utf-8", newline="\n") as target:
-            target.write("I'm recording into this directory.\n")
+            target.write("Recording session active.\n")
     except FileExistsError as exc:
         raise OSError("Output is locked; use a fresh --output directory after a crash") from exc
     client = None
@@ -161,7 +161,7 @@ def record(
                            scheduled_ms=slot, cycle_started_ms=cycle_started,
                            cycle_finished_ms=clock.now_ms(), failures=failures)
             slot += interval_ms
-            # I skip any slot reached during the cycle, even if it ended exactly on a boundary.
+            # Skip any slot reached during the cycle, including an exact boundary finish.
             effective_now = max(clock.now_ms(), anchor.wall_ms + round(
                 (clock.monotonic() - anchor.monotonic_s) * 1000))
             if stop != math.inf:

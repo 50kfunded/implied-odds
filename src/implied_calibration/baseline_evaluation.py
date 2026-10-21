@@ -1,4 +1,4 @@
-"""I freeze and score baseline records once, with the original forecast's cutoff."""
+"""Baseline forecasts and scores share the original forecast cutoff."""
 
 from collections import Counter, defaultdict
 from dataclasses import asdict
@@ -107,7 +107,7 @@ def score_baselines(db: Path, extension: LockedBaselines, parent: LockedProtocol
     persist = created_at_ms == as_of_ms
     preview = {r['prediction_id']: r for r in (parent_preview or []) if r['status'] == 'ok'}
     if preview and created_at_ms == as_of_ms:
-        raise ValueError('I only accept temporary parent scores for historical previews')
+        raise ValueError('Historical previews require temporary parent scores')
     try:
         with store.connection:
             register_baselines(store.connection, extension, parent)
@@ -142,7 +142,7 @@ def score_baselines(db: Path, extension: LockedBaselines, parent: LockedProtocol
                 original = store.connection.execute('SELECT payload_json FROM predictions WHERE prediction_id=? '
                     "AND json_extract(payload_json, '$.created_at_ms')<=?", (prediction['prediction_id'], as_of_ms)).fetchone()
                 if original is None:
-                    raise ValueError('I need the frozen original prediction for baseline scoring')
+                    raise ValueError('Expected the frozen original prediction for baseline scoring')
                 original = checked_prediction(original[0])
                 distribution = BaselineCDF(**prediction['distribution'])
                 if (prediction['prediction_content_hash'] != original['content_hash']
@@ -196,7 +196,7 @@ def infer_database(db: Path, extension: LockedBaselines, parent: LockedProtocol,
                                extension.content_hash, as_of_ms)
     if choices['formal_decision_allowed']:
         as_of_ms = min(as_of_ms, choices['final_analysis_at_ms'])
-    # I read inference inputs without migrating or changing the research database.
+    # Read inference inputs without migrating or changing the research database.
     connection = sqlite3.connect(Path(db).resolve().as_uri() + '?mode=ro', uri=True)
     connection.row_factory = sqlite3.Row
     paired = defaultdict(list)

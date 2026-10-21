@@ -1,4 +1,4 @@
-"""I keep immutable capture rows and timestamped metadata in a local SQLite file."""
+"""Local SQLite storage retains immutable captures and timestamped metadata."""
 
 from __future__ import annotations
 
@@ -165,7 +165,7 @@ class Store:
                 raise ValueError(f"Unsupported database schema version: {version}")
             if version == 0 and self.connection.execute(
                     "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").fetchone():
-                raise ValueError("I won't initialise an unrelated nonempty database; use a new --db path")
+                raise ValueError("Cannot initialise an unrelated nonempty database; use a new --db path")
             self.connection.execute("PRAGMA journal_mode=WAL")
             self.connection.execute("PRAGMA synchronous=FULL")
             self.connection.execute("PRAGMA foreign_keys=ON")
@@ -311,7 +311,7 @@ SCORE_KEYS = {'score_records': 'prediction_id', 'baseline_scores': 'baseline_id'
 
 
 def score_available(connection: sqlite3.Connection, table: str, record: dict, as_of_ms: int) -> bool:
-    """I require a hash-linked receipt observed after the score transaction committed."""
+    """Require a hash-linked receipt observed after the score transaction committed."""
     key = SCORE_KEYS[table]
     if connection.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='score_availability'").fetchone() is None:
         return False
@@ -326,15 +326,15 @@ def score_available(connection: sqlite3.Connection, table: str, record: dict, as
             or receipt.get('record_id') != record[key] or receipt.get('payload_hash') != record['content_hash']
             or receipt.get('completed_at_ms') != record['created_at_ms'] or type(available) is not int
             or available < record['created_at_ms']):
-        raise ValueError('I found a changed or invalid score availability receipt')
+        raise ValueError('Detected a changed or invalid score availability receipt')
     return available <= as_of_ms
 
 
 def retain_score_availability(connection: sqlite3.Connection, table: str, records: list[dict],
                               now_ms: Callable[[], int]) -> None:
-    """I timestamp durable scores after commit; a restart never backdates a missing receipt."""
+    """Timestamp durable scores after commit; a restart never backdates a missing receipt."""
     if connection.in_transaction:
-        raise ValueError('I only receipt a score after its transaction commits')
+        raise ValueError('A score receipt requires its transaction to commit first')
     key = SCORE_KEYS[table]
     with connection:
         for record in records:

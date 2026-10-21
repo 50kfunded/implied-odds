@@ -1,4 +1,4 @@
-"""I classify every stored quote and inspect IV conventions using captured data."""
+"""Stored quotes are classified and checked against captured IV conventions."""
 
 from collections import Counter, defaultdict
 from dataclasses import asdict, dataclass, replace
@@ -190,14 +190,14 @@ def _clean_quote(row: dict[str, Any], forward: float | None, protocol: Protocol)
 
 
 def clean_expiry(rows: list[dict[str, Any]], protocol: Protocol) -> dict[str, Any]:
-    """I use one median forward before applying price or OTM filters."""
+    """Use one median forward before applying price or OTM filters."""
     if validate_protocol(protocol.content).content_hash != protocol.content_hash:
         raise ValueError('Protocol content changed after hashing')
     if not rows:
         raise ValueError('An expiry group must contain quotes')
     identities = {(r['snapshot_id'], r['expiry_ms'], r['fetched_at_ms']) for r in rows}
     if len(identities) != 1:
-        raise ValueError('I clean one snapshot and expiry at a time')
+        raise ValueError('Cleaning requires one snapshot and expiry at a time')
     rows = sorted(rows, key=lambda r: r['instrument_name'])
     forwards = [r['underlying_price'] for r in rows if r['identity_status'] == 'verified'
                 and r['metadata_time'] is not None and r['is_active']
@@ -242,7 +242,7 @@ def clean_expiry(rows: list[dict[str, Any]], protocol: Protocol) -> dict[str, An
 
 
 def _cache_implementation() -> str:
-    """I invalidate saved inversions after code or numeric runtime changes."""
+    """Invalidate saved inversions after code or numeric runtime changes."""
     folder = Path(__file__).parent
     return digest({'format': 1, 'python': sys.version, 'numpy': np.__version__, 'scipy': scipy.__version__,
                    'sources': {name: hashlib.sha256((folder / name).read_bytes()).hexdigest()
@@ -318,7 +318,7 @@ def clean_database(path: Path, protocol: Protocol, as_of_ms: int | None = None,
         for row in rows:
             groups[(row['snapshot_id'], row['expiry_ms'])].append(dict(row))
         if cache_path is not None and Path(cache_path).resolve() == Path(path).resolve():
-            raise ValueError('I keep my cleaning cache outside my research database')
+            raise ValueError('The cleaning cache must stay outside the research database')
         output = _clean_groups(groups.values(), protocol, cache_path)
     finally:
         connection.close()

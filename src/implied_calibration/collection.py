@@ -1,4 +1,4 @@
-"""I collect prospective market inputs and freeze due forecasts in one local job."""
+"""A local job collects prospective inputs, freezes due forecasts and scores deliveries."""
 
 from contextlib import ExitStack
 from concurrent.futures import ThreadPoolExecutor
@@ -40,7 +40,7 @@ def _render_report(config: 'CollectionConfig', parent: LockedProtocol, extension
 
 
 class FileLease:
-    """I let the OS release a crashed job's lease without deleting its lock file."""
+    """Let the OS release a crashed job's lease without deleting its lock file."""
 
     def __init__(self, path: Path) -> None:
         self.path = Path(path)
@@ -132,7 +132,7 @@ class CollectionJob:
                 self.report_state = {'status': 'completed', 'result': self.report_future.result()}
             except Exception as exc:
                 self.report_state = {'status': 'failed', 'error_type': type(exc).__name__}
-                LOGGER.warning('I failed to render my local report: %s', exc)
+                LOGGER.warning('Local report rendering failed: %s', exc)
             self.report_future = None
         if self.report_future is None and self.report_requested_ms is not None:
             if self.report_executor is None:
@@ -157,7 +157,7 @@ class CollectionJob:
                     self.config, self.parent, self.extension, pending, self.git_commit)}
             except Exception as exc:
                 self.report_state = {'status': 'failed', 'error_type': type(exc).__name__}
-                LOGGER.warning('I failed to render my final local report: %s', exc)
+                LOGGER.warning('Final local report rendering failed: %s', exc)
         return dict(self.report_state)
 
     def event(self, event: str, **fields: Any) -> None:
@@ -274,7 +274,7 @@ class CollectionJob:
                 self.settlement_capture_failures += 1
                 result['failures'].append('settlements:' + exc.reason)
                 result['settlements'] = {'status': 'retry_next_cycle', 'reason': exc.reason}
-                LOGGER.warning('I will retry my settlement capture: %s', exc)
+                LOGGER.warning('Settlement capture will retry: %s', exc)
             except (ValueError, sqlite3.Error, OSError):
                 self.settlement_capture_failures += 1
                 raise
@@ -298,7 +298,7 @@ class CollectionJob:
 def request_stop(output: Path) -> dict:
     path = Path(output) / 'STOP'
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text('I requested a graceful stop.\n', encoding='utf-8', newline='\n')
+    path.write_text('Graceful stop requested.\n', encoding='utf-8', newline='\n')
     return {'status': 'stop_requested', 'output': str(output)}
 
 
@@ -308,7 +308,7 @@ def collect(config: CollectionConfig, *, clock=None, client_factory=PublicClient
     config.validate()
     details = provenance()
     if details['git_commit'] is None or details['working_tree_dirty'] is not False:
-        raise ValueError('I need a clean committed checkout before starting collection')
+        raise ValueError('Expected a clean committed checkout before starting collection')
     parent = load_locked_protocol(config.protocol)
     extension = load_locked_baselines(config.baselines, parent)
     job = CollectionJob(config, parent, extension, details['git_commit'], clock=clock, client_factory=client_factory)

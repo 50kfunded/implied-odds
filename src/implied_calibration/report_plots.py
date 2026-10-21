@@ -1,4 +1,4 @@
-"""I draw scientific report panels and keep missing or synthetic results visible."""
+"""Scientific report panels display missing and synthetic results explicitly."""
 
 from collections import defaultdict
 from datetime import datetime, timezone
@@ -34,7 +34,7 @@ def report_figures(data: dict) -> dict[str, tuple[str, Figure]]:
         axes.text(.5,.55,'insufficient data',ha='center',va='center',fontsize=22,transform=axes.transAxes,color='#435d6f')
         axes.text(.5,.4,reason,ha='center',va='center',fontsize=11,transform=axes.transAxes,wrap=True)
 
-    axes = panel('smile','Smile against bid and ask','I use the selected frozen forecast and quotes from its exact snapshot.')
+    axes = panel('smile','Smile against bid and ask','')
     if chart and chart['k']:
         k,bid,ask = (np.asarray(chart[name]) for name in ('k','iv_bid','iv_ask'))
         order = np.argsort(k)
@@ -46,9 +46,9 @@ def report_figures(data: dict) -> dict[str, tuple[str, Figure]]:
         axes.set(xlabel='Log-moneyness ln(K/F)',ylabel='Implied volatility, percent')
         axes.legend()
     else:
-        missing(axes,'I need an accepted frozen forecast and its quote observations.')
+        missing(axes,'An accepted frozen forecast and its quote observations are required.')
 
-    axes = panel('cdf-baselines','Implied CDF against baselines','I use one frozen forecast; shaded regions extend beyond its observed strikes.')
+    axes = panel('cdf-baselines','Implied CDF against baselines','')
     if chart:
         svi = FrozenCDF.from_record(chart)
         models = {'SVI risk-neutral':svi,**{name:BaselineCDF(**record) for name,record in sorted(chart['baselines'].items())}}
@@ -68,10 +68,10 @@ def report_figures(data: dict) -> dict[str, tuple[str, Figure]]:
         axes.set(xlabel='Delivery price, USD',ylabel='Cumulative probability below price',ylim=(0,1),xlim=(lower,upper))
         axes.legend(fontsize=8)
     else:
-        missing(axes,'I need an accepted frozen forecast for the CDF comparison.')
+        missing(axes,'An accepted frozen forecast is required for the CDF comparison.')
 
     hist = stats['pit']
-    axes = panel('pit','PIT histogram','95% binomial iid reference range: pointwise null reference only. Overlapping outcomes need dependence-aware inference.')
+    axes = panel('pit','PIT histogram','95% binomial iid reference range')
     if hist['n']:
         lower,upper = hist['reference_count_range_95']
         axes.axhspan(lower,upper,color='#d8b16a',alpha=.3,label='95% binomial iid reference range')
@@ -82,9 +82,9 @@ def report_figures(data: dict) -> dict[str, tuple[str, Figure]]:
         axes.text(.02,.96,f"n={hist['n']}; {state}",transform=axes.transAxes,va='top')
         axes.legend(fontsize=8,loc='upper right')
     else:
-        missing(axes,'I need scored frozen forecasts and official delivery observations.')
+        missing(axes,'Scored frozen forecasts and official delivery observations are required.')
 
-    axes = panel('reliability','Tail reliability','Inclusive frozen-quantile events; intervals are pointwise stationary-bootstrap estimates and require ESS >= 60.')
+    axes = panel('reliability','Tail reliability','')
     if any(row['n'] for row in stats['reliability']):
         axes.plot([0,.25],[0,.25],linestyle=':',color='#657984',label='Nominal reference')
         for side,color in (('left','#267797'),('right','#b26a35')):
@@ -99,10 +99,10 @@ def report_figures(data: dict) -> dict[str, tuple[str, Figure]]:
         axes.set(xlabel='Nominal risk-neutral tail probability',ylabel='Realised frequency',xlim=(0,.27),ylim=(0,min(1.,max(.3,upper+.03))))
         axes.legend(loc='lower right',fontsize=8)
     else:
-        missing(axes,'I need realised outcomes paired with frozen tail probabilities.')
+        missing(axes,'Realised outcomes paired with frozen tail probabilities are required.')
 
     temporal = stats['crps']
-    axes = panel('crps-differences','Cumulative paired CRPS difference','Pointwise cumulative-mean stationary-bootstrap intervals; each prefix has its own ESS gate. These are not simultaneous bands.')
+    axes = panel('crps-differences','Cumulative paired CRPS difference','')
     if temporal['points']:
         points = temporal['points']
         times = [datetime.fromtimestamp(p['expiry_ms']/1000,timezone.utc) for p in points]
@@ -117,12 +117,12 @@ def report_figures(data: dict) -> dict[str, tuple[str, Figure]]:
         axes.legend(fontsize=8,loc='lower left')
         axes.tick_params(axis='x',labelrotation=20)
     else:
-        missing(axes,'I need paired SVI and ATM CRPS scores at the declared primary lead.')
+        missing(axes,'Paired SVI and ATM CRPS scores at the declared primary lead are required.')
 
     groups = defaultdict(dict)
     for row in stats['coverage']:
         groups[(row['model'],row['lead_ms'],row['expiry_class'])][row['level']] = row
-    axes = panel('coverage','Central interval coverage','I retain every model, lead and expiry class. Infinite and undefined log losses stay counted in report.json.',height=max(5.4,1.9+.3*len(groups)))
+    axes = panel('coverage','Central interval coverage','',height=max(5.4,1.9+.3*len(groups)))
     if groups:
         cells = []
         for (model,lead,classification), levels in sorted(groups.items()):
@@ -141,5 +141,5 @@ def report_figures(data: dict) -> dict[str, tuple[str, Figure]]:
             cell.set_edgecolor('#dbe3e8')
             cell.set_facecolor('#e5edf2' if row==0 else '#f4f7f9' if row%2 else 'white')
     else:
-        missing(axes,'I haven\'t measured realised interval coverage yet.')
+        missing(axes,'Realised interval coverage is unavailable.')
     return figures

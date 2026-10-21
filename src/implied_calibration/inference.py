@@ -1,4 +1,4 @@
-"""I compare paired scores with dependence-aware uncertainty and an ESS gate."""
+"""Paired-score comparisons retain dependence-aware uncertainty and the ESS gate."""
 
 import math
 
@@ -10,7 +10,7 @@ from scipy.stats import chi2, norm
 def finite_series(values) -> np.ndarray:
     x = np.asarray(values, dtype=float)
     if x.ndim != 1 or not np.isfinite(x).all():
-        raise ValueError('I need a finite one-dimensional paired series')
+        raise ValueError('Expected a finite one-dimensional paired series')
     return x
 
 
@@ -23,7 +23,7 @@ def effective_sample_size(values, lags: int = 13) -> float:
     variance = float(y @ y)
     if variance <= np.finfo(float).tiny:
         return 0.
-    # I stop at the first nonpositive autocorrelation pair and keep pairs decreasing.
+    # Stop at the first nonpositive autocorrelation pair and keep pairs decreasing.
     correlations = np.correlate(y, y, mode='full')[n - 1:] / variance
     pair_sum, previous = 0., math.inf
     for lag in range(1, n - 1, 2):
@@ -43,7 +43,7 @@ def overlap_count(expiry_ms, lead_ms: int) -> int:
     times = np.asarray(expiry_ms)
     if (times.ndim != 1 or not np.issubdtype(times.dtype, np.integer) or np.any(times < 0)
             or type(lead_ms) is not int or lead_ms <= 0 or np.any(np.diff(times) <= 0)):
-        raise ValueError('I need unique increasing integer expiries and a positive lead')
+        raise ValueError('Expected unique increasing integer expiries and a positive lead')
     return max((i - int(np.searchsorted(times, time - lead_ms, side='right')) + 1
                 for i, time in enumerate(times)), default=1)
 
@@ -78,7 +78,7 @@ def stationary_bootstrap(values, *, resamples: int = 2000, block_length: int = 1
     x = finite_series(values)
     if (not len(x) or type(resamples) is not int or resamples < 2000
             or type(block_length) is not int or block_length < 1 or type(seed) is not int or seed < 0):
-        raise ValueError('I need at least 2000 seeded stationary bootstrap resamples')
+        raise ValueError('Expected at least 2000 seeded stationary bootstrap resamples')
     rng = np.random.default_rng(seed)
     index = rng.integers(0, len(x), size=resamples)
     sums = x[index].copy()
@@ -96,7 +96,7 @@ def stationary_bootstrap(values, *, resamples: int = 2000, block_length: int = 1
 def berkowitz_hac(pits, *, lags: int = 13, minimum_ess: float = 60, epsilon: float = 1e-6) -> dict:
     u = finite_series(pits)
     if (not math.isfinite(minimum_ess) or minimum_ess <= 0 or type(lags) is not int or lags < 0):
-        raise ValueError('I need a positive finite ESS threshold and nonnegative integer lags')
+        raise ValueError('Expected a positive finite ESS threshold and nonnegative integer lags')
     if np.any((u < 0) | (u > 1)) or not 0 < epsilon < .01:
         raise ValueError('PITs must lie in 0..1; transform clipping must be declared')
     z = ndtri(np.clip(u, epsilon, 1 - epsilon))
@@ -125,7 +125,7 @@ def paired_inference(expiry_ms, svi_scores, baseline_scores, lead_ms: int, *, mi
     if (not math.isfinite(minimum_ess) or minimum_ess <= 0
             or type(block_length) is not int or block_length < 1
             or type(resamples) is not int or resamples < 2000 or type(seed) is not int or seed < 0):
-        raise ValueError('I need valid finite inference settings before applying the ESS gate')
+        raise ValueError('Expected valid finite inference settings before applying the ESS gate')
     svi, baseline = finite_series(svi_scores), finite_series(baseline_scores)
     if svi.shape != baseline.shape or len(expiry_ms) != len(svi):
         raise ValueError('Paired scores and expiry timestamps must have the same length')
@@ -152,7 +152,7 @@ def paired_inference(expiry_ms, svi_scores, baseline_scores, lead_ms: int, *, mi
         return output
     if not primary:
         bootstrap['p_value'] = None
-    # I retain DM only as a descriptive cross-check, never a second headline test.
+    # The Diebold-Mariano statistic is a descriptive cross-check, not another headline test.
     dm['p_value'] = None
     output.update(status='ok', bootstrap=bootstrap, dm_cross_check=dm,
                   conclusion='descriptive only' if not primary else

@@ -1,4 +1,4 @@
-"""I retain official BTC delivery pages and ingest them without substituting spot."""
+"""Official BTC delivery pages are retained and ingested as settlement observations."""
 
 from collections import Counter
 from datetime import date, datetime, timezone
@@ -12,7 +12,7 @@ from .store import canonical, digest, evaluation_store
 
 
 class RecoverableDeliveryCaptureError(ValueError):
-    """I retry an inconsistent page sequence in a fresh capture."""
+    """Retry an inconsistent page sequence in a fresh capture."""
 
     def __init__(self, reason: str, message: str) -> None:
         super().__init__(message)
@@ -27,7 +27,7 @@ def delivery_expiry_ms(value: str) -> int:
 def fetch_delivery_pages(client: PublicClient, *, count: int = 1000, max_pages: int = 1000,
                          sleep: Callable[[float], None] = time.sleep) -> dict[str, Any]:
     if type(count) is not int or not 1 <= count <= 1000 or type(max_pages) is not int or max_pages < 1:
-        raise ValueError('I need count 1..1000 and a positive page limit')
+        raise ValueError('Expected count 1..1000 and a positive page limit')
     offset, expected_total, seen, pages = 0, None, set(), 0
     while pages < max_pages:
         response = client.request('public/get_delivery_prices', {'index_name': 'btc_usd', 'offset': offset, 'count': count})
@@ -35,15 +35,15 @@ def fetch_delivery_pages(client: PublicClient, *, count: int = 1000, max_pages: 
         total, rows = result['records_total'], result['data']
         if expected_total is not None and total != expected_total:
             raise RecoverableDeliveryCaptureError('pagination_total_changed',
-                'I retain the raw pages and retry the changed total in a fresh capture')
+                'Raw pages are retained; the changed total requires a fresh capture')
         expected_total = total
         if len(rows) > count or offset + len(rows) > total or not rows and offset < total:
             raise RecoverableDeliveryCaptureError('pagination_no_progress',
-                'I retry delivery pagination after no progress or an exceeded count')
+                'Delivery pagination retry required after no progress or an exceeded count')
         dates = [row['date'] for row in rows]
         if len(set(dates)) != len(dates) or seen.intersection(dates):
             raise RecoverableDeliveryCaptureError('pagination_overlap',
-                'I retry delivery pagination after repeated or overlapping dates')
+                'Delivery pagination retry required after repeated or overlapping dates')
         seen.update(dates)
         offset += len(rows)
         pages += 1
@@ -51,7 +51,7 @@ def fetch_delivery_pages(client: PublicClient, *, count: int = 1000, max_pages: 
             return {'status': 'ok', 'pages': pages, 'records': offset, 'records_total': total}
         sleep(10.0)
     raise RecoverableDeliveryCaptureError('pagination_page_limit',
-        'I retry delivery pagination after reaching the page limit')
+        'Delivery pagination retry required after reaching the page limit')
 
 
 def capture_deliveries(output: Path) -> dict[str, Any]:
@@ -65,10 +65,10 @@ def capture_deliveries(output: Path) -> dict[str, Any]:
 
 def ingest_deliveries(directory: Path, db: Path, as_of_ms: int) -> dict[str, Any]:
     if type(as_of_ms) is not int or as_of_ms < 0:
-        raise ValueError('I need integer UTC milliseconds for settlement ingestion')
+        raise ValueError('Expected integer UTC milliseconds for settlement ingestion')
     paths = sorted(Path(directory).rglob('*.jsonl.gz'))
     if not paths:
-        raise ValueError('I need retained gzip JSON-lines delivery pages')
+        raise ValueError('Expected retained gzip JSON-lines delivery pages')
     store = evaluation_store(db)
     reasons: Counter[str] = Counter()
     pages = added = unchanged = 0
@@ -110,7 +110,7 @@ def ingest_deliveries(directory: Path, db: Path, as_of_ms: int) -> dict[str, Any
                         old = store.connection.execute('SELECT * FROM delivery_prices WHERE expiry_ms=?', (expiry,)).fetchone()
                         if old is not None:
                             if old['delivery_price'] != entry['delivery_price']:
-                                raise ValueError('Conflicting official delivery price; I keep the first observation unchanged')
+                                raise ValueError('Conflicting official delivery price; the first observation remains unchanged')
                             unchanged += 1
                             continue
                         store.connection.execute('INSERT INTO delivery_prices VALUES (?, ?, ?)',

@@ -1,4 +1,4 @@
-"""I compare historical variance forecasts with later outcomes using past-only inputs."""
+"""Historical variance forecasts use past-only inputs and later outcomes."""
 
 from collections import Counter
 from dataclasses import asdict, dataclass
@@ -50,7 +50,7 @@ def hourly_variance(prices: dict, start_ms: int, end_ms: int, annual_hours: int)
 def historical_forecast(prices: dict, dvol: dict, origin_ms: int, config: dict,
                         *, dvol_lag_days: int = 0) -> tuple[VarianceForecast | None, list[str]]:
     if type(origin_ms) is not int or origin_ms % DAY_MS or type(dvol_lag_days) is not int or dvol_lag_days < 0:
-        raise ValueError('I need a daily UTC origin and nonnegative DVOL lag')
+        raise ValueError('Expected a daily UTC origin and nonnegative DVOL lag')
     reasons = []
     opened = origin_ms - (dvol_lag_days + 1) * DAY_MS
     candle = dvol.get(opened)
@@ -122,7 +122,7 @@ def bootstrap_means(values: np.ndarray, times: np.ndarray, *, spacing_ms: int, b
             or np.any(np.diff(times) <= 0) or resamples < 2000 or block_rows < 1 or spacing_ms <= 0):
         raise ValueError('Invalid paired historical bootstrap inputs')
     if np.any(np.diff(times) != spacing_ms):
-        raise ValueError('I withhold bootstrap intervals across internal calendar gaps')
+        raise ValueError('Bootstrap intervals are withheld across internal calendar gaps')
     rng = np.random.default_rng(seed)
     index = rng.integers(0, len(x), size=resamples)
     totals = x[index].copy()

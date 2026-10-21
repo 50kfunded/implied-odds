@@ -1,4 +1,4 @@
-"""I extract CDF diagnostics only from captured smiles that pass the existing fit gate."""
+"""CDF diagnostics use captured smiles that pass the existing fit gate."""
 
 from collections import Counter
 from pathlib import Path

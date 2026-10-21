@@ -1,4 +1,4 @@
-"""I calculate report panels from frozen scores without reading files."""
+"""Report statistics use frozen scores and perform no file I/O."""
 
 from collections import defaultdict
 from dataclasses import dataclass
@@ -46,7 +46,7 @@ def histogram(pits: list[float], choices: dict, epsilon: float, *, times: list[i
 def binary_summary(values: list[float], times: list[int], lead: int, choices: dict) -> dict:
     x = np.asarray(values, dtype=float)
     if len(x) != len(times) or not np.isfinite(x).all() or np.any((x != 0) & (x != 1)):
-        raise ValueError('I need paired binary events and expiry times')
+        raise ValueError('Expected paired binary events and expiry times')
     overlap = overlap_count(np.asarray(times, dtype=np.int64), lead)
     block = max(choices['expected_block_length'], overlap)
     lags = max(choices['expected_block_length']-1, overlap-1)
@@ -62,7 +62,7 @@ def binary_summary(values: list[float], times: list[int], lead: int, choices: di
 
 def cumulative_comparison(rows: list[ReportObservation], choices: dict, *, max_points: int = 32) -> dict:
     if type(max_points) is not int or max_points < 2:
-        raise ValueError('I need at least two display points')
+        raise ValueError('Expected at least two display points')
     lead, baseline = choices['primary_lead_ms'], choices['primary_baseline']
     paired: dict[str, dict[str, ReportObservation]] = defaultdict(dict)
     for row in rows:
@@ -84,7 +84,7 @@ def cumulative_comparison(rows: list[ReportObservation], choices: dict, *, max_p
     final['final_analysis_at_ms'] = choices.get('final_analysis_at_ms')
     final['stopping_amendment_hash'] = choices.get('stopping_amendment_hash')
     if not arguments['primary'] and final['status'] == 'ok':
-        final['conclusion'] = 'descriptive only; I wait for the fixed terminal analysis'
+        final['conclusion'] = 'descriptive only; fixed terminal analysis pending'
     points = []
     prefixes = np.unique(np.linspace(1, len(times), min(len(times), max_points), dtype=int)) if times else []
     for n in prefixes:

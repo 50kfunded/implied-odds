@@ -1,4 +1,4 @@
-"""I ingest captured responses without changing raw files or borrowing later data."""
+"""Captured responses are ingested without changing raw files or using later data."""
 
 from __future__ import annotations
 
@@ -61,7 +61,7 @@ def quote_row(row: dict[str, Any], identity: str, fetched_at_ms: int, store: Sto
     parsed = parse_name(name)
     metadata = store.latest_instrument(name, fetched_at_ms)
     if metadata is None and store.metadata_rejection(name, fetched_at_ms) is not None:
-        raise InstrumentError("quarantined_metadata", f"I rejected the latest known metadata for {name}")
+        raise InstrumentError("quarantined_metadata", f"The latest known metadata was rejected for {name}")
     if metadata is not None and any(metadata[field] != getattr(parsed, field)
                                     for field in ("strike", "expiry_ms", "option_type")):
         raise InstrumentError("metadata_identity_mismatch", f"Stored metadata conflicts with {name}")

@@ -1,4 +1,4 @@
-"""I append complete gzip members and leave damaged raw files untouched."""
+"""Complete gzip members are appended while damaged raw files remain untouched."""
 
 from __future__ import annotations
 
@@ -64,7 +64,7 @@ def read_raw(path: Path, *, on_issue: Callable[[dict[str, Any]], None] | None = 
                     continue
                 yield record
     except TruncatedTail as exc:
-        LOGGER.warning("truncated_tail reason=%s; I discarded the incomplete member", exc)
+        LOGGER.warning("truncated_tail reason=%s; incomplete member discarded", exc)
         if on_issue is not None:
             on_issue({"reason": "truncated_tail", "member": member_number + 1,
                       "line": None, "detail": "I discarded the incomplete final gzip member",
@@ -85,7 +85,7 @@ class RawWriter:
                     for _ in _members(path):
                         pass
                 except OSError as exc:
-                    raise OSError(f"I won't append to {path}; use a fresh --output directory: {exc}") from exc
+                    raise OSError(f"Cannot append to {path}; use a fresh --output directory: {exc}") from exc
             self.checked.add(path)
         return path
 

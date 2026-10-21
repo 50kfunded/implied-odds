@@ -1,4 +1,4 @@
-"""I rebuild the included sample report offline in a temporary research database."""
+"""Included reports rebuild offline in a temporary research database."""
 
 import argparse
 import hashlib
@@ -40,7 +40,7 @@ def verify_sample(manifest_path: Path) -> dict:
     inventory = {p.relative_to(manifest_path.parent).as_posix() for name in folders
                  for p in (manifest_path.parent/name).rglob('*') if p.is_file()}
     if inventory != set(manifest['files']):
-        raise ValueError('Included sample inventory differs from its manifest; I reject unlisted files')
+        raise ValueError('Included sample inventory differs from its manifest; unlisted files are rejected')
     return manifest
 
 
@@ -101,7 +101,7 @@ def reproduce(output: Path, *, manifest_path: Path | None = None, include_synthe
              for folder,report in reports.items() for name in report['report_files']}
     result = {'status':'reproduced','sample_kind':manifest['kind'],'as_of_ms':manifest['as_of_ms'],
               'sample_files':manifest['files'],'provenance':details,'reports':reports,'file_sha256':files,
-              'note':"I keep the market report separate from generated illustrations. I don't create research forecasts during reproduction."}
+              'note':"Market reports and generated illustrations remain separate; reproduction creates no research forecasts."}
     if snapshot_manifest is not None:
         result['exploratory_snapshot_sample'] = snapshot_manifest
     (output/'reproduction.json').write_text(json.dumps(result,indent=2,sort_keys=True,allow_nan=False)+'\n',encoding='utf-8',newline='\n')
@@ -113,17 +113,16 @@ def reproduce(output: Path, *, manifest_path: Path | None = None, include_synthe
         snapshot_link = '<p>' + figure_link + '<a href="snapshot/snapshot.json">Fit diagnostics</a></p>'
     html = f'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Implied odds reports</title>
 <style>body{{font:18px/1.6 system-ui,sans-serif;max-width:760px;margin:70px auto;padding:24px;color:#183042}}a{{color:#185c80}}</style></head><body>
-<h1>Implied odds</h1><p>I rebuild these reports offline from retained or generated inputs.</p>
+<h1>Implied odds</h1><p>These reports rebuild offline from retained or generated inputs.</p>
 <p><a href="market/report.html">Frozen-score market report</a></p>{historical_link}{snapshot_link}{synthetic_link}
-<p>I study historical variance forecasting separately from prospective option probabilities, which still have no settled scores.
-The synthetic illustration exercises the reporting code.</p>
-<p>I keep source and output hashes in reproduction.json.</p></body></html>'''
+<p>Historical variance forecasting and prospective option probabilities are separate studies. The option study still has no settled scores; the synthetic illustration exercises the reporting code.</p>
+<p>Source and output hashes appear in reproduction.json.</p></body></html>'''
     (output/'index.html').write_text(html,encoding='utf-8',newline='\n')
     return result
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description='I reproduce the included market report and a separate synthetic illustration offline.')
+    parser = argparse.ArgumentParser(description='Reproduce the included market report and a separate synthetic illustration offline.')
     parser.add_argument('--output',type=Path,default=Path('results/reproduction'))
     parser.add_argument('--no-synthetic',action='store_true')
     args = parser.parse_args()

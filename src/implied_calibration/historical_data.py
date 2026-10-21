@@ -1,4 +1,4 @@
-"""I retain a separate historical DVOL study without creating prospective records."""
+"""Historical DVOL inputs are retained separately from prospective records."""
 
 from dataclasses import dataclass
 import hashlib
@@ -77,12 +77,12 @@ def capture_study(output: Path, config_path: Path, *, client_factory=PublicClien
     config = load_study(config_path)
     details = provenance()
     if details['git_commit'] is None or details['working_tree_dirty'] is not False:
-        raise ValueError('I need a clean committed historical study before downloading inputs')
+        raise ValueError('Expected a clean committed historical study before downloading inputs')
     if config['price_end_ms'] > now_ms():
         raise ValueError('Historical price capture must end before actual capture time')
     output = Path(output)
     if output.exists() and any(output.iterdir()):
-        raise ValueError('I retain each historical capture in a fresh directory')
+        raise ValueError('Each historical capture requires a fresh directory')
     output.mkdir(parents=True, exist_ok=True)
     state = {'status': 'capturing', 'started_at_ms': now_ms(), 'attempts': 0, 'failed_attempts': 0,
              'config_hash': digest(config), 'git_commit': details['git_commit']}
@@ -162,7 +162,7 @@ def read_study(manifest_path: Path, config: dict) -> HistoricalInputs:
     inventory = {p.relative_to(root).as_posix() for name in ('dvol', 'prices', 'alignment')
                  for p in (root / name).rglob('*') if p.is_file()}
     if inventory != set(manifest['files']):
-        raise ValueError('Historical input inventory differs; I reject unlisted files')
+        raise ValueError('Historical input inventory differs; unlisted files are rejected')
     mappings: dict[str, dict] = {name: {} for name in ('prices', 'dvol', 'alignment_dvol', 'alignment_prices')}
     duplicates = failed = 0
     for relative, proof in sorted(manifest['files'].items()):

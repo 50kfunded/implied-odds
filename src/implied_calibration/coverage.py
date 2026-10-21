@@ -1,4 +1,4 @@
-"""I report captured polling slots and keep unknown observation windows explicit."""
+"""Polling-slot coverage includes unknown observation windows explicitly."""
 
 from __future__ import annotations
 

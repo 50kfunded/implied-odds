@@ -1,4 +1,4 @@
-"""I price undiscounted Black-76 options and invert prices without doing I/O."""
+"""Undiscounted Black-76 pricing and price inversion, with no I/O."""
 
 from dataclasses import dataclass
 import math
@@ -29,7 +29,7 @@ def _log_strike(forward_usd: float, strike_usd: float) -> float:
 
 
 def _positive_integral_log_price(k: float, w: float) -> float:
-    """I integrate a positive payoff when the normal-CDF terms nearly cancel."""
+    """Integrate a positive payoff when the normal-CDF terms nearly cancel."""
     root_w = math.sqrt(w)
     z = abs(k) / root_w + root_w / 2
     prefactor = max(k, 0.0) - z * z / 2 - math.log(2 * math.pi) / 2 + math.log(root_w)
@@ -47,7 +47,7 @@ def _positive_integral_log_price(k: float, w: float) -> float:
             return math.exp(exponent + increment) * u * (-math.expm1(-increment)) / increment
         return math.exp(exponent) * u * math.expm1(increment) / increment
 
-    # I rescale the integral to stay near one even for very small total variance.
+    # Rescaling keeps the integral near one even for very small total variance.
     result = quad(kernel, 0.0, 80.0, epsabs=5e-15, epsrel=5e-14,
                   limit=128, full_output=1)
     integral, error = result[:2]
@@ -75,7 +75,7 @@ def _otm_log_price(k: float, w: float) -> float:
 
 
 def normalised_price(k: float, w: float, option_type: str) -> float:
-    """I return USD premium / forward from log-strike and total variance."""
+    """Return USD premium / forward from log-strike and total variance."""
     if not _finite(k, w) or w < 0 or abs(k) > 700 or option_type not in ('call', 'put'):
         return math.nan
     otm = math.exp(_otm_log_price(k, w))
@@ -100,7 +100,7 @@ def price_usd(forward_usd: float, strike_usd: float, t_years: float,
 
 
 def vega_usd(forward_usd: float, strike_usd: float, t_years: float, iv: float) -> float:
-    """I differentiate USD premium with respect to decimal volatility."""
+    """Differentiate USD premium with respect to decimal volatility."""
     if not _finite(forward_usd, strike_usd, t_years, iv) or min(
             forward_usd, strike_usd, t_years, iv) <= 0:
         return math.nan
@@ -117,7 +117,7 @@ def implied_vol(price: float, forward_usd: float, strike_usd: float,
                 upper_iv: float = 10.0, absolute_tolerance: float = 5e-324,
                 relative_tolerance: float = 8.881784197001252e-16,
                 max_iterations: int = 512, max_relative_price_error: float = 1e-10) -> IVResult:
-    """I invert a USD premium with Brent and check its relative repricing error."""
+    """Invert a USD premium with Brent and check its relative repricing error."""
     def failure(reason: str) -> IVResult:
         return IVResult(math.nan, reason)
 

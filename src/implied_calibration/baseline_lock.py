@@ -1,4 +1,4 @@
-"""I lock baseline choices prospectively without changing the original protocol."""
+"""Baseline choices are locked prospectively against the original protocol."""
 
 from dataclasses import asdict, dataclass
 import json
@@ -82,7 +82,7 @@ class LockedBaselines:
         expiry_class(self.content['first_expiry_ms'])
         first_target = self.content['first_expiry_ms'] - max(parent.protocol.content['evaluation']['lead_times_ms'])
         if not 0 <= self.lock['locked_at_ms'] <= self.witness_at_ms + 999 < first_target:
-            raise ValueError('I need the baseline lock committed before the first eligible decision')
+            raise ValueError('Expected the baseline lock committed before the first eligible decision')
 
 
 def load_locked_baselines(path: Path, parent: LockedProtocol) -> LockedBaselines:
@@ -99,7 +99,7 @@ def load_locked_baselines(path: Path, parent: LockedProtocol) -> LockedBaselines
     def git(*args: str) -> str:
         run = subprocess.run(['git', '-C', str(root), *args], capture_output=True, text=True, check=False)
         if run.returncode:
-            raise ValueError('I need a committed baseline extension and lock')
+            raise ValueError('Expected a committed baseline extension and lock')
         return run.stdout.strip()
 
     if digest(json.loads(git('show', f"{lock['git_commit']}:{relative}"))) != result.content_hash:
@@ -110,4 +110,4 @@ def load_locked_baselines(path: Path, parent: LockedProtocol) -> LockedBaselines
             result = LockedBaselines(content, lock, commit, int(git('show', '-s', '--format=%ct', commit)) * 1000)
             result.validate(parent)
             return result
-    raise ValueError('I need a committed matching baseline lock')
+    raise ValueError('Expected a committed matching baseline lock')

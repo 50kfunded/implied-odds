@@ -1,4 +1,4 @@
-"""I extract risk-neutral CDFs from total-variance slices without doing I/O."""
+"""Risk-neutral CDF extraction from total-variance slices, with no I/O."""
 
 from dataclasses import asdict, dataclass, field
 import math
@@ -28,7 +28,7 @@ class CDFSettings:
                     or name.endswith('points') and (type(value) is not int or value < 513)):
                 raise ValueError(f'Invalid CDF setting: {name}')
         if not self.initial_log_extent <= self.maximum_log_extent <= 600:
-            raise ValueError('I need initial_log_extent <= maximum_log_extent <= 600')
+            raise ValueError('Expected initial_log_extent <= maximum_log_extent <= 600')
         if max(self.tail_probability_tolerance, self.tail_mean_relative_tolerance,
                self.forward_relative_tolerance) >= 1:
             raise ValueError('CDF tolerances must be below one')
@@ -45,7 +45,7 @@ class PAVAResult:
 
 
 def bounded_pava(values: Sequence[float]) -> PAVAResult:
-    """I project equally weighted nodes onto increasing probabilities and report every change."""
+    """Project equally weighted nodes onto increasing probabilities and report every change."""
     raw = np.asarray(values, dtype=float)
     if raw.ndim != 1 or raw.size == 0 or not np.isfinite(raw).all():
         raise ValueError('PAVA needs a nonempty finite one-dimensional sequence')
@@ -67,15 +67,15 @@ def bounded_pava(values: Sequence[float]) -> PAVAResult:
 
 def _validate_params(params: SVIParams) -> None:
     if not all(type(v) in (float, int) and math.isfinite(v) for v in asdict(params).values()):
-        raise ValueError('I need finite SVI parameters')
+        raise ValueError('Expected finite SVI parameters')
     if (params.b < 0 or params.s <= 0 or abs(params.rho) >= 1
             or params.a + params.b * params.s * math.sqrt(1 - params.rho ** 2) <= 0
             or max(params.b * (1 - params.rho), params.b * (1 + params.rho)) >= 2):
-        raise ValueError('I need positive variance, b >= 0, s > 0, |rho| < 1 and Lee slopes < 2')
+        raise ValueError('Expected positive variance, b >= 0, s > 0, |rho| < 1 and Lee slopes < 2')
 
 
 def _linear_survival_integral(k: np.ndarray, survival: np.ndarray) -> float:
-    """I integrate the repaired linear-in-k survival exactly, including the price Jacobian."""
+    """Integrate the repaired linear-in-k survival exactly, including the price Jacobian."""
     h = np.diff(k)
     second = np.empty_like(h)
     small = h < 1e-3
@@ -87,11 +87,11 @@ def _linear_survival_integral(k: np.ndarray, survival: np.ndarray) -> float:
 
 
 def analytic_probabilities(k: Sequence[float] | float, params: SVIParams) -> tuple[np.ndarray, np.ndarray]:
-    """I return the raw CDF and survival separately, including any invalid probabilities."""
+    """Return the raw CDF and survival separately, including any invalid probabilities."""
     _validate_params(params)
     x = np.asarray(k, dtype=float)
     if not np.isfinite(x).all():
-        raise ValueError('I need finite log-moneyness')
+        raise ValueError('Expected finite log-moneyness')
     w = total_variance(x, params)
     first, _ = variance_derivatives(x, params)
     if not np.isfinite(w).all() or np.any(w <= 0) or not np.isfinite(first).all():
@@ -105,7 +105,7 @@ def analytic_probabilities(k: Sequence[float] | float, params: SVIParams) -> tup
     sf_log, sf_sign = logsumexp(np.stack((log_ndtr(d2), adjustment_log)), axis=0,
                                b=np.stack((np.ones_like(x), -np.sign(first))), return_sign=True)
     cdf, sf = cdf_sign * np.exp(cdf_log), sf_sign * np.exp(sf_log)
-    # I keep the smaller tail directly and use its complement for the large probability.
+    # Keep the smaller tail directly and use its complement for the large probability.
     return np.where(cdf <= sf, cdf, 1 - sf), np.where(cdf <= sf, 1 - cdf, sf)
 
 
@@ -137,11 +137,11 @@ class ImpliedCDF:
         for name in ('forward_usd', 't_years', 'observed_k_min', 'observed_k_max'):
             value = getattr(self, name)
             if type(value) not in (float, int) or not math.isfinite(value):
-                raise ValueError(f'I need finite {name}')
+                raise ValueError(f'Expected finite {name}')
         if self.forward_usd <= 0 or self.t_years <= 0 or self.observed_k_min >= self.observed_k_max:
-            raise ValueError('I need positive F and T and an ordered observed strike range')
+            raise ValueError('Expected positive F and T and an ordered observed strike range')
         if not isinstance(self.settings, CDFSettings):
-            raise ValueError('I need CDFSettings')
+            raise ValueError('Expected CDFSettings')
         radius = max(self.settings.initial_log_extent, abs(self.observed_k_min), abs(self.observed_k_max))
         if radius > self.settings.maximum_log_extent:
             raise ValueError('Observed strikes exceed the numerical log-extent limit')
@@ -181,7 +181,7 @@ class ImpliedCDF:
         for name, array in (('_k', k), ('_cdf', cdf), ('_survival', sf)):
             array.setflags(write=False)
             object.__setattr__(self, name, array)
-        # I integrate survival on the log-price axis with dS = F exp(k) dk.
+        # Integrate survival on the log-price axis with dS = F exp(k) dk.
         truncated = (_linear_survival_integral(k, sf) if repair else
                      float(np.trapezoid(sf * np.exp(k), k)))
         integration_points, integration_refinements = len(k), 0
@@ -251,7 +251,7 @@ class ImpliedCDF:
     def _evaluate(self, k: Sequence[float] | float, repaired: bool) -> tuple[np.ndarray, np.ndarray]:
         x = np.asarray(k, dtype=float)
         if not np.isfinite(x).all():
-            raise ValueError('I need finite log-moneyness')
+            raise ValueError('Expected finite log-moneyness')
         if repaired:
             cdf = np.interp(x, self._k, self._cdf, left=0.0, right=1.0)
             sf = np.interp(x, self._k, self._survival, left=1.0, right=0.0)
@@ -263,7 +263,7 @@ class ImpliedCDF:
 
     def cdf_at(self, price: float) -> CDFValue:
         if type(price) not in (int, float) or math.isnan(price) or price < 0:
-            raise ValueError('I need a nonnegative price, optionally positive infinity')
+            raise ValueError('Expected a nonnegative price, optionally positive infinity')
         if price == 0:
             k, cdf, sf = -math.inf, 0.0, 1.0
         elif price == math.inf:

@@ -1,4 +1,4 @@
-"""I fit cleaned snapshots only after their recorded IV investigation gate clears."""
+"""Captured smiles are fitted after the recorded IV investigation gate clears."""
 
 from collections import Counter
 from dataclasses import asdict

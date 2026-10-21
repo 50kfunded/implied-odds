@@ -1,4 +1,4 @@
-"""I rebuild the exploratory HAR comparison from retained public inputs."""
+"""Rebuild the matched HAR comparison from retained public inputs."""
 
 import csv
 import json
@@ -27,9 +27,10 @@ def headline_figure(result: dict, output: Path) -> None:
     means = [result['summary']['metrics']['qlike_'+name]['mean'] for name in models]
     axes[0].bar(['Trailing','DVOL','HAR','HAR + DVOL'],means,color=['#8996a2','#7b8994','#267c91','#d18135'],width=.6)
     axes[0].set_ylabel('Mean QLIKE; lower is better')
-    axes[0].set_title(f"Real BTC history: {result['n']:,} matched forecasts, 2023–26",loc='left',fontweight='bold')
+    axes[0].set_title(f"Matched BTC forecasts, 2023–26 (n = {result['n']:,})",loc='left',pad=12)
+    axes[0].set_ylim(0,max(means)*1.18)
     for i,value in enumerate(means):
-        axes[0].text(i,value,f'{value:.4f}',ha='center',va='bottom')
+        axes[0].annotate(f'{value:.5f}',(i,value),xytext=(0,4),textcoords='offset points',ha='center',va='bottom')
     for model,base,label in [('har_dvol','har','HAR + DVOL minus HAR'),('dvol','trailing','DVOL minus trailing')]:
         differences = np.array([r['losses'][model]-r['losses'][base] for r in records])
         axes[1].plot(dates,np.cumsum(differences),label=label,lw=1.6)
@@ -43,10 +44,9 @@ def headline_figure(result: dict, output: Path) -> None:
         ax.spines[['top','right']].set_visible(False)
         ax.grid(axis='y',alpha=.18)
         ax.set_axisbelow(True)
-    fig.suptitle('Does DVOL add information beyond HAR?',x=.02,ha='left',fontweight='bold',fontsize=15)
-    fig.supxlabel('Exploratory historical comparison. Original source gate remains failed.\nI make no formal superiority claim.',fontsize=9)
     fig.savefig(output/'incremental-variance.svg',metadata={'Date':None})
     fig.savefig(output/'incremental-variance.png',dpi=180,metadata={'Software':'implied-odds'})
+    fig.savefig(output/'figure-1.pdf',metadata={'CreationDate':None,'ModDate':None})
     plt.close(fig)
 
 
@@ -59,7 +59,7 @@ def write_incremental_report(root: Path, output: Path, *, simulations: bool = Tr
     result['plan_hash'] = digest(plan)
     result['plan'] = plan
     result['original_alignment'] = alignment_checks(inputs,historical['alignment_check_days_ms'])
-    result['audited_close_rule'] = 'I preserve the original all-OHLC failure; the three audited DVOL closes agree, with limited date coverage.'
+    result['audited_close_rule'] = 'The original all-OHLC check fails; the three audited DVOL closes agree, with limited date coverage.'
     if simulations:
         result['inference_simulations'] = simulation_report(plan)
     (output/'report.json').write_text(json.dumps(result,indent=2,sort_keys=True,allow_nan=False)+'\n',encoding='utf-8')
