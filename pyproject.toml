@@ -5,12 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "implied-odds"
 version = "0.1.0"
-description = "I record BTC option quotes for a probability calibration study."
+description = "I test BTC volatility forecasts with HAR and DVOL, and collect option quotes for SVI calibration."
 requires-python = ">=3.11"
 dependencies = ["requests>=2.31,<3", "numpy>=2,<3", "scipy>=1.14,<2", "matplotlib>=3.9,<4", "arch>=8,<9"]
 
 [project.optional-dependencies]
-research = ["reportlab==4.4.4", "pypdf==6.1.1"]
+research = ["pypdf==6.1.1"]
 dev = ["ruff==0.14.1", "mypy==1.18.2"]
 
 [tool.setuptools.packages.find]

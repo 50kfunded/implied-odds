@@ -23,7 +23,6 @@ pillow==13.0.0
 pyparsing==3.3.3
 pypdf==6.1.1
 python-dateutil==2.9.0.post0
-reportlab==4.4.4
 requests==2.34.2
 ruff==0.14.1
 scipy==1.18.1
