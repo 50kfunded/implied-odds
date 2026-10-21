@@ -1,7 +1,7 @@
 # Research note
 
-I present the current matched HAR experiment in my [five-page paper](research-paper.pdf)
-and [machine-readable results](incremental-results.json). I retain the earlier study
+I present the current matched HAR experiment in my [LaTeX paper](latex/main.pdf),
+[source](latex/main.tex) and [machine-readable results](incremental-results.json). I retain the earlier study
 below so its observations, source failure and protocol choices stay visible.
 
 I use 365 completed labels for both HAR regressions and one matched evaluation cohort.
@@ -285,7 +285,7 @@ The `fit` command cleans captured rows as of the requested cutoff before fitting
 It keeps every expiry group in its output, including rejected or failed fits.
 The original historical gate blocked my ten-minute capture before the optimiser.
 The corrected per-group gate allows eligible market slices and retains flagged groups.
-I haven't changed the Phase 3 thresholds. The synthetic example runs without that capture.
+I haven't changed the locked cleaning thresholds. The synthetic example runs without that capture.
 
 ## Implied CDF
 
@@ -341,7 +341,7 @@ CDFs reported above. Finite grids can miss violations,
 and PAVA doesn't preserve option prices or the martingale mean. My scoring convention
 for accepted analytic CDFs is below.
 
-I can still run the synthetic smile plot from Phase 4 with
+I run the synthetic smile example with
 `.venv/bin/python scripts/synthetic_svi.py --output results/synthetic-svi.json --plot results/synthetic-svi.png`
 on macOS or Linux, or replace the interpreter with `.\.venv\Scripts\python.exe`
 in PowerShell. I keep the equivalent CDF example commands in the pipeline section below.
@@ -396,7 +396,7 @@ I document it without a v1 correction.
 
 I freeze a finite scoring support from each accepted CDF's resolved check limits.
 I collapse the small omitted tails onto boundary atoms and record the policy,
-atom masses, omitted raw probability and tail-mean diagnostics. The Phase 5
+atom masses, omitted raw probability and tail-mean diagnostics. The
 analytic CDF still continues into its SVI wings; this scoring wrapper is explicit.
 Outside frozen support, raw PIT is zero or one with a tail-exceedance flag.
 I keep that PIT and a separate transformed value clipped to [1e-6,1-1e-6].
@@ -424,7 +424,7 @@ I haven't created research forecasts or scores from the saved market capture.
 
 ## Research still to do
 
-I've completed the implementation and offline reporting. I still need qualifying market observations.
+I've completed the implementation and offline reporting. I still need settled SVI forecast outcomes.
 
 I haven't collected a set of settled research forecasts. I'll freeze each forecast
 using only information available at its decision timestamp, then score it after
