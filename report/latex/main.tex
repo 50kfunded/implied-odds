@@ -55,7 +55,7 @@ EXECUTE {end.bib}
 % $.plan.horizon_hours; format d
 \newcommand{\TargetHours}{720}
 % Fixed wording or parameter in the source paper.
-\newcommand{\AnnualHours}{8,760}
+\newcommand{\AnnualHours}{8{,}760}
 % AnnualHours without a thousands separator in mathematics.
 \newcommand{\AnnualHoursPlain}{8760}
 % Fixed wording or parameter in the source paper.
@@ -71,7 +71,7 @@ EXECUTE {end.bib}
 % Fixed wording or parameter in the source paper.
 \newcommand{\PaperDate}{19 October 2026}
 % $.n; format ,d
-\newcommand{\MatchedOrigins}{1,357}
+\newcommand{\MatchedOrigins}{1{,}357}
 % $.plan.historical_origin_start_ms; UTC year
 \newcommand{\EvaluationStartYear}{2023}
 % $.plan.historical_origin_end_ms; UTC year
@@ -93,9 +93,9 @@ EXECUTE {end.bib}
 % Fixed wording or parameter in the source paper.
 \newcommand{\SectionA}{1}
 % Fixed wording or parameter in the source paper.
-\newcommand{\RetainedHourlyCandles}{48,626}
+\newcommand{\RetainedHourlyCandles}{48{,}626}
 % Fixed wording or parameter in the source paper.
-\newcommand{\RetainedDVOLCandles}{1,996}
+\newcommand{\RetainedDVOLCandles}{1{,}996}
 % Fixed wording or parameter in the source paper.
 \newcommand{\DownloadDate}{19 October 2026}
 % Fixed wording or parameter in the source paper.
@@ -149,7 +149,7 @@ EXECUTE {end.bib}
 % $.concentration.har_dvol.leave_one_year_out.2026JSON object key
 \newcommand{\LeaveYearDYear}{2026}
 % $.concentration.har_dvol.leave_one_year_out.2026.n; format d
-\newcommand{\LeaveYearDOrigins}{1096}
+\newcommand{\LeaveYearDOrigins}{1{,}096}
 % $.concentration.har_dvol.leave_one_year_out.2026.mean; format .5f
 \newcommand{\LeaveYearDMean}{-0.02065}
 % Fixed wording or parameter in the source paper.
@@ -205,7 +205,7 @@ EXECUTE {end.bib}
 % Fixed wording or parameter in the source paper.
 \newcommand{\SectionC}{3}
 % $.plan.bootstrap_resamples; format ,d
-\newcommand{\BootstrapDraws}{5,000}
+\newcommand{\BootstrapDraws}{5{,}000}
 % $.plan.expected_block_days; format d
 \newcommand{\ExpectedBlockDays}{60}
 % $.plan.hac_lags_days; format d
@@ -223,9 +223,9 @@ EXECUTE {end.bib}
 % $.plan.simulation.sample_sizes[0]; format d
 \newcommand{\SimulationShortN}{365}
 % $.plan.simulation.sample_sizes[1]; format ,d
-\newcommand{\SimulationLongNGrouped}{1,357}
+\newcommand{\SimulationLongNGrouped}{1{,}357}
 % $.plan.simulation.bootstrap_resamples; format ,d
-\newcommand{\SimulationBootstrapDraws}{2,000}
+\newcommand{\SimulationBootstrapDraws}{2{,}000}
 % Fixed wording or parameter in the source paper.
 \newcommand{\NegativeUnit}{-1}
 % Fixed wording or parameter in the source paper.
@@ -263,7 +263,7 @@ EXECUTE {end.bib}
 % $.inference_simulations.rows[4].gate_pass_rate * 100; format .1f
 \newcommand{\NullScenarioCGatePercent}{0.0}
 % $.inference_simulations.rows[6].n; format d
-\newcommand{\NullScenarioDN}{1357}
+\newcommand{\NullScenarioDN}{1{,}357}
 % $.inference_simulations.rows[6].ungated_rejection_rate * 100; format .1f
 \newcommand{\NullScenarioDRejectionPercent}{10.0}
 % $.inference_simulations.rows[6].ungated_mc_interval_95[0] * 100; format .1f
@@ -273,7 +273,7 @@ EXECUTE {end.bib}
 % $.inference_simulations.rows[6].gate_pass_rate * 100; format .1f
 \newcommand{\NullScenarioDGatePercent}{1.5}
 % $.inference_simulations.rows[8].n; format d
-\newcommand{\NullScenarioEN}{1357}
+\newcommand{\NullScenarioEN}{1{,}357}
 % $.inference_simulations.rows[8].ungated_rejection_rate * 100; format .1f
 \newcommand{\NullScenarioERejectionPercent}{45.0}
 % $.inference_simulations.rows[8].ungated_mc_interval_95[0] * 100; format .1f
@@ -283,7 +283,7 @@ EXECUTE {end.bib}
 % $.inference_simulations.rows[8].gate_pass_rate * 100; format .1f
 \newcommand{\NullScenarioEGatePercent}{0.0}
 % $.inference_simulations.rows[10].n; format d
-\newcommand{\NullScenarioFN}{1357}
+\newcommand{\NullScenarioFN}{1{,}357}
 % $.inference_simulations.rows[10].ungated_rejection_rate * 100; format .1f
 \newcommand{\NullScenarioFRejectionPercent}{8.5}
 % $.inference_simulations.rows[10].ungated_mc_interval_95[0] * 100; format .1f
@@ -342,32 +342,50 @@ EXECUTE {end.bib}
 \newcommand{\BootstrapDOI}{10.1080/01621459.1994.10476870}
 \renewcommand{\thefigure}{\FigureNumber}
 
+
+% Additional historical comparison requested after inspection; same paired bootstrap.
+% $.summary.metrics.qlike_dvol_minus_har_dvol.mean; format .5f
+\newcommand{\RawPairedMean}{-0.01513}
+% $.summary.metrics.qlike_dvol_minus_har_dvol.confidence_interval_95[0]; format +.5f
+\newcommand{\RawPairedLower}{-0.03939}
+% $.summary.metrics.qlike_dvol_minus_har_dvol.confidence_interval_95[1]; format +.5f
+\newcommand{\RawPairedUpper}{+0.00817}
+% $.summary.metrics.qlike_dvol_minus_har_dvol.effective_sample_size; format .2f
+\newcommand{\RawPairedESS}{53.44}
+% Verified bibliography and byline values.
+\newcommand{\SPIndex}{100}
+\newcommand{\PaperAuthor}{Yuvraj Singh}
+\newcommand{\ChristensenYear}{1998}
+\newcommand{\ChristensenDOI}{10.1016/S0304-405X(98)00034-8}
+\newcommand{\DeribitAccessDate}{21 October 2026}
+
 \begin{document}
 
 \begin{center}{\LARGE\bfseries Does DVOL add information beyond HAR?\par}\end{center}
-\begin{center}\small A retrospective BTC variance forecast study | 50kfunded | \PaperDate{}\end{center}
+\begin{center}\small A retrospective BTC variance forecast study | \PaperAuthor{} | \PaperDate{}\end{center}
 
-\textbf{Abstract.} Raw Bitcoin (BTC) DVOL, Deribit's option-implied volatility index, has the lowest mean quasi-likelihood (QLIKE) variance loss in this sample: \MeanQLIKEDvol{}, compared with \MeanQLIKEHardvol{} for the fitted augmentation. The comparison uses \MatchedOrigins{} matched daily forecasts from \EvaluationStartYear{} to \EvaluationEndYear{} and a direct \HorizonDays{}-day heterogeneous autoregressive (HAR) benchmark built from price-history variance. Adding DVOL lowers mean QLIKE relative to HAR by \MeanLossReductionPercent{}\%, but the paired difference of \PairedLossMean{} has a descriptive \ConfidencePercent{}\% interval [\PairedLossLower{}, \PairedLossUpper{}] that includes zero. Estimated effective sample size (ESS), which adjusts sample information for dependence, is \PairedLossEffectiveN{}, below the preset reporting threshold of \MinimumEffectiveN{}. The allocation diagnostic shows no clear improvement in meeting a fixed annual volatility budget. The ESS rule excludes every declared one-year simulation from confirmatory inference.
+\textbf{Abstract.} Raw Bitcoin (BTC) DVOL, Deribit's option-implied volatility index, has the lowest mean quasi-likelihood (QLIKE) variance loss in \MatchedOrigins{} matched daily forecasts from \EvaluationStartYear{} to \EvaluationEndYear{}. Its paired QLIKE difference from HAR + DVOL is \RawPairedMean{}, with a descriptive \ConfidencePercent{}\% interval [\RawPairedLower{}, \RawPairedUpper{}]. HAR is a heterogeneous autoregressive benchmark for direct \HorizonDays{}-day variance forecasts. HAR + DVOL lowers its mean QLIKE loss by \MeanLossReductionPercent{}\%; that paired difference is \PairedLossMean{}, with interval [\PairedLossLower{}, \PairedLossUpper{}]. Both intervals include zero. The latter comparison has an estimated effective sample size (ESS) of \PairedLossEffectiveN{}, below my preset reporting threshold of \MinimumEffectiveN{}. HAR + DVOL shows no clear improvement in the volatility-budget diagnostic. The ESS rule excludes every declared one-year simulation from confirmatory inference, so I treat the planned prospective year as evidence collection without a formal significance test.
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 \centering
-\includegraphics[width=\linewidth]{figure-1.pdf}
-\caption{Mean QLIKE by forecast and cumulative paired loss differences, using the same \MatchedOrigins{} daily origins. Negative differences favour the first forecast named in the legend.}
+\includegraphics[width=0.88\linewidth]{figure-1.pdf}
+\caption{Mean QLIKE loss, paired mean differences with descriptive \ConfidencePercent{}\% intervals, and cumulative paired QLIKE differences for the same \MatchedOrigins{} daily origins. Negative differences favour the first forecast named. Raw DVOL minus (HAR + DVOL) is an additional historical comparison requested after inspection.}
 \label{fig:headline}
 \end{figure}
 
-\clearpage
 \section{Introduction}
 
-Does option-implied variance add forecasting information beyond daily, weekly and monthly realised variance? I compare Corsi's HAR construction, adapted to a direct \HorizonDays{}-day target, with the same regression augmented by the previous completed daily DVOL variance. Raw DVOL and trailing variance provide reference forecasts.
+Does option-implied variance add forecasting information beyond daily, weekly and monthly realised variance? I compare a direct \HorizonDays{}-day HAR forecast with HAR + DVOL, which adds the previous completed daily DVOL variance. Raw DVOL and Trailing variance provide reference forecasts.
 
-The most striking point-loss ranking is raw DVOL ahead of both fitted regressions. Augmentation reduces mean QLIKE relative to HAR, while its uncertainty interval spans zero and the allocation diagnostic shows a higher point estimate of risk-budget error. The lower loss of raw DVOL highlights estimation risk in the fitted augmentation. The following sections distinguish these estimates from the limits of the evidence and then set out the locked prospective comparison.
+Raw DVOL has the lowest mean QLIKE loss, but its paired interval against HAR + DVOL includes zero. HAR + DVOL also lowers mean QLIKE loss relative to HAR, while its interval includes zero and its mean squared variance-budget error is higher. Raw DVOL's lower mean QLIKE loss is consistent with estimation risk in HAR + DVOL; this comparison does not isolate the cause of the ranking.
+
+Prior work asks whether option-implied volatility adds information beyond historical volatility. \citet{christensenprabhala} find incremental information in implied volatility for the S\&P \SPIndex{} index using non-overlapping observations; their setting differs from the overlapping BTC targets here. \citet{corsi} combines realised-volatility components across time horizons in the HAR model, which I adapt to a direct variance target. \citet{patton} studies how imperfect volatility proxies affect forecast rankings and motivates care in choosing the loss function.
 
 \section{Data and method}
 
 The retained inputs contain \RetainedHourlyCandles{} hourly BTC-PERPETUAL candles and \RetainedDVOLCandles{} daily DVOL candles, downloaded on \DownloadDate{}. Evaluation uses daily midnight forecast origins from \EvaluationStartDay{} January \EvaluationStartYear{} through \EvaluationEndDay{} September \EvaluationEndYear{}. Each target is the next \TargetHours{} hourly log-return squares, annualised by \AnnualHours{}; that window requires \RequiredCloses{} completed closes.
 
-Both regressions use exactly the latest \TrainingLabels{} labels whose full \HorizonDays{}-day targets have ended. Prior \DailyDays{}-, \WeeklyDays{}- and \MonthlyDays{}-day annualised variances form the HAR features. The augmented model adds the previous completed daily DVOL close divided by \PercentScale{} and then squared. Level ordinary least squares includes an intercept, with features centred and scaled using training rows only. An annual-variance floor of \VarianceFloorText{} applies to forecasts; raw predictions and every floor hit are retained. Neither regression reaches that floor in this sample.
+Both regressions use exactly the latest \TrainingLabels{} labels whose full \HorizonDays{}-day targets have ended. Prior \DailyDays{}-, \WeeklyDays{}- and \MonthlyDays{}-day annualised variances form the HAR features. HAR + DVOL adds the previous completed daily DVOL close divided by \PercentScale{} and then squared. Level ordinary least squares includes an intercept, with features centred and scaled using training rows only. An annual-variance floor of \VarianceFloorText{} applies to forecasts; raw predictions and every floor hit are retained. Neither regression reaches that floor in this sample.
 
 With $r_t$ denoting an hourly log return and $t$ the forecast origin, the future target and completed-return features are
 \begin{align*}
@@ -400,31 +418,36 @@ All comparisons use identical origins. Smaller values of the QLIKE loss indicate
   -\QLIKEUnit{}.
 \]
 
-\section{Raw DVOL has the lowest average loss}
+\section{Raw DVOL has the lowest mean QLIKE loss}
 
-Table~\ref{tab:forecasts} reports the matched forecast comparison. Augmentation minus HAR has mean \PairedLossMean{}, with a \ConfidencePercent{}\% interval [\PairedLossLower{}, \PairedLossUpper{}]. Raw DVOL has the lowest point loss, including against the fitted augmentation.
+Table~\ref{tab:forecasts} gives the model means and both paired QLIKE differences. Raw DVOL minus (HAR + DVOL) has mean \RawPairedMean{}, interval [\RawPairedLower{}, \RawPairedUpper{}] and ESS \RawPairedESS{}. HAR + DVOL minus HAR has mean \PairedLossMean{}, interval [\PairedLossLower{}, \PairedLossUpper{}] and ESS \PairedLossEffectiveN{}. Both paired intervals use the same matched origins and resampling settings. The raw-DVOL comparison was added after inspection and leaves the locked primary comparison unchanged.
 
-\begin{table}[H]
+\begin{table}[!htbp]
 \centering\small
-\caption{Matched variance forecasts. Lower mean QLIKE indicates better forecast accuracy.}
+\caption{Matched mean QLIKE losses and paired QLIKE differences. Lower mean QLIKE loss is better; negative differences favour the first forecast named. Both paired intervals are descriptive.}
 \label{tab:forecasts}
 \begin{tabular}{lrl}
 \toprule
-Forecast & Mean QLIKE & Role \\
+Forecast & Mean QLIKE loss & Role \\
 \midrule
-Trailing \HorizonDays{}-day & \MeanQLIKETrailing{} & Reference \\
+Trailing variance & \MeanQLIKETrailing{} & Reference \\
 Raw DVOL & \MeanQLIKEDvol{} & Reference \\
 HAR & \MeanQLIKEHar{} & Benchmark \\
-HAR + DVOL & \MeanQLIKEHardvol{} & Augmentation \\
+HAR + DVOL & \MeanQLIKEHardvol{} & HAR with DVOL \\
+\midrule
+Paired comparison & Mean difference & \ConfidencePercent{}\% interval \\
+\midrule
+HAR + DVOL minus HAR & \PairedLossMean{} & [\PairedLossLower{}, \PairedLossUpper{}] \\
+Raw DVOL minus (HAR + DVOL) & \RawPairedMean{} & [\RawPairedLower{}, \RawPairedUpper{}] \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 Level Mincer--Zarnowitz regressions assess forecast calibration, with heteroskedasticity- and autocorrelation-consistent (HAC) uncertainty. The diagnostics include a joint HAR calibration/encompassing restriction and a separate incremental-coefficient restriction with the HAR slope and intercept unrestricted. Coefficients and uncertainty are retained in \texttt{summary.json}.
 
-\subsection*{Large absolute differences hurt augmentation}
+\subsection{Large absolute differences hurt HAR + DVOL}
 
-The largest \TailOnePercent{}\% and \TailFivePercent{}\% of absolute augmentation loss differences account for \TailOneSharePercent{}\% and \TailFiveSharePercent{}\% of total absolute differences. Their aggregate signed contributions are positive, so these groups hurt augmentation even though the full-sample mean is negative. This pattern runs against a simple explanation in which augmentation wins by avoiding the most extreme losses.
+The largest \TailOnePercent{}\% and \TailFivePercent{}\% of absolute HAR + DVOL minus HAR QLIKE differences account for \TailOneSharePercent{}\% and \TailFiveSharePercent{}\% of total absolute differences. Their aggregate signed contributions are positive, so these groups hurt HAR + DVOL relative to HAR even though the full-sample mean is negative. This pattern runs against a simple explanation in which HAR + DVOL wins by avoiding the most extreme losses.
 
 \begin{table}[H]
 \centering\small
@@ -432,7 +455,7 @@ The largest \TailOnePercent{}\% and \TailFivePercent{}\% of absolute augmentatio
 \label{tab:years}
 \begin{tabular}{lrr}
 \toprule
-Year left out & Remaining origins & Mean augmentation difference \\
+Year left out & Remaining origins & Mean QLIKE difference \\
 \midrule
 \LeaveYearAYear{} & \LeaveYearAOrigins{} & \LeaveYearAMean{} \\
 \LeaveYearBYear{} & \LeaveYearBOrigins{} & \LeaveYearBMean{} \\
@@ -444,9 +467,9 @@ Year left out & Remaining origins & Mean augmentation difference \\
 
 The retained diagnostics cover every fixed calendar quarter, extreme-origin dates and all \NonoverlapPhases{} non-overlapping starting phases. Each phase contains \MinimumPhaseOutcomes{} or \MaximumPhaseOutcomes{} outcomes. These displays describe concentration; their interpretation is set out in the limitations below.
 
-\subsection*{The lower forecast loss brings no clear budget gain}
+\subsection{Lower mean QLIKE loss brings no clear budget gain}
 
-A diagnostic allocation rule targets an illustrative \BudgetPercent{}\% annual volatility budget by scaling assumed fractional exposure. Its capped weight and squared error relative to the variance budget are
+I use a volatility-budget diagnostic to ask whether forecast errors affect an illustrative \BudgetPercent{}\% annual volatility budget. The rule scales assumed fractional exposure; its capped weight and squared variance-budget error are
 \[
 w=\min\!\left(\Unit{},\frac{\BudgetWeight{}}{\sqrt{\text{forecast variance}}}\right),
 \qquad
@@ -455,25 +478,25 @@ w=\min\!\left(\Unit{},\frac{\BudgetWeight{}}{\sqrt{\text{forecast variance}}}\ri
 
 \begin{table}[H]
 \centering\small
-\caption{The fixed volatility-budget diagnostic. Budget exceeded is the share of origins above the target variance budget.}
+\caption{The volatility-budget diagnostic. Budget exceeded is the share of origins above the target variance budget.}
 \label{tab:budget}
 \begin{tabular}{lrrl}
 \toprule
-Forecast & Mean weight & \shortstack{Mean squared\\budget error} & Budget exceeded \\
+Forecast & Mean weight & \shortstack{Mean squared\\variance-budget error} & Budget exceeded \\
 \midrule
-Trailing & \DecisionTrailingWeight{} & \DecisionTrailingBudgetError{} & \DecisionTrailingBudgetExceededPercent{}\% \\
-DVOL & \DecisionDvolWeight{} & \DecisionDvolBudgetError{} & \DecisionDvolBudgetExceededPercent{}\% \\
+Trailing variance & \DecisionTrailingWeight{} & \DecisionTrailingBudgetError{} & \DecisionTrailingBudgetExceededPercent{}\% \\
+Raw DVOL & \DecisionDvolWeight{} & \DecisionDvolBudgetError{} & \DecisionDvolBudgetExceededPercent{}\% \\
 HAR & \DecisionHarWeight{} & \DecisionHarBudgetError{} & \DecisionHarBudgetExceededPercent{}\% \\
 HAR + DVOL & \DecisionHardvolWeight{} & \DecisionHardvolBudgetError{} & \DecisionHardvolBudgetExceededPercent{}\% \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Augmentation minus HAR has mean risk loss \RiskLossMean{}, with interval [\RiskLossLower{}, \RiskLossUpper{}]. The higher point estimate and interval spanning both signs give no clear improvement under this decision loss. Entry-plus-exit fee amounts are reported separately at \FeeZeroBps{}, \FeeFiveBps{}, \FeeTenBps{} and \FeeTwentyBps{} basis points per side.
+HAR + DVOL has a higher mean squared variance-budget error than HAR: the paired difference is \RiskLossMean{}, with interval [\RiskLossLower{}, \RiskLossUpper{}]. The interval includes zero, so this diagnostic leaves the benefit uncertain. Entry-plus-exit fee amounts are reported separately at \FeeZeroBps{}, \FeeFiveBps{}, \FeeTenBps{} and \FeeTwentyBps{} basis points per side.
 
 \section{Inference limits}
 
-Paired stationary-bootstrap inference uses \BootstrapDraws{} draws, a fixed seed and expected blocks of \ExpectedBlockDays{} days, with a \HACLags{}-lag HAC cross-check. Block sensitivities use \SensitivityThirtyDays{}, \SensitivityNinetyDays{}, \SensitivityOneEightyDays{} and \SensitivityYearDays{} days. Overlapping targets and rolling fits can create dependence beyond the \HorizonDays{}-day horizon. ESS estimates that dependence-adjusted information; the preset minimum-ESS rule is a prerequisite for confirmatory reporting.
+Paired stationary-bootstrap inference uses \BootstrapDraws{} draws, a fixed seed and expected blocks of \ExpectedBlockDays{} days, with a \HACLags{}-lag HAC cross-check. Block sensitivities use \SensitivityThirtyDays{}, \SensitivityNinetyDays{}, \SensitivityOneEightyDays{} and \SensitivityYearDays{} days. Overlapping targets and rolling fits can create dependence beyond the \HorizonDays{}-day horizon. For each paired QLIKE difference series, ESS is the minimum of the observation count, an estimate from positive autocorrelation pairs constrained to decrease, and a variance-ratio estimate using the \HACLags{}-lag Newey--West long-run variance; the pair sequence stops at its first nonpositive pair. The existing plan fixes \MinimumEffectiveN{} as a minimum reporting rule to withhold confirmatory results when estimated information is limited; I retain it without tuning it to these results, but the study provides no size or power derivation that makes this cutoff sufficient for valid inference.
 
 Each declared synthetic scenario has \SimulationReplications{} independent replications at sample sizes \SimulationShortN{} and \SimulationLongNGrouped{}, with \SimulationBootstrapDraws{} bootstrap draws per replication. The population null has exactly zero mean, without centring each realised sample. The scenarios use a \HorizonDays{}-day moving-average loss component alone, add a stationary slow component of persistence $\exp(\NegativeUnit{}/\PersistenceDays{})$, or add symmetric rare shocks spread across overlapping windows. The alternative shifts the mean by \AlternativeShift{} marginal standard deviations, rather than \AlternativeShift{} QLIKE.
 
@@ -495,32 +518,34 @@ $n$ & Synthetic loss process & \shortstack{Ungated\\rejection} & \ConfidencePerc
 \end{tabular}
 \end{table}
 
-At $n=\SimulationShortN{}$, ungated null rejection ranges from \ShortNullMinimumRejectionPercent{}\% to \ShortNullMaximumRejectionPercent{}\%, against nominal \NominalRejectionPercent{}\%. The ESS rule passes zero of \SimulationReplications{} replications under every one-year null and alternative. The Wilson \ConfidencePercent{}\% upper bound is around \GatePassUpperPercent{}\% for the probability of passing the rule in those scenarios. At the one-year sample size, the rule prevents confirmatory reporting in these stress tests. At $n=\MatchedOrigins{}$, some conditional estimates use only one to four passing replications, with wide Monte Carlo intervals.
+At $n=\SimulationShortN{}$, ungated null rejection ranges from \ShortNullMinimumRejectionPercent{}\% to \ShortNullMaximumRejectionPercent{}\%, against nominal \NominalRejectionPercent{}\%. The ESS rule passes zero of \SimulationReplications{} replications under every one-year null and alternative. The Wilson \ConfidencePercent{}\% upper bound is around \GatePassUpperPercent{}\% for the probability of passing the rule in those scenarios. The rule therefore prevents a formal significance test in every declared one-year replication. At $n=\MatchedOrigins{}$, some conditional estimates use only one to four passing replications, with wide Monte Carlo intervals.
 
 \section{Limitations}
 
-All historical findings and generated-forecast diagnostics are exploratory. The additional historical work followed inspection of the data, so chronological training alone leaves the evaluation exposed to research choices made after inspection. The interval estimates are descriptive, the Mincer--Zarnowitz and encompassing p-values are diagnostics rather than additional primary discoveries, and the point-loss ranking does not establish formal superiority. ESS is an estimated dependence diagnostic, not an observed count of independent episodes. The non-overlapping phase samples remain dependent; their role is to expose concentration, rather than select a favourable crisis window or identify an ex-ante regime rule. The synthetic stress tests approximate loss dependence rather than the complete rolling HAR estimation pipeline. Zero observed ESS-rule passes leave true pass probability uncertain, as the reported Wilson bound makes explicit.
+\paragraph{Research choices.} I added the historical comparisons after inspecting the data. Chronological training does not remove that exposure to research choices. All historical findings and generated-forecast diagnostics are exploratory; the intervals are descriptive, and the Mincer--Zarnowitz and encompassing p-values are diagnostics rather than additional primary discoveries. The mean QLIKE ranking establishes no formal superiority. The new raw-DVOL comparison also follows inspection of the ranking.
 
-The original source check compares open, high, low and close (OHLC) fields. It fails because one unused DVOL open differs; all three audited DVOL closes match, but those dates provide limited coverage of the full history. Historical downloads also leave the original unrevised vintages unverified. Returns from one perpetual contract proxy the spot index, and the study covers one asset and venue with overlapping outcomes.
+\paragraph{Data.} The original source check compares open, high, low and close (OHLC) fields. It fails because one unused DVOL open differs. All three audited DVOL closes match, but those dates cover little of the full history. I cannot verify the original unrevised data vintages from these historical downloads. One perpetual contract supplies a proxy for spot-index returns, so the study covers one asset and venue.
 
-Forecast accuracy and a variance-budget diagnostic define the economic scope. The latter assumes constant fractional exposure; a fixed-unit portfolio, rebalancing, funding and profit lie outside the implementation. The allocation rule has no established optimality for squared budget error. Fee amounts remain separate from that error, so the results identify neither net trading returns, a causal variance premium nor an executable edge. The cumulative figure measures loss accumulation. The separate option-distribution study retains finite calendar-grid and extrapolated-tail limitations.
+\paragraph{Scope.} I evaluate variance forecasts and a volatility-budget diagnostic. The diagnostic assumes constant fractional exposure; it does not model a fixed-unit portfolio, rebalancing, funding or profit. I have not established that the rule minimises squared variance-budget error. Fees are reported separately from that error. I make no claims about net trading returns, a causal variance premium or an executable edge. The cumulative figure tracks QLIKE differences, rather than portfolio returns.
+
+\paragraph{Inference.} The non-overlapping phase samples can still be dependent because volatility and rolling parameter estimates persist. These samples show concentration; they do not select a crisis window or identify an ex-ante regime rule. ESS estimates dependence-adjusted information rather than counting independent episodes. The synthetic stress tests approximate loss dependence, not the full rolling HAR estimation pipeline. None of the declared one-year replications passes the ESS rule, but zero observed passes does not mean the true probability is zero; the Wilson bound quantifies that uncertainty.
 
 \section{Prospective protocol}
 
-The primary prospective contrast remains HAR + DVOL minus HAR. An inference-validation amendment disables formal superiority claims for the planned year, which collects timestamped evidence under the fixed design. A later inference design needs a separate prospective declaration; the current cohort and terminal date stay fixed even if the result is inconclusive.
+The primary prospective contrast remains HAR + DVOL minus HAR. Under the inference-validation amendment, I treat the planned year as timestamped evidence collection without a formal significance test. I fix the cohort and terminal date in advance, even if the result is inconclusive; a later inference design needs a separate prospective declaration.
 
 The HAR cohort contains \PlannedOrigins{} scheduled origins from \HARStartDate{} through \HAREndDate{}, each at \HAROriginTime{} UTC. Features end at midnight, forecasts freeze between \HARFreezeStartTime{} and \HARFreezeEndTime{}, and outcomes begin at \HAROriginTime{}. Training uses the correspondingly shifted historical \HorizonDays{}-day targets completed by midnight, a different alignment from the retrospective midnight targets. Final maturity is \HARMaturityDate{}, with terminal analysis fixed at \HARAnalysisDate{}, \HAROriginTime{} UTC.
 
 Each new forecast requires matching hourly and daily DVOL closes and completion of fitting and the durable write before the freeze deadline. Missed scheduled days count as missed and stay unfilled. Terminal intervals require all \PlannedOrigins{} planned pairs and source checks; the fixed analysis cutoff excludes later-arriving scores.
 
-A separate option-distribution study uses stochastic volatility inspired (SVI) option smiles to define probability forecasts for later settlement outcomes. It has zero settled research forecasts. Its original protocol and baseline locks remain unchanged. A versioned amendment sets the expiry cutoff at \SVICutoffDate{}, \SVITime{} UTC and the final decision at \SVIAnalysisDate{}, \SVITime{} UTC. Interim reporting and command-line inference remain descriptive, with terminal data availability fixed.
+A separate stochastic volatility inspired (SVI) option-probability study has zero settled research forecasts; its protocol, dates and finite calendar-grid and extrapolated-tail limits are documented in the \href{https://github.com/50kfunded/implied-odds/blob/main/report/research-note.md}{repository methods note}.
 
 \appendix
 \section{Infrastructure and reproduction}
 
 Immutable raw capture segments, code hashes and input hashes accompany the forecasts. Recoverable delivery-pagination failures trigger retries in fresh segments; conflicting immutable prices remain fatal. Cleaning is cached by input, protocol, code and runtime fingerprints. Reports render outside the forecast loop. Published operational snapshots contain counts, rejection reasons, local hashes and heartbeat age.
 
-These operational signals have distinct limits: local forecast hash chains lack an independent public timestamp, and a fresh heartbeat alone leaves process health unverified. Continuous collection requires an awake online host. The short validation recordings demonstrate bounded operation rather than sustained collection.
+Local forecast hash chains have no independent public timestamp. A fresh heartbeat records activity but does not establish that collection is healthy. Continuous collection requires an awake online host. The short validation recordings demonstrate bounded operation rather than sustained collection.
 
 The numerical rebuild uses Python \PythonVersion{} with \texttt{requirements-research.txt} and runs:
 \begin{quote}
@@ -529,7 +554,7 @@ The numerical rebuild uses Python \PythonVersion{} with \texttt{requirements-res
 The command reads the checked-in public recordings without market requests and retains the full report, matched forecasts, coefficients, training cutoffs, diagnostics, simulation rates and plan hashes. The manuscript compiles separately from its checked LaTeX source, bibliography and figure PDF.
 
 \begingroup\raggedright
-\nocite{corsi,patton,politisromano,deribit}
+\nocite{politisromano,deribit}
 \bibliographystyle{references-exact}
 \bibliography{references}
 \endgroup

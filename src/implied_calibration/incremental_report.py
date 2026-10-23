@@ -22,24 +22,36 @@ def headline_figure(result: dict, output: Path) -> None:
     plt.rcParams.update({'font.family':'DejaVu Sans','font.size':10,'svg.hashsalt':'incremental-variance-v1'})
     records = result['records']
     dates = np.array([np.datetime64(r['origin_ms'],'ms') for r in records])
-    fig, axes = plt.subplots(2,1,figsize=(9,6.2),gridspec_kw={'height_ratios':[1,1.3]},constrained_layout=True)
+    fig, axes = plt.subplots(3,1,figsize=(9,7.6),gridspec_kw={'height_ratios':[1,.65,1.3]},constrained_layout=True)
     models = ['trailing','dvol','har','har_dvol']
     means = [result['summary']['metrics']['qlike_'+name]['mean'] for name in models]
-    axes[0].bar(['Trailing','DVOL','HAR','HAR + DVOL'],means,color=['#8996a2','#7b8994','#267c91','#d18135'],width=.6)
-    axes[0].set_ylabel('Mean QLIKE; lower is better')
+    axes[0].bar(['Trailing variance','Raw DVOL','HAR','HAR + DVOL'],means,color=['#8996a2','#7b8994','#267c91','#d18135'],width=.6)
+    axes[0].set_ylabel('Mean QLIKE loss; lower is better')
     axes[0].set_title(f"Matched BTC forecasts, 2023–26 (n = {result['n']:,})",loc='left',pad=12)
     axes[0].set_ylim(0,max(means)*1.18)
     for i,value in enumerate(means):
         axes[0].annotate(f'{value:.5f}',(i,value),xytext=(0,4),textcoords='offset points',ha='center',va='bottom')
-    for model,base,label in [('har_dvol','har','HAR + DVOL minus HAR'),('dvol','trailing','DVOL minus trailing')]:
+    comparisons = [('har_dvol','har','HAR + DVOL minus HAR','qlike_har_dvol_minus_har'),
+                   ('dvol','har_dvol','Raw DVOL minus (HAR + DVOL)','qlike_dvol_minus_har_dvol')]
+    for i,(model,base,label,metric_name) in enumerate(comparisons):
+        metric = result['summary']['metrics'][metric_name]
+        interval = metric['confidence_interval_95']
+        color = f'C{i}'
+        if interval is not None:
+            axes[1].plot(interval,[i,i],color=color,lw=2,label=label+' interval')
+        axes[1].plot(metric['mean'],i,'o',color=color)
         differences = np.array([r['losses'][model]-r['losses'][base] for r in records])
-        axes[1].plot(dates,np.cumsum(differences),label=label,lw=1.6)
-    axes[1].axhline(0,color='#888888',lw=.7)
-    axes[1].set_ylabel('Cumulative paired QLIKE difference')
-    axes[1].xaxis.set_major_locator(mdates.YearLocator())
-    axes[1].xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
-    axes[1].legend(frameon=False,loc='best')
-    axes[1].set_title('Negative cumulative differences favour the first forecast',loc='left',fontsize=10)
+        axes[2].plot(dates,np.cumsum(differences),label=label,lw=1.6,color=color)
+    axes[1].axvline(0,color='#888888',lw=.7)
+    axes[1].set_yticks([0,1],[row[2] for row in comparisons])
+    axes[1].set_ylim(1.6,-.6)
+    axes[1].set_xlabel('Mean paired QLIKE difference, descriptive 95% interval')
+    axes[2].axhline(0,color='#888888',lw=.7)
+    axes[2].set_ylabel('Cumulative paired QLIKE difference')
+    axes[2].xaxis.set_major_locator(mdates.YearLocator())
+    axes[2].xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
+    axes[2].legend(frameon=False,loc='best')
+    axes[2].set_title('Negative differences favour the first forecast',loc='left',fontsize=10)
     for ax in axes:
         ax.spines[['top','right']].set_visible(False)
         ax.grid(axis='y',alpha=.18)

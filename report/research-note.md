@@ -2,23 +2,26 @@
 
 Raw DVOL, Deribit's 30-day option-implied volatility index, has the lowest mean
 quasi-likelihood (QLIKE) variance loss in the current matched comparison: 0.09611,
-against 0.12548 for HAR and 0.11123 for HAR plus DVOL. QLIKE measures variance
+against 0.12548 for HAR and 0.11123 for HAR + DVOL. QLIKE measures variance
 forecast error; lower is better. HAR is a heterogeneous autoregressive model that
 combines daily, weekly and monthly realised-variance components. The [LaTeX paper](latex/main.pdf),
 [source](latex/main.tex) and [results](incremental-results.json) cover this experiment.
+Raw DVOL minus (HAR + DVOL) has mean QLIKE difference -0.01513, descriptive 95% interval [-0.03939, +0.00817] and effective sample size (ESS) 53.44. This additional comparison follows inspection of the ranking and leaves the primary comparison unchanged.
 The earlier study remains below with its observations, source failure and protocol choices.
 
 Both HAR regressions use 365 completed labels and one matched evaluation cohort.
-Augmentation's mean QLIKE difference is -0.01424 with interval [-0.03490, +0.00505],
+HAR + DVOL minus HAR has mean QLIKE difference -0.01424 with interval [-0.03490, +0.00505],
 so the data leave the incremental gain uncertain. The [future plan](../protocol/incremental-variance-v1.json)
 starts on 21 October 2026. The [inference amendment](../protocol/inference-validation-v1.json)
 disables formal claims after the declared simulations exposed poor size and the
 effective sample size (ESS) reporting rule excluded every one-year replication. The fixed terminal date stands even if the result stays inconclusive.
 
+For the current matched comparison, ESS is the minimum of the observation count, a positive monotone autocorrelation-pair estimate and a variance-ratio estimate using 59-lag Newey-West long-run variance. Pairs start at lags 1 and 2 and stop at the first nonpositive pair. The threshold of 60 is the existing fixed reporting rule; it has no size or power derivation here and is retained without tuning it to these outcomes.
+
 The [stopping amendment](../protocol/forward-inference-v1.json) for stochastic volatility
 inspired (SVI) option-smile forecasts keeps interim inference
 descriptive, fixes the expiry cohort and pins terminal data availability; the original
-locks remain intact. Counts, rejection reasons and local hash anchors appear in the
+locks remain intact. The amendment fixes the expiry cutoff at 20 October 2027, 08:00 UTC, and the final decision at 22 October 2027, 08:00 UTC. Interim command-line inference remains descriptive, with terminal data availability fixed. Counts, rejection reasons and local hash anchors appear in the
 [scoreboard snapshot](scoreboard.html). These hashes have no independent timestamp.
 
 For bounded supervised sessions, I run

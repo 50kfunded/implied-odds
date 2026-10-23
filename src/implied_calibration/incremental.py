@@ -157,10 +157,11 @@ def analyse_incremental(prices: dict, dvol: dict, historical: dict, plan: dict) 
     if not records:
         raise ValueError('No matched incremental-information observations are available')
     names = ['qlike_'+name for name in plan['models']] + ['qlike_har_dvol_minus_har', 'qlike_dvol_minus_har',
-             'risk_budget_har_dvol_minus_har']
+             'risk_budget_har_dvol_minus_har', 'qlike_dvol_minus_har_dvol']
     values = np.asarray([[*[r['losses'][name] for name in plan['models']],
          r['losses']['har_dvol']-r['losses']['har'], r['losses']['dvol']-r['losses']['har'],
-         r['decision']['har_dvol']['squared_variance_budget_error']-r['decision']['har']['squared_variance_budget_error']]
+         r['decision']['har_dvol']['squared_variance_budget_error']-r['decision']['har']['squared_variance_budget_error'],
+         r['losses']['dvol']-r['losses']['har_dvol']]
          for r in records])
     times = np.asarray([r['origin_ms'] for r in records])
     summary = _metric_summary(values, times, names, plan)
