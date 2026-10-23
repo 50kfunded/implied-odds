@@ -6,12 +6,14 @@ I'm testing whether BTC DVOL, Deribit's option-implied volatility index for bitc
 Raw DVOL has the lowest mean quasi-likelihood (QLIKE) loss in this sample, but its paired difference from HAR + DVOL is -0.01513 with a descriptive 95% interval [-0.03939, +0.00817] that includes zero.
 Across 1,357 matched 30-day forecasts, HAR + DVOL also lowers mean QLIKE loss relative to HAR, while the uncertainty interval spans zero and the variance-budget diagnostic shows no clear gain.
 
-| Forecast | Mean QLIKE loss, lower is better |
-| --- | ---: |
-| trailing variance | 0.16670 |
-| Raw DVOL | 0.09611 |
-| HAR | 0.12548 |
-| HAR + DVOL | 0.11123 |
+| Forecast | Mean QLIKE loss, lower is better | Mean realised / forecast variance |
+| --- | ---: | ---: |
+| trailing variance | 0.16670 | 1.1689 |
+| Raw DVOL | 0.09611 | 0.8920 |
+| HAR | 0.12548 | 0.9499 |
+| HAR + DVOL | 0.11123 | 1.0072 |
+
+Raw DVOL's relative performance varies over time. HAR + DVOL is ahead cumulatively in mid-2024; the net raw-DVOL gain comes from 2025 and the partial 2026 period. Leaving out 2025 reduces the raw-DVOL-minus-HAR+DVOL mean difference to -0.00477. The paper reports every leave-one-year-out result. The variance ratios average each origin's realised variance divided by its forecast, rather than dividing the two sample means.
 
 HAR + DVOL minus HAR has mean QLIKE difference -0.01424 and a descriptive 95% interval [-0.03490, +0.00505]. Its estimated effective sample size (ESS), a dependence-adjusted measure of information, is 51.71; the raw-DVOL comparison has ESS 53.44. Both fall below the preset reporting rule of 60, which is a design choice rather than a validated significance cutoff. Neither regression reaches its fixed positivity floor.
 
