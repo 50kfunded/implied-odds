@@ -7,6 +7,7 @@ forecast error; lower is better. HAR is a heterogeneous autoregressive model tha
 combines daily, weekly and monthly realised-variance components. The [LaTeX paper](latex/main.pdf),
 [source](latex/main.tex) and [results](incremental-results.json) cover this experiment.
 Raw DVOL minus (HAR + DVOL) has mean QLIKE difference -0.01513, descriptive 95% interval [-0.03939, +0.00817] and effective sample size (ESS) 53.44. This additional comparison follows inspection of the ranking and leaves the primary comparison unchanged.
+Raw DVOL's net gain comes from 2025 and the partial 2026 period; HAR + DVOL is ahead cumulatively in mid-2024. Leaving out 2025 reduces the mean difference to -0.00477. The paper's Tables 1 and 2 report mean realised-to-forecast variance ratios and all leave-one-year-out comparisons. Level OLS fitting and QLIKE evaluation use different objectives within the restricted HAR models; the ratios do not identify why the ranking occurs.
 The earlier study remains below with its observations, source failure and protocol choices.
 
 Both HAR regressions use 365 completed labels and one matched evaluation cohort.

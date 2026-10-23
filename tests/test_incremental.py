@@ -1,6 +1,7 @@
 """Completed-label fitting, decision units and research-lock checks."""
 
 from dataclasses import replace
+from datetime import datetime, timezone
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
@@ -89,14 +90,15 @@ class IncrementalTests(unittest.TestCase):
     def test_raw_dvol_comparison_preserves_old_metrics_and_plots_paired_losses(self):
         rng = np.random.default_rng(17)
         cases = []
+        base = int(datetime(2023,12,1,tzinfo=timezone.utc).timestamp()*1000)-420*DAY_MS
         for i in range(540):
             x = tuple(rng.uniform(.02,.3,4))
-            cases.append(VarianceCase(i*DAY_MS,i*DAY_MS,(i+30)*DAY_MS,x,
+            cases.append(VarianceCase(base+i*DAY_MS,base+i*DAY_MS,base+(i+30)*DAY_MS,x,
                                      .01+.2*x[0]+.3*x[1]+.4*x[2]+.5*x[3]+rng.normal(0,.005)))
-        plan = {**self.plan, 'historical_origin_start_ms':420*DAY_MS,
-                'historical_origin_end_ms':499*DAY_MS, 'bootstrap_resamples':2000}
+        plan = {**self.plan, 'historical_origin_start_ms':base+420*DAY_MS,
+                'historical_origin_end_ms':base+499*DAY_MS, 'bootstrap_resamples':2000}
         with patch('implied_calibration.incremental.build_cases',return_value=cases):
-            result = analyse_incremental({}, {}, {'origin_start_ms':0,'origin_end_ms':539*DAY_MS}, plan)
+            result = analyse_incremental({}, {}, {'origin_start_ms':base,'origin_end_ms':base+539*DAY_MS}, plan)
         records = result['records']
         times = np.array([r['origin_ms'] for r in records])
         raw = np.array([r['losses']['dvol'] for r in records])
@@ -110,16 +112,29 @@ class IncrementalTests(unittest.TestCase):
         expected_interval = np.quantile(samples[:,0]-samples[:,1],[.025,.975])
         np.testing.assert_allclose(metric['confidence_interval_95'],expected_interval,atol=1e-14)
         old_names = ['qlike_'+name for name in plan['models']]+['qlike_har_dvol_minus_har',
-                    'qlike_dvol_minus_har','risk_budget_har_dvol_minus_har']
+                    'qlike_dvol_minus_har','risk_budget_har_dvol_minus_har','qlike_dvol_minus_har_dvol']
         old_values = np.array([[*[r['losses'][name] for name in plan['models']],
             r['losses']['har_dvol']-r['losses']['har'],r['losses']['dvol']-r['losses']['har'],
             r['decision']['har_dvol']['squared_variance_budget_error']-
-            r['decision']['har']['squared_variance_budget_error']] for r in records])
+            r['decision']['har']['squared_variance_budget_error'],
+            r['losses']['dvol']-r['losses']['har_dvol']] for r in records])
         for block in (60,*plan['sensitivity_block_days']):
             expected = _metric_summary(old_values,times,old_names,plan,block_days=block)
             observed = result['summary'] if block==60 else result['block_sensitivities'][str(block)]
             for name in old_names:
                 self.assertEqual(observed['metrics'][name],expected['metrics'][name])
+        for name in plan['models']:
+            expected_ratio = np.mean([r['actual']/r['forecasts'][name] for r in records])
+            self.assertAlmostEqual(result['summary']['metrics']['realised_to_forecast_'+name]['mean'],expected_ratio)
+        years = np.array([datetime.fromtimestamp(r['origin_ms']/1000,timezone.utc).year for r in records])
+        yearly = result['concentration']['dvol_minus_har_dvol']['leave_one_year_out']
+        self.assertEqual(set(yearly),{'2023','2024'})
+        for year,entry in yearly.items():
+            remaining = difference[years!=int(year)]
+            self.assertEqual(entry['n'],len(remaining))
+            self.assertAlmostEqual(entry['mean'],float(remaining.mean()))
+        old_dvol_sum = sum(q['sum'] for q in result['concentration']['dvol']['quarters'].values())
+        self.assertAlmostEqual(old_dvol_sum,sum(r['losses']['dvol']-r['losses']['trailing'] for r in records))
         with TemporaryDirectory() as folder, patch('implied_calibration.incremental_report.plt.close'):
             headline_figure(result,Path(folder))
             import matplotlib.pyplot as plt

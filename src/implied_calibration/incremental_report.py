@@ -25,7 +25,7 @@ def headline_figure(result: dict, output: Path) -> None:
     fig, axes = plt.subplots(3,1,figsize=(9,7.6),gridspec_kw={'height_ratios':[1,.65,1.3]},constrained_layout=True)
     models = ['trailing','dvol','har','har_dvol']
     means = [result['summary']['metrics']['qlike_'+name]['mean'] for name in models]
-    axes[0].bar(['Trailing variance','Raw DVOL','HAR','HAR + DVOL'],means,color=['#8996a2','#7b8994','#267c91','#d18135'],width=.6)
+    axes[0].bar(['trailing variance','Raw DVOL','HAR','HAR + DVOL'],means,color=['#8996a2','#7b8994','#267c91','#d18135'],width=.6)
     axes[0].set_ylabel('Mean QLIKE loss; lower is better')
     axes[0].set_title(f"Matched BTC forecasts, 2023–26 (n = {result['n']:,})",loc='left',pad=12)
     axes[0].set_ylim(0,max(means)*1.18)

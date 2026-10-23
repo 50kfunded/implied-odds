@@ -158,10 +158,12 @@ def analyse_incremental(prices: dict, dvol: dict, historical: dict, plan: dict) 
         raise ValueError('No matched incremental-information observations are available')
     names = ['qlike_'+name for name in plan['models']] + ['qlike_har_dvol_minus_har', 'qlike_dvol_minus_har',
              'risk_budget_har_dvol_minus_har', 'qlike_dvol_minus_har_dvol']
+    names += ['realised_to_forecast_'+name for name in plan['models']]
     values = np.asarray([[*[r['losses'][name] for name in plan['models']],
          r['losses']['har_dvol']-r['losses']['har'], r['losses']['dvol']-r['losses']['har'],
          r['decision']['har_dvol']['squared_variance_budget_error']-r['decision']['har']['squared_variance_budget_error'],
-         r['losses']['dvol']-r['losses']['har_dvol']]
+         r['losses']['dvol']-r['losses']['har_dvol'],
+         *[r['actual']/r['forecasts'][name] for name in plan['models']]]
          for r in records])
     times = np.asarray([r['origin_ms'] for r in records])
     summary = _metric_summary(values, times, names, plan)
@@ -185,6 +187,10 @@ def analyse_incremental(prices: dict, dvol: dict, historical: dict, plan: dict) 
         selected = np.array([(t-times[0])//DAY_MS % 30 == phase for t in times])
         phases.append({'phase_days': phase, 'n': int(selected.sum()),
                        'mean_har_dvol_minus_har': float(values[selected,4].mean()) if selected.any() else None})
+    concentration = {name: loss_concentration(records, np.array([r['losses'][name]-r['losses'][baseline] for r in records]))
+                     for name,baseline in (('har_dvol','har'),('dvol','trailing'))}
+    concentration['dvol_minus_har_dvol'] = loss_concentration(
+        records, np.array([r['losses']['dvol']-r['losses']['har_dvol'] for r in records]))
     return {'kind': 'exploratory_incremental_variance', 'synthetic': False, 'formal_claim_eligible': False,
         'historical_role': plan['historical_role'], 'summary': summary, 'n': len(records), 'excluded': exclusions,
         'floor_hits': {name: sum(r['fits'][name]['floor_hit'] for r in records) for name in ('har','har_dvol')},
@@ -192,8 +198,7 @@ def analyse_incremental(prices: dict, dvol: dict, historical: dict, plan: dict) 
         'block_sensitivities': {str(days): _metric_summary(values, times, names, plan, block_days=days)
                                 for days in plan['sensitivity_block_days']},
         'mincer_zarnowitz': diagnostics, 'encompassing': encompassing,
-        'concentration': {name: loss_concentration(records, np.array([r['losses'][name]-r['losses'][baseline] for r in records]))
-                          for name,baseline in (('har_dvol','har'),('dvol','trailing'))},
+        'concentration': concentration,
         'nonoverlap_phases': phases, 'decision': decision,
         'decision_scope': plan['decision']['scope'],
         'fee_summary': {name: {str(bps): float(np.mean([r['decision'][name]['entry_exit_fee_fraction'][str(bps)] for r in records]))
