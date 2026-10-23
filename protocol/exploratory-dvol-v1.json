@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "kind": "exploratory_dvol_explanations_v1",
+  "declared_date": "2026-10-23",
+  "role": "I fixed these specifications after inspecting the historical ranking and before running these additions. This is not a prospective preregistration.",
+  "parent_plan": "incremental-variance-v1.json",
+  "training_completed_origins": 365,
+  "availability": "I use exactly the latest 365 completed labels selected for each existing HAR forecast, including target_end == feature_cutoff and excluding unfinished targets.",
+  "rescaled_dvol": {
+    "factor": "arithmetic mean of each training label's realised variance divided by its raw DVOL variance",
+    "forecast": "factor times current raw DVOL variance",
+    "floor": "none; inputs and resulting forecast must be positive and finite",
+    "clipping": "none"
+  },
+  "har_dvol_equal": {
+    "har_weight": 0.5,
+    "dvol_weight": 0.5,
+    "forecast": "0.5 times existing HAR variance forecast plus 0.5 times raw DVOL variance",
+    "weight_selection": "I fixed the weight without examining this combination's outcomes. The HAR component still has estimated coefficients."
+  },
+  "table_models": ["dvol", "dvol_rescaled", "har_dvol_equal", "har_dvol", "har"],
+  "paired_baseline": "har_dvol",
+  "additional_contrasts": ["dvol_rescaled_minus_dvol", "har_dvol_equal_minus_dvol"],
+  "cohort": "I retain every original matched origin and report every declared row, regardless of its ranking.",
+  "inference": "I reuse the parent plan's paired stationary bootstrap, seed, block sensitivities, HAC and ESS machinery. All intervals remain descriptive.",
+  "in_sample_scale_check": "I report the full-sample scalar QLIKE optimum as an algebraic diagnostic only, separately from the completed-label rolling forecasts.",
+  "annual": "I report calendar-year counts, paired mean QLIKE differences and signed sums. The final year is partial. A signed contribution share can exceed 100 percent when other years offset it.",
+  "prospective_scope": "I leave the locked prospective primary comparison, model set and stopping rules unchanged.",
+  "optional_extensions": "I defer log-variance HAR and ETH to a later version."
+}
