@@ -91,6 +91,54 @@
           "mean": 0.16670010718776415,
           "median": 0.08866307444258087
         },
+        "realised_to_forecast_dvol": {
+          "confidence_interval_95": [
+            0.8199017078349611,
+            0.9719514408320152
+          ],
+          "effective_sample_size": 56.31951651873971,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.04750835488291253,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.8919690651263241,
+          "median": 0.7653400309313313
+        },
+        "realised_to_forecast_har": {
+          "confidence_interval_95": [
+            0.8011114294352333,
+            1.1031202438656231
+          ],
+          "effective_sample_size": 32.73646174853854,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.07298531497841594,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.9498599600802052,
+          "median": 0.8019247348687762
+        },
+        "realised_to_forecast_har_dvol": {
+          "confidence_interval_95": [
+            0.8550245536573065,
+            1.150607483711883
+          ],
+          "effective_sample_size": 39.52749025990945,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.07285605657061418,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 1.0072493155796647,
+          "median": 0.8822405994450474
+        },
+        "realised_to_forecast_trailing": {
+          "confidence_interval_95": [
+            1.0668260471213507,
+            1.2698646705481436
+          ],
+          "effective_sample_size": 62.399976330397614,
+          "ess_gate_passed": true,
+          "hac_standard_error": 0.07093539041510846,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 1.1688702113521994,
+          "median": 0.9440280376227181
+        },
         "risk_budget_har_dvol_minus_har": {
           "confidence_interval_95": [
             -8.106920053036409e-05,
@@ -200,6 +248,54 @@
           "interval_role": "descriptive_stationary_bootstrap",
           "mean": 0.16670010718776415,
           "median": 0.08866307444258087
+        },
+        "realised_to_forecast_dvol": {
+          "confidence_interval_95": [
+            0.8058560219478066,
+            0.9818717296905236
+          ],
+          "effective_sample_size": 56.31951651873971,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.04750835488291253,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.8919690651263241,
+          "median": 0.7653400309313313
+        },
+        "realised_to_forecast_har": {
+          "confidence_interval_95": [
+            0.8152520482387955,
+            1.0900257857983557
+          ],
+          "effective_sample_size": 32.73646174853854,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.07298531497841594,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.9498599600802052,
+          "median": 0.8019247348687762
+        },
+        "realised_to_forecast_har_dvol": {
+          "confidence_interval_95": [
+            0.8767660630890445,
+            1.142441693387387
+          ],
+          "effective_sample_size": 39.52749025990945,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.07285605657061418,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 1.0072493155796647,
+          "median": 0.8822405994450474
+        },
+        "realised_to_forecast_trailing": {
+          "confidence_interval_95": [
+            1.037995585725835,
+            1.3051061805480761
+          ],
+          "effective_sample_size": 62.399976330397614,
+          "ess_gate_passed": true,
+          "hac_standard_error": 0.07093539041510846,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 1.1688702113521994,
+          "median": 0.9440280376227181
         },
         "risk_budget_har_dvol_minus_har": {
           "confidence_interval_95": [
@@ -311,6 +407,54 @@
           "mean": 0.16670010718776415,
           "median": 0.08866307444258087
         },
+        "realised_to_forecast_dvol": {
+          "confidence_interval_95": [
+            0.8279732351308609,
+            0.9613103332528036
+          ],
+          "effective_sample_size": 56.31951651873971,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.04750835488291253,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.8919690651263241,
+          "median": 0.7653400309313313
+        },
+        "realised_to_forecast_har": {
+          "confidence_interval_95": [
+            0.8196923213756369,
+            1.0831079258660066
+          ],
+          "effective_sample_size": 32.73646174853854,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.07298531497841594,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.9498599600802052,
+          "median": 0.8019247348687762
+        },
+        "realised_to_forecast_har_dvol": {
+          "confidence_interval_95": [
+            0.8709178838073434,
+            1.140119139400026
+          ],
+          "effective_sample_size": 39.52749025990945,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.07285605657061418,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 1.0072493155796647,
+          "median": 0.8822405994450474
+        },
+        "realised_to_forecast_trailing": {
+          "confidence_interval_95": [
+            1.0864155273355633,
+            1.2496095103003249
+          ],
+          "effective_sample_size": 62.399976330397614,
+          "ess_gate_passed": true,
+          "hac_standard_error": 0.07093539041510846,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 1.1688702113521994,
+          "median": 0.9440280376227181
+        },
         "risk_budget_har_dvol_minus_har": {
           "confidence_interval_95": [
             -7.534489053663741e-05,
@@ -420,6 +564,54 @@
           "interval_role": "descriptive_stationary_bootstrap",
           "mean": 0.16670010718776415,
           "median": 0.08866307444258087
+        },
+        "realised_to_forecast_dvol": {
+          "confidence_interval_95": [
+            0.814213269608928,
+            0.9763219425483767
+          ],
+          "effective_sample_size": 56.31951651873971,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.04750835488291253,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.8919690651263241,
+          "median": 0.7653400309313313
+        },
+        "realised_to_forecast_har": {
+          "confidence_interval_95": [
+            0.7948639354629037,
+            1.115408999192723
+          ],
+          "effective_sample_size": 32.73646174853854,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.07298531497841594,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.9498599600802052,
+          "median": 0.8019247348687762
+        },
+        "realised_to_forecast_har_dvol": {
+          "confidence_interval_95": [
+            0.85645845628193,
+            1.1624809961705649
+          ],
+          "effective_sample_size": 39.52749025990945,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.07285605657061418,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 1.0072493155796647,
+          "median": 0.8822405994450474
+        },
+        "realised_to_forecast_trailing": {
+          "confidence_interval_95": [
+            1.0561079323251117,
+            1.2836668435993726
+          ],
+          "effective_sample_size": 62.399976330397614,
+          "ess_gate_passed": true,
+          "hac_standard_error": 0.07093539041510846,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 1.1688702113521994,
+          "median": 0.9440280376227181
         },
         "risk_budget_har_dvol_minus_har": {
           "confidence_interval_95": [
@@ -593,6 +785,159 @@
         {
           "difference": -1.211350708385613,
           "origin_ms": 1692144000000
+        }
+      ]
+    },
+    "dvol_minus_har_dvol": {
+      "interpretation": "Large contributions are identified after inspection of losses and do not define an ex-ante trading regime.",
+      "leave_one_year_out": {
+        "2023": {
+          "mean": -0.022115835284918256,
+          "n": 992
+        },
+        "2024": {
+          "mean": -0.020979634478837758,
+          "n": 991
+        },
+        "2025": {
+          "mean": -0.004773209023274349,
+          "n": 992
+        },
+        "2026": {
+          "mean": -0.012884113821269921,
+          "n": 1096
+        }
+      },
+      "quarters": {
+        "2023-Q1": {
+          "mean": 0.021959064723398345,
+          "n": 90,
+          "sum": 1.976315825105851
+        },
+        "2023-Q2": {
+          "mean": -0.038471015263054624,
+          "n": 91,
+          "sum": -3.500862388937971
+        },
+        "2023-Q3": {
+          "mean": -0.03421184680738149,
+          "n": 92,
+          "sum": -3.1474899062790973
+        },
+        "2023-Q4": {
+          "mean": 0.06611266937638864,
+          "n": 92,
+          "sum": 6.082365582627755
+        },
+        "2024-Q1": {
+          "mean": -0.008910078688735862,
+          "n": 91,
+          "sum": -0.8108171606749635
+        },
+        "2024-Q2": {
+          "mean": 0.08215391393065377,
+          "n": 91,
+          "sum": 7.476006167689493
+        },
+        "2024-Q3": {
+          "mean": -0.08875242537049298,
+          "n": 92,
+          "sum": -8.165223134085354
+        },
+        "2024-Q4": {
+          "mean": 0.0191551348421377,
+          "n": 92,
+          "sum": 1.7622724054766683
+        },
+        "2025-Q1": {
+          "mean": -0.019703484375420292,
+          "n": 90,
+          "sum": -1.7733135937878262
+        },
+        "2025-Q2": {
+          "mean": -0.07457664959169255,
+          "n": 91,
+          "sum": -6.786475112844022
+        },
+        "2025-Q3": {
+          "mean": -0.0077025765679760196,
+          "n": 92,
+          "sum": -0.7086370442537938
+        },
+        "2025-Q4": {
+          "mean": -0.07092533030596278,
+          "n": 92,
+          "sum": -6.525130388148575
+        },
+        "2026-Q1": {
+          "mean": -0.07769249253911963,
+          "n": 90,
+          "sum": -6.992324328520766
+        },
+        "2026-Q2": {
+          "mean": 0.021201746658984177,
+          "n": 91,
+          "sum": 1.9293589459675602
+        },
+        "2026-Q3": {
+          "mean": -0.01680781699321667,
+          "n": 80,
+          "sum": -1.3446253594573334
+        }
+      },
+      "role": "exploratory_fixed_calendar_episodes",
+      "top_absolute_contributions": {
+        "1": {
+          "n": 14,
+          "share_absolute_loss_difference": 0.06603715547852028,
+          "signed_sum": -6.601825356519205
+        },
+        "5": {
+          "n": 68,
+          "share_absolute_loss_difference": 0.22765538129170912,
+          "signed_sum": -20.558860581766442
+        }
+      },
+      "worst_absolute_origins": [
+        {
+          "difference": -0.5715486068387028,
+          "origin_ms": 1769558400000
+        },
+        {
+          "difference": -0.5545733046067659,
+          "origin_ms": 1769472000000
+        },
+        {
+          "difference": -0.5441033905998576,
+          "origin_ms": 1769299200000
+        },
+        {
+          "difference": -0.481271156963448,
+          "origin_ms": 1722470400000
+        },
+        {
+          "difference": -0.4759543020663198,
+          "origin_ms": 1759708800000
+        },
+        {
+          "difference": -0.4725634951583305,
+          "origin_ms": 1720656000000
+        },
+        {
+          "difference": -0.4697556316155175,
+          "origin_ms": 1769212800000
+        },
+        {
+          "difference": -0.4634365434712202,
+          "origin_ms": 1722556800000
+        },
+        {
+          "difference": -0.4419945726241091,
+          "origin_ms": 1722643200000
+        },
+        {
+          "difference": -0.4342493604182628,
+          "origin_ms": 1720742400000
         }
       ]
     },
@@ -1760,6 +2105,54 @@
         "interval_role": "descriptive_stationary_bootstrap",
         "mean": 0.16670010718776415,
         "median": 0.08866307444258087
+      },
+      "realised_to_forecast_dvol": {
+        "confidence_interval_95": [
+          0.8080980342765816,
+          0.9797625153310737
+        ],
+        "effective_sample_size": 56.31951651873971,
+        "ess_gate_passed": false,
+        "hac_standard_error": 0.04750835488291253,
+        "interval_role": "descriptive_stationary_bootstrap",
+        "mean": 0.8919690651263241,
+        "median": 0.7653400309313313
+      },
+      "realised_to_forecast_har": {
+        "confidence_interval_95": [
+          0.7989439868223996,
+          1.104955890961975
+        ],
+        "effective_sample_size": 32.73646174853854,
+        "ess_gate_passed": false,
+        "hac_standard_error": 0.07298531497841594,
+        "interval_role": "descriptive_stationary_bootstrap",
+        "mean": 0.9498599600802052,
+        "median": 0.8019247348687762
+      },
+      "realised_to_forecast_har_dvol": {
+        "confidence_interval_95": [
+          0.860730566741598,
+          1.159955328529582
+        ],
+        "effective_sample_size": 39.52749025990945,
+        "ess_gate_passed": false,
+        "hac_standard_error": 0.07285605657061418,
+        "interval_role": "descriptive_stationary_bootstrap",
+        "mean": 1.0072493155796647,
+        "median": 0.8822405994450474
+      },
+      "realised_to_forecast_trailing": {
+        "confidence_interval_95": [
+          1.0505754450964033,
+          1.2936398887466396
+        ],
+        "effective_sample_size": 62.399976330397614,
+        "ess_gate_passed": true,
+        "hac_standard_error": 0.07093539041510846,
+        "interval_role": "descriptive_stationary_bootstrap",
+        "mean": 1.1688702113521994,
+        "median": 0.9440280376227181
       },
       "risk_budget_har_dvol_minus_har": {
         "confidence_interval_95": [
