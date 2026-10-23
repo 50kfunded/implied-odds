@@ -1,5 +1,5 @@
 % Compile with latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex.
-% Reported values and technical meaning are preserved while the prose is revised.
+% Reported values map to the matched-cohort rebuild; additions remain exploratory.
 % Computed numeric macros map to summary.json below; other macros retain fixed source values.
 % Figure 1 is a static PDF; changing text macros does not redraw its labels or data.
 \documentclass[10pt,a4paper]{article}
@@ -69,7 +69,7 @@ EXECUTE {end.bib}
 % Fixed wording or parameter in the source paper.
 \newcommand{\PercentScale}{100}
 % Fixed wording or parameter in the source paper.
-\newcommand{\PaperDate}{19 October 2026}
+\newcommand{\PaperDate}{24 October 2026}
 % $.n; format ,d
 \newcommand{\MatchedOrigins}{1{,}357}
 % $.plan.historical_origin_start_ms; UTC year
@@ -379,17 +379,92 @@ EXECUTE {end.bib}
 % $.concentration.dvol_minus_har_dvol.leave_one_year_out.2026.mean; format .5f
 \newcommand{\RawLeaveYearDMean}{-0.01288}
 
+% $.exploratory_extensions.summary.metrics.qlike_dvol_rescaled.mean; format .5f
+\newcommand{\MeanQLIKERescaled}{0.09582}
+% $.exploratory_extensions.summary.metrics.qlike_dvol_rescaled_minus_har_dvol.mean; format .5f
+\newcommand{\RescaledMean}{-0.01541}
+% $.exploratory_extensions.summary.metrics.qlike_dvol_rescaled_minus_har_dvol.confidence_interval_95[0]; format +.5f
+\newcommand{\RescaledLower}{-0.03732}
+% $.exploratory_extensions.summary.metrics.qlike_dvol_rescaled_minus_har_dvol.confidence_interval_95[1]; format +.5f
+\newcommand{\RescaledUpper}{+0.00577}
+% $.exploratory_extensions.summary.metrics.qlike_dvol_rescaled_minus_har_dvol.effective_sample_size; format .2f
+\newcommand{\RescaledESS}{70.63}
+% $.exploratory_extensions.summary.metrics.qlike_har_dvol_equal.mean; format .5f
+\newcommand{\MeanQLIKEEqual}{0.09937}
+% $.exploratory_extensions.summary.metrics.qlike_har_dvol_equal_minus_har_dvol.mean; format .5f
+\newcommand{\EqualMean}{-0.01186}
+% $.exploratory_extensions.summary.metrics.qlike_har_dvol_equal_minus_har_dvol.confidence_interval_95[0]; format +.5f
+\newcommand{\EqualLower}{-0.02929}
+% $.exploratory_extensions.summary.metrics.qlike_har_dvol_equal_minus_har_dvol.confidence_interval_95[1]; format +.5f
+\newcommand{\EqualUpper}{+0.00339}
+% $.exploratory_extensions.summary.metrics.qlike_har_dvol_equal_minus_har_dvol.effective_sample_size; format .2f
+\newcommand{\EqualESS}{58.57}
+% $.exploratory_extensions.summary.metrics.qlike_dvol_rescaled_minus_dvol.mean; format +.5f
+\newcommand{\RescaledRawMean}{-0.00028}
+% $.exploratory_extensions.summary.metrics.qlike_dvol_rescaled_minus_dvol.confidence_interval_95[0]; format +.5f
+\newcommand{\RescaledRawLower}{-0.01600}
+% $.exploratory_extensions.summary.metrics.qlike_dvol_rescaled_minus_dvol.confidence_interval_95[1]; format +.5f
+\newcommand{\RescaledRawUpper}{+0.01550}
+% $.exploratory_extensions.summary.metrics.qlike_har_dvol_equal_minus_dvol.mean; format +.5f
+\newcommand{\EqualRawMean}{+0.00327}
+% $.exploratory_extensions.summary.metrics.qlike_har_dvol_equal_minus_dvol.confidence_interval_95[0]; format +.5f
+\newcommand{\EqualRawLower}{-0.01125}
+% $.exploratory_extensions.summary.metrics.qlike_har_dvol_equal_minus_dvol.confidence_interval_95[1]; format +.5f
+\newcommand{\EqualRawUpper}{+0.01952}
+% $.exploratory_extensions.summary.metrics.qlike_har_minus_har_dvol.mean; format +.5f
+\newcommand{\HarAugmentedMean}{+0.01424}
+% $.exploratory_extensions.summary.metrics.qlike_har_minus_har_dvol.confidence_interval_95[0]; format +.5f
+\newcommand{\HarAugmentedLower}{-0.00505}
+% $.exploratory_extensions.summary.metrics.qlike_har_minus_har_dvol.confidence_interval_95[1]; format +.5f
+\newcommand{\HarAugmentedUpper}{+0.03490}
+% $.exploratory_extensions.annual.2023.n; format ,d
+\newcommand{\AnnualOriginsA}{365}
+% $.exploratory_extensions.annual.2023.har_dvol_minus_har; format +.5f
+\newcommand{\AnnualPrimaryA}{-0.01943}
+% $.exploratory_extensions.annual.2023.paired.dvol.mean; format +.5f
+\newcommand{\AnnualRawA}{+0.00386}
+% $.exploratory_extensions.annual.2024.n; format ,d
+\newcommand{\AnnualOriginsB}{366}
+% $.exploratory_extensions.annual.2024.har_dvol_minus_har; format +.5f
+\newcommand{\AnnualPrimaryB}{-0.01870}
+% $.exploratory_extensions.annual.2024.paired.dvol.mean; format +.5f
+\newcommand{\AnnualRawB}{+0.00072}
+% $.exploratory_extensions.annual.2025.n; format ,d
+\newcommand{\AnnualOriginsC}{365}
+% $.exploratory_extensions.annual.2025.har_dvol_minus_har; format +.5f
+\newcommand{\AnnualPrimaryC}{-0.02382}
+% $.exploratory_extensions.annual.2025.paired.dvol.mean; format +.5f
+\newcommand{\AnnualRawC}{-0.04327}
+% $.exploratory_extensions.annual.2026.n; format ,d
+\newcommand{\AnnualOriginsD}{261}
+% $.exploratory_extensions.annual.2026.har_dvol_minus_har; format +.5f
+\newcommand{\AnnualPrimaryD}{+0.01265}
+% $.exploratory_extensions.annual.2026.paired.dvol.mean; format +.5f
+\newcommand{\AnnualRawD}{-0.02455}
+% 100 * $.exploratory_extensions.annual.2025.raw_signed_contribution_share; format .2f
+\newcommand{\RawGainYearShare}{76.93}
+% $.exploratory_extensions.in_sample_scale_check.dvol.mean_qlike; format .5f
+\newcommand{\InSampleDvolQLIKE}{0.08981}
+% $.exploratory_extensions.in_sample_scale_check.har_dvol.mean_qlike; format .5f
+\newcommand{\InSampleAugmentedQLIKE}{0.11121}
+% $.exploratory_extensions.specification.har_dvol_equal.har_weight; format .1f
+\newcommand{\BlendWeight}{0.5}
+% 100 * $.exploratory_extensions.specification.har_dvol_equal.har_weight; format .0f
+\newcommand{\BlendPercent}{50}
+% Fixed public specification commit before the added evaluation; format identifier
+\newcommand{\ExtensionSpecificationCommit}{6a6b59b}
+
 \begin{document}
 
 \begin{center}{\LARGE\bfseries Does DVOL add information beyond HAR?\par}\end{center}
 \begin{center}\small A retrospective BTC variance forecast study | \PaperAuthor{} | \PaperDate{}\end{center}
 
-\textbf{Abstract.} I compare Bitcoin (BTC) DVOL, Deribit's option-implied volatility index, with a heterogeneous autoregressive (HAR) model for direct \HorizonDays{}-day variance forecasts, using \MatchedOrigins{} matched daily forecasts from \EvaluationStartYear{} to \EvaluationEndYear{}. Raw DVOL has the lowest mean quasi-likelihood (QLIKE) loss in this sample; its paired difference from HAR + DVOL is \RawPairedMean{}, with a descriptive \ConfidencePercent{}\% interval [\RawPairedLower{}, \RawPairedUpper{}]. Its relative advantage varies over time. HAR + DVOL lowers HAR's mean QLIKE loss by \MeanLossReductionPercent{}\%, but both paired intervals include zero. Estimated effective sample size (ESS) is \RawPairedESS{} for Raw DVOL minus (HAR + DVOL) and \PairedLossEffectiveN{} for HAR + DVOL minus HAR, both below my preset reporting rule of \MinimumEffectiveN{}. HAR + DVOL shows no clear gain in the variance-budget diagnostic. The ESS rule excludes every declared one-year simulation from confirmatory inference, so I treat the planned prospective year as evidence collection without a formal significance test.
+\textbf{Abstract.} I test whether Bitcoin (BTC) DVOL, Deribit's option-implied volatility index, adds information beyond a heterogeneous autoregressive (HAR) model for direct \HorizonDays{}-day variance forecasts, using \MatchedOrigins{} daily origins from \EvaluationStartYear{} to \EvaluationEndYear{}. Raw DVOL's advantage over HAR + DVOL is concentrated in \LeaveYearCYear{}--\LeaveYearDYear{}; \LeaveYearCYear{} accounts for \RawGainYearShare{}\% of its net quasi-likelihood (QLIKE) loss advantage. Rolling rescaling barely changes raw DVOL's mean loss, while a fixed \BlendPercent{}/\BlendPercent{} HAR--DVOL variance blend trails raw DVOL and has lower mean loss than HAR + DVOL. Every new paired interval includes zero. HAR + DVOL lowers HAR's mean QLIKE by \MeanLossReductionPercent{}\%, but the original paired intervals also include zero and their effective sample sizes (ESS), \RawPairedESS{} and \PairedLossEffectiveN{}, are below the preset reporting rule of \MinimumEffectiveN{}. The variance-budget diagnostic shows no clear gain; the prospective year remains evidence collection without a formal significance test.
 
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.88\linewidth]{figure-1.pdf}
-\caption{Mean QLIKE loss, paired mean differences with descriptive \ConfidencePercent{}\% intervals, and cumulative paired QLIKE differences for the same \MatchedOrigins{} daily origins. Negative differences favour the first forecast named. Raw DVOL minus (HAR + DVOL) is an additional historical comparison added after inspection.}
+\caption{Mean QLIKE loss for the five matched forecasts, descriptive \ConfidencePercent{}\% paired intervals, and the original cumulative paired differences over \MatchedOrigins{} daily origins. Negative differences favour the first forecast named. Raw-DVOL, rescaling and fixed-blend comparisons are exploratory additions made after inspection.}
 \label{fig:headline}
 \end{figure}
 
@@ -397,7 +472,9 @@ EXECUTE {end.bib}
 
 Does option-implied variance add forecasting information beyond daily, weekly and monthly realised variance? I compare a direct \HorizonDays{}-day HAR forecast with HAR + DVOL, which adds the previous completed daily DVOL variance. Raw DVOL and trailing variance provide reference forecasts.
 
-Raw DVOL has the lowest mean QLIKE loss, but its paired interval against HAR + DVOL includes zero. HAR + DVOL also lowers mean QLIKE loss relative to HAR, while its interval includes zero and its mean squared variance-budget error is higher. Raw DVOL's lower mean QLIKE loss is consistent with estimation risk in HAR + DVOL, but forecast bias and the different fitting and scoring objectives offer competing explanations.
+\begin{samepage}
+Among the original forecasts, raw DVOL has lower mean QLIKE than HAR + DVOL, with an interval including zero. Rolling rescaling changes little; the equal blend narrows the regression's mean-loss gap but trails raw DVOL.
+\end{samepage}
 
 Prior work asks whether option-implied volatility adds information beyond historical volatility. \citet{christensenprabhala} find incremental information in implied volatility for the S\&P \SPIndex{} index using non-overlapping observations; their setting differs from the overlapping BTC targets here. \citet{corsi} combines realised-volatility components across time horizons in the HAR model, which I adapt to a direct variance target. \citet{patton} studies how imperfect volatility proxies affect forecast rankings and motivates care in choosing the loss function.
 
@@ -440,54 +517,60 @@ All comparisons use identical origins. Smaller values of the QLIKE loss indicate
   -\QLIKEUnit{}.
 \]
 
-\section{Mean QLIKE differences are uncertain and vary over time}
+\section{Testing scale and fixed-weight alternatives}
 
-Table~\ref{tab:forecasts} gives the model means and both paired QLIKE differences. Raw DVOL minus (HAR + DVOL) has mean \RawPairedMean{}, interval [\RawPairedLower{}, \RawPairedUpper{}] and ESS \RawPairedESS{}. HAR + DVOL minus HAR has mean \PairedLossMean{}, interval [\PairedLossLower{}, \PairedLossUpper{}] and ESS \PairedLossEffectiveN{}. Both paired intervals use the same matched origins and resampling settings. The raw-DVOL comparison was added after inspection and leaves the locked primary comparison unchanged.
+The original HAR + DVOL minus HAR mean QLIKE difference is \PairedLossMean{}, with descriptive interval [\PairedLossLower{}, \PairedLossUpper{}] and ESS \PairedLossEffectiveN{}. Raw DVOL minus (HAR + DVOL) has mean \RawPairedMean{}, interval [\RawPairedLower{}, \RawPairedUpper{}] and ESS \RawPairedESS{}.
+
+I declared the added specifications in public commit \texttt{\ExtensionSpecificationCommit{}} before evaluating these additions, after inspecting the original ranking. Rescaled DVOL uses exactly the same latest \TrainingLabels{} fully completed labels as each HAR fit. With $D_t$ denoting raw DVOL variance, $V_s$ the realised target and $\mathcal T_t$ that training set, the added forecasts are
+\[
+c_t=\frac{\Unit{}}{\TrainingLabels{}}\sum_{s\in\mathcal T_t}\frac{V_s}{D_s},\qquad
+\widehat V_t^{\mathrm{rescaled}}=c_tD_t,\qquad
+\widehat V_t^{\mathrm{equal}}=\BlendWeight{}\widehat V_t^{\mathrm{HAR}}+\BlendWeight{}D_t.
+\]
+The multiplier is positive and unclipped. The blend averages variances and has no fitted combination weight; HAR's coefficients remain estimated. The scalar rule also appeared in the earlier DVOL reference comparison; this table matches it to HAR. All rows use the same origins, bootstrap draws and ESS machinery, while the locked prospective primary comparison stays unchanged.
 
 \begin{table}[H]
-\centering\small
-\caption{Matched QLIKE losses, mean realised-to-forecast variance ratios and paired QLIKE differences. The ratio averages $V_t/\widehat V_t$ over origins. Lower QLIKE is better; negative paired differences favour the first forecast. Both intervals are descriptive.}
+\centering\small\setlength{\tabcolsep}{5pt}
+\caption{Matched exploratory comparisons against HAR + DVOL. Lower mean QLIKE is better. Negative paired differences favour the row forecast. All intervals are descriptive; the reference row has no paired interval or ESS.}
 \label{tab:forecasts}
-\begin{tabular}{lrr}
+\begin{tabular}{lrrrr}
 \toprule
-Forecast & Mean QLIKE loss & \shortstack{Mean variance\\ratio $V/\widehat V$} \\
+Forecast & \shortstack{Mean\\QLIKE} & \shortstack{Paired mean\\difference} & \ConfidencePercent{}\% interval & ESS \\
 \midrule
-trailing variance & \MeanQLIKETrailing{} & \MeanVarianceRatioTrailing{} \\
-Raw DVOL & \MeanQLIKEDvol{} & \MeanVarianceRatioDvol{} \\
-HAR & \MeanQLIKEHar{} & \MeanVarianceRatioHar{} \\
-HAR + DVOL & \MeanQLIKEHardvol{} & \MeanVarianceRatioHardvol{} \\
-\midrule
-Paired comparison & Mean difference & \ConfidencePercent{}\% interval \\
-\midrule
-HAR + DVOL minus HAR & \PairedLossMean{} & [\PairedLossLower{}, \PairedLossUpper{}] \\
-Raw DVOL minus (HAR + DVOL) & \RawPairedMean{} & [\RawPairedLower{}, \RawPairedUpper{}] \\
+Raw DVOL & \MeanQLIKEDvol{} & \RawPairedMean{} & [\RawPairedLower{}, \RawPairedUpper{}] & \RawPairedESS{} \\
+Rescaled DVOL & \MeanQLIKERescaled{} & \RescaledMean{} & [\RescaledLower{}, \RescaledUpper{}] & \RescaledESS{} \\
+\BlendPercent{}/\BlendPercent{} HAR--DVOL & \MeanQLIKEEqual{} & \EqualMean{} & [\EqualLower{}, \EqualUpper{}] & \EqualESS{} \\
+HAR + DVOL & \MeanQLIKEHardvol{} & --- & --- & --- \\
+HAR & \MeanQLIKEHar{} & \HarAugmentedMean{} & [\HarAugmentedLower{}, \HarAugmentedUpper{}] & \PairedLossEffectiveN{} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Raw DVOL's mean realised-to-forecast variance ratio is \MeanVarianceRatioDvol{}, compared with \MeanVarianceRatioHardvol{} for HAR + DVOL. These averages describe relative forecast scale, not conditional calibration. QLIKE penalises reciprocal multiplicative underforecasts more heavily than overforecasts, but this asymmetry does not make upward bias generally optimal. Bias or forecast scale, estimation risk and the fit--score mismatch remain possible explanations for the ranking; these diagnostics do not identify the cause.
+Rescaled DVOL minus raw DVOL has mean \RescaledRawMean{} and interval [\RescaledRawLower{}, \RescaledRawUpper{}]. The equal blend minus raw DVOL has mean \EqualRawMean{} and interval [\EqualRawLower{}, \EqualRawUpper{}]. Rescaling barely changes the mean loss; the blend has lower mean loss than HAR + DVOL but higher mean loss than raw DVOL. All four new paired intervals include zero. The simpler rules therefore leave the cause of the original ranking unresolved.
 
-\subsection{Large absolute differences hurt HAR + DVOL}
+Mean realised-to-forecast variance ratios are \MeanVarianceRatioTrailing{} for trailing variance, \MeanVarianceRatioDvol{} for raw DVOL, \MeanVarianceRatioHar{} for HAR and \MeanVarianceRatioHardvol{} for HAR + DVOL. Each averages individual $V_t/\widehat V_t$ ratios, rather than dividing sample means. A single scalar equal to that mean minimises in-sample QLIKE. It lowers raw DVOL's in-sample mean to \InSampleDvolQLIKE{} and HAR + DVOL's to \InSampleAugmentedQLIKE{}. This algebraic diagnostic leans against helpful constant upward scaling as the explanation for raw DVOL's advantage. It uses the full sample and is separate from the completed-label rolling forecast; it establishes neither conditional calibration nor a causal explanation. QLIKE penalises a forecast too low by a factor $k>\Unit{}$ more than one too high by the same factor. Trailing variance's mean QLIKE is \MeanQLIKETrailing{}.
+
+\subsection{Extreme differences pull against the mean}
 
 The largest \TailOnePercent{}\% and \TailFivePercent{}\% of absolute HAR + DVOL minus HAR QLIKE differences account for \TailOneSharePercent{}\% and \TailFiveSharePercent{}\% of total absolute differences. Their aggregate signed contributions are positive, so these groups hurt HAR + DVOL relative to HAR even though the full-sample mean is negative. This pattern runs against a simple explanation in which HAR + DVOL wins by avoiding the most extreme losses.
 
 \begin{table}[H]
 \centering\small
-\caption{Leaving out each evaluation year. Both columns report mean paired QLIKE differences on the remaining origins; negative values favour the first forecast named.}
+\caption{Mean paired QLIKE differences within each year. Negative values favour the first forecast named. The final year ends on \EvaluationEndDay{} September; these are descriptive episode summaries.}
 \label{tab:years}
 \begin{tabular}{lrrr}
 \toprule
-Year left out & Remaining origins & \shortstack{HAR + DVOL\\minus HAR} & \shortstack{Raw DVOL minus\\(HAR + DVOL)} \\
+Year & Origins & \shortstack{HAR + DVOL\\minus HAR} & \shortstack{Raw DVOL minus\\(HAR + DVOL)} \\
 \midrule
-\LeaveYearAYear{} & \LeaveYearAOrigins{} & \LeaveYearAMean{} & \RawLeaveYearAMean{} \\
-\LeaveYearBYear{} & \LeaveYearBOrigins{} & \LeaveYearBMean{} & \RawLeaveYearBMean{} \\
-\LeaveYearCYear{} & \LeaveYearCOrigins{} & \LeaveYearCMean{} & \RawLeaveYearCMean{} \\
-\LeaveYearDYear{} & \LeaveYearDOrigins{} & \LeaveYearDMean{} & \RawLeaveYearDMean{} \\
+\LeaveYearAYear{} & \AnnualOriginsA{} & \AnnualPrimaryA{} & \AnnualRawA{} \\
+\LeaveYearBYear{} & \AnnualOriginsB{} & \AnnualPrimaryB{} & \AnnualRawB{} \\
+\LeaveYearCYear{} & \AnnualOriginsC{} & \AnnualPrimaryC{} & \AnnualRawC{} \\
+\LeaveYearDYear{} (partial) & \AnnualOriginsD{} & \AnnualPrimaryD{} & \AnnualRawD{} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Raw DVOL's relative performance varies over the sample: HAR + DVOL is ahead cumulatively in mid-\LeaveYearBYear{}, while the net raw-DVOL gain comes from \LeaveYearCYear{} and the partial \LeaveYearDYear{} period. All leave-one-year-out point differences still favour raw DVOL, but omitting \LeaveYearCYear{} reduces its advantage to \RawLeaveYearCMean{}.
+Raw DVOL's advantage over HAR + DVOL is concentrated in \LeaveYearCYear{}--\LeaveYearDYear{}. The \LeaveYearCYear{} signed loss sum accounts for \RawGainYearShare{}\% of the full-sample net advantage; the small positive differences in \LeaveYearAYear{}--\LeaveYearBYear{} partly offset later gains. HAR + DVOL lowers annual mean QLIKE relative to HAR in \LeaveYearAYear{}--\LeaveYearCYear{} and raises it in the partial \LeaveYearDYear{} sample. Leave-one-year-out diagnostics remain in the results JSON.
 
 The retained diagnostics cover every fixed calendar quarter, extreme-origin dates and all \NonoverlapPhases{} non-overlapping starting phases. Each phase contains \MinimumPhaseOutcomes{} or \MaximumPhaseOutcomes{} outcomes. These displays describe concentration; their interpretation is set out in the limitations below.
 
@@ -546,7 +629,7 @@ At $n=\SimulationShortN{}$, ungated null rejection ranges from \ShortNullMinimum
 
 \section{Limitations}
 
-\paragraph{Research choices.} I added the historical comparisons after inspecting the data. Chronological training does not remove that exposure to research choices. All historical findings and generated-forecast diagnostics are exploratory; the intervals are descriptive, and additional diagnostics are not primary discoveries. The mean QLIKE ranking establishes no formal superiority. The new raw-DVOL comparison also follows inspection of the ranking.
+\paragraph{Research choices.} I added the historical comparisons after inspecting the data. Chronological training does not remove that exposure to research choices. All historical findings and generated-forecast diagnostics are exploratory; the intervals are descriptive, and additional diagnostics are not primary discoveries. The mean QLIKE ranking establishes no formal superiority. Raw-DVOL, rescaling and fixed-blend comparisons all follow inspection. A one-parameter rolling fit still has estimation risk because its overlapping labels are dependent. The added intervals do not turn these mechanism checks into confirmatory tests.
 
 \paragraph{Data.} The original source check compares open, high, low and close (OHLC) fields. It fails because one unused DVOL open differs. All three audited DVOL closes match, but those dates cover little of the full history. I cannot verify the original unrevised data vintages from these historical downloads. One perpetual contract supplies a proxy for spot-index returns, so the study covers one asset and venue.
 
@@ -562,8 +645,6 @@ The HAR cohort contains \PlannedOrigins{} scheduled origins from \HARStartDate{}
 
 Each new forecast requires matching hourly and daily DVOL closes and completion of fitting and the durable write before the freeze deadline. Missed scheduled days count as missed and stay unfilled. Terminal intervals require all \PlannedOrigins{} planned pairs and source checks; the fixed analysis cutoff excludes later-arriving scores.
 
-A separate stochastic volatility inspired (SVI) option-probability study has zero settled research forecasts; its protocol, dates and finite calendar-grid and extrapolated-tail limits are documented in the \href{https://github.com/50kfunded/implied-odds/blob/main/report/research-note.md}{repository methods note}.
-
 \appendix
 \section{Reproduction}
 
@@ -571,7 +652,7 @@ The numerical results rebuild offline from the retained public recordings with P
 \begin{quote}
 \texttt{python scripts/build\_research.py}
 \end{quote}
-The output retains matched forecasts, coefficients, training cutoffs, diagnostics, simulation rates and plan hashes. The manuscript compiles separately from its checked LaTeX source, bibliography and figure PDF. Collection details, provenance and operational limits are documented in the \href{https://github.com/50kfunded/implied-odds#collection-and-provenance}{repository README}.
+The output retains matched forecasts, coefficients, training cutoffs, diagnostics, simulation rates and plan hashes. The manuscript compiles separately from its checked LaTeX source, bibliography and figure PDF. Collection details, provenance and operational limits are documented in the \href{https://github.com/50kfunded/implied-odds/blob/main/report/research-note.md}{DVOL methods note}.
 
 \begingroup\raggedright
 \nocite{politisromano,deribit}
