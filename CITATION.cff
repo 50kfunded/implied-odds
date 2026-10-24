@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If this work is useful, I'd like it cited using this metadata."
 type: software
 title: "implied-odds: Does DVOL add information beyond HAR?"
-version: 1.0.1
+version: 1.0.2
 doi: 10.5281/zenodo.23606990
 date-released: 2026-10-24
 authors:
