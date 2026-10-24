@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "implied-odds"
-version = "1.0.0"
+version = "1.0.1"
 description = "Matched BTC variance forecasts from HAR, DVOL and simple exploratory combinations."
 requires-python = ">=3.11"
 dependencies = ["requests>=2.31,<3", "numpy>=2,<3", "scipy>=1.14,<2", "matplotlib>=3.9,<4", "arch>=8,<9"]

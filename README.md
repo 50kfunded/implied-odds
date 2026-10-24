@@ -10,7 +10,7 @@ DVOL is Deribit's option-implied volatility index; HAR is a heterogeneous autore
 python scripts/build_research.py
 ```
 
-[![tests](https://github.com/50kfunded/implied-odds/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/50kfunded/implied-odds/actions/workflows/tests.yml) · [Paper](report/latex/main.pdf) · [Results](report/incremental-results.json) · [LaTeX](report/latex/main.tex) · [v1.0 and DOI](https://doi.org/10.5281/zenodo.23606991)
+[![tests](https://github.com/50kfunded/implied-odds/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/50kfunded/implied-odds/actions/workflows/tests.yml) · [Paper](report/latex/main.pdf) · [Results](report/incremental-results.json) · [LaTeX](report/latex/main.tex) · [Latest release](https://github.com/50kfunded/implied-odds/releases/latest) · [All versions DOI](https://doi.org/10.5281/zenodo.23606990)
 
 Across 1,357 matched daily origins, mean QLIKE loss is 0.09611 for raw DVOL, 0.09582 for rolling-rescaled DVOL, 0.09937 for a fixed 50/50 HAR–DVOL variance blend, 0.11123 for HAR + DVOL and 0.12548 for HAR. Lower is better. The paper reports paired intervals, effective sample sizes and annual results. The fixed-weight and scaling additions are exploratory and leave the locked prospective contrast unchanged.
 
