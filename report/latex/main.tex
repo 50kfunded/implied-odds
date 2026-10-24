@@ -13,7 +13,7 @@
 \usepackage[hidelinks]{hyperref}
 \captionsetup{font=small,labelsep=period}
 \setlength{\parindent}{0pt}
-\setlength{\parskip}{5pt}
+\setlength{\parskip}{4pt}
 \setlength{\emergencystretch}{2em}
 \setlength{\tabcolsep}{7pt}
 \pagestyle{plain}
@@ -470,7 +470,7 @@ EXECUTE {end.bib}
 
 \section{Introduction}
 
-Does option-implied variance add forecasting information beyond daily, weekly and monthly realised variance? I compare a direct \HorizonDays{}-day HAR forecast with HAR + DVOL, which adds the previous completed daily DVOL variance. Raw DVOL and trailing variance provide reference forecasts.
+Does option-implied variance add forecasting information beyond daily, weekly and monthly realised variance? I compare a direct \HorizonDays{}-day HAR forecast with HAR + DVOL, which adds the previous completed daily DVOL variance. Raw DVOL provides a reference forecast.
 
 \begin{samepage}
 Among the original forecasts, raw DVOL has lower mean QLIKE than HAR + DVOL, with an interval including zero. Rolling rescaling changes little; the equal blend narrows the regression's mean-loss gap but trails raw DVOL.
@@ -527,7 +527,7 @@ c_t=\frac{\Unit{}}{\TrainingLabels{}}\sum_{s\in\mathcal T_t}\frac{V_s}{D_s},\qqu
 \widehat V_t^{\mathrm{rescaled}}=c_tD_t,\qquad
 \widehat V_t^{\mathrm{equal}}=\BlendWeight{}\widehat V_t^{\mathrm{HAR}}+\BlendWeight{}D_t.
 \]
-The multiplier is positive and unclipped. The blend averages variances and has no fitted combination weight; HAR's coefficients remain estimated. The scalar rule also appeared in the earlier DVOL reference comparison; this table matches it to HAR. All rows use the same origins, bootstrap draws and ESS machinery, while the locked prospective primary comparison stays unchanged.
+The multiplier is positive and unclipped. The blend averages variances and has no fitted combination weight; HAR's coefficients remain estimated. All rows use the same origins, bootstrap draws and ESS machinery, while the locked prospective primary comparison stays unchanged.
 
 \begin{table}[H]
 \centering\small\setlength{\tabcolsep}{5pt}
@@ -546,9 +546,11 @@ HAR & \MeanQLIKEHar{} & \HarAugmentedMean{} & [\HarAugmentedLower{}, \HarAugment
 \end{tabular}
 \end{table}
 
-Rescaled DVOL minus raw DVOL has mean \RescaledRawMean{} and interval [\RescaledRawLower{}, \RescaledRawUpper{}]. The equal blend minus raw DVOL has mean \EqualRawMean{} and interval [\EqualRawLower{}, \EqualRawUpper{}]. Rescaling barely changes the mean loss; the blend has lower mean loss than HAR + DVOL but higher mean loss than raw DVOL. All four new paired intervals include zero. The simpler rules therefore leave the cause of the original ranking unresolved.
+Against HAR + DVOL, rescaled DVOL's ESS is \RescaledESS{}, above the \MinimumEffectiveN{} reporting rule, but its interval includes zero; the blend's \EqualESS{} is just below. Rescaled DVOL minus raw DVOL has mean \RescaledRawMean{} and interval [\RescaledRawLower{}, \RescaledRawUpper{}]. The equal blend minus raw DVOL has mean \EqualRawMean{} and interval [\EqualRawLower{}, \EqualRawUpper{}]. Rescaling barely changes the mean loss; the blend has lower mean loss than HAR + DVOL but higher mean loss than raw DVOL. All four new paired intervals include zero. The simpler rules therefore leave the cause of the original ranking unresolved.
 
-Mean realised-to-forecast variance ratios are \MeanVarianceRatioTrailing{} for trailing variance, \MeanVarianceRatioDvol{} for raw DVOL, \MeanVarianceRatioHar{} for HAR and \MeanVarianceRatioHardvol{} for HAR + DVOL. Each averages individual $V_t/\widehat V_t$ ratios, rather than dividing sample means. A single scalar equal to that mean minimises in-sample QLIKE. It lowers raw DVOL's in-sample mean to \InSampleDvolQLIKE{} and HAR + DVOL's to \InSampleAugmentedQLIKE{}. This algebraic diagnostic leans against helpful constant upward scaling as the explanation for raw DVOL's advantage. It uses the full sample and is separate from the completed-label rolling forecast; it establishes neither conditional calibration nor a causal explanation. QLIKE penalises a forecast too low by a factor $k>\Unit{}$ more than one too high by the same factor. Trailing variance's mean QLIKE is \MeanQLIKETrailing{}.
+Mean realised-to-forecast variance ratios are \MeanVarianceRatioTrailing{} for trailing variance over the previous \MonthlyDays{} days, \MeanVarianceRatioDvol{} for raw DVOL, \MeanVarianceRatioHar{} for HAR and \MeanVarianceRatioHardvol{} for HAR + DVOL. Each averages individual $V_t/\widehat V_t$ ratios, rather than dividing sample means. A single scalar equal to that mean minimises in-sample QLIKE. It lowers raw DVOL's in-sample mean from \MeanQLIKEDvol{} to \InSampleDvolQLIKE{} and HAR + DVOL's to \InSampleAugmentedQLIKE{}.
+
+The completed-label rolling rule reaches \MeanQLIKERescaled{}, so most of the full-sample scaling gain is absent from the rolling forecast. This gap is consistent with changes in optimal scale or rolling estimation noise; it does not identify scale drift. Even after full-sample rescaling, raw DVOL's mean loss of \InSampleDvolQLIKE{} remains below unscaled HAR + DVOL's \MeanQLIKEHardvol{}. These in-sample diagnostics lean against helpful constant upward scaling as the explanation for raw DVOL's advantage; they establish neither conditional calibration nor a causal explanation. QLIKE penalises a forecast too low by a factor $k>\Unit{}$ more than one too high by the same factor.
 
 \subsection{Extreme differences pull against the mean}
 
