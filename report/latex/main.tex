@@ -454,12 +454,21 @@ EXECUTE {end.bib}
 % Fixed public specification commit before the added evaluation; format identifier
 \newcommand{\ExtensionSpecificationCommit}{6a6b59b}
 
+% $.summary.metrics.qlike_dvol_minus_har.mean; format .5f
+\newcommand{\RawHarMean}{-0.02937}
+% $.summary.metrics.qlike_dvol_minus_har.confidence_interval_95[0]; format +.5f
+\newcommand{\RawHarLower}{-0.05831}
+% $.summary.metrics.qlike_dvol_minus_har.confidence_interval_95[1]; format +.5f
+\newcommand{\RawHarUpper}{-0.00465}
+% $.summary.metrics.qlike_dvol_minus_har.effective_sample_size; format .2f
+\newcommand{\RawHarESS}{47.79}
+
 \begin{document}
 
 \begin{center}{\LARGE\bfseries Does DVOL add information beyond HAR?\par}\end{center}
 \begin{center}\small A retrospective BTC variance forecast study | \PaperAuthor{} | \PaperDate{}\end{center}
 
-\textbf{Abstract.} I test whether Bitcoin (BTC) DVOL, Deribit's option-implied volatility index, adds information beyond a heterogeneous autoregressive (HAR) model for direct \HorizonDays{}-day variance forecasts, using \MatchedOrigins{} daily origins from \EvaluationStartYear{} to \EvaluationEndYear{}. Raw DVOL's advantage over HAR + DVOL is concentrated in \LeaveYearCYear{}--\LeaveYearDYear{}; \LeaveYearCYear{} accounts for \RawGainYearShare{}\% of its net quasi-likelihood (QLIKE) loss advantage. Rolling rescaling barely changes raw DVOL's mean loss, while a fixed \BlendPercent{}/\BlendPercent{} HAR--DVOL variance blend trails raw DVOL and has lower mean loss than HAR + DVOL. Every new paired interval includes zero. HAR + DVOL lowers HAR's mean QLIKE by \MeanLossReductionPercent{}\%, but the original paired intervals also include zero and their effective sample sizes (ESS), \RawPairedESS{} and \PairedLossEffectiveN{}, are below the preset reporting rule of \MinimumEffectiveN{}. The variance-budget diagnostic shows no clear gain; the prospective year remains evidence collection without a formal significance test.
+\textbf{Abstract.} I test whether Bitcoin (BTC) DVOL, Deribit's option-implied volatility index, adds information beyond a heterogeneous autoregressive (HAR) model for direct \HorizonDays{}-day variance forecasts, using \MatchedOrigins{} daily origins from \EvaluationStartYear{} to \EvaluationEndYear{}. The two DVOL-only forecasts, raw (\MeanQLIKEDvol{}) and rolling-rescaled (\MeanQLIKERescaled{}), have lower mean quasi-likelihood (QLIKE) loss than HAR + DVOL (\MeanQLIKEHardvol{}) and HAR (\MeanQLIKEHar{}), but all reported paired QLIKE intervals against HAR + DVOL include zero. Raw DVOL's advantage over HAR + DVOL is concentrated in \LeaveYearCYear{}--\LeaveYearDYear{}; \LeaveYearCYear{} accounts for \RawGainYearShare{}\% of its net loss advantage. A fixed \BlendPercent{}/\BlendPercent{} HAR--DVOL blend trails raw DVOL and has lower mean loss than HAR + DVOL. HAR + DVOL lowers HAR's mean QLIKE by \MeanLossReductionPercent{}\%, but the effective sample sizes (ESS) of the original comparisons, \RawPairedESS{} and \PairedLossEffectiveN{}, are below the preset reporting rule of \MinimumEffectiveN{}. The variance-budget diagnostic shows no clear gain, and the prospective year remains evidence collection without a formal significance test.
 
 \begin{figure}[!htbp]
 \centering
@@ -546,11 +555,13 @@ HAR & \MeanQLIKEHar{} & \HarAugmentedMean{} & [\HarAugmentedLower{}, \HarAugment
 \end{tabular}
 \end{table}
 
-Against HAR + DVOL, rescaled DVOL's ESS is \RescaledESS{}, above the \MinimumEffectiveN{} reporting rule, but its interval includes zero; the blend's \EqualESS{} is just below. Rescaled DVOL minus raw DVOL has mean \RescaledRawMean{} and interval [\RescaledRawLower{}, \RescaledRawUpper{}]. The equal blend minus raw DVOL has mean \EqualRawMean{} and interval [\EqualRawLower{}, \EqualRawUpper{}]. Rescaling barely changes the mean loss; the blend has lower mean loss than HAR + DVOL but higher mean loss than raw DVOL. All four new paired intervals include zero. The simpler rules therefore leave the cause of the original ranking unresolved.
+Raw DVOL minus HAR has mean \RawHarMean{}, descriptive \ConfidencePercent{}\% interval [\RawHarLower{}, \RawHarUpper{}] and ESS \RawHarESS{}. I add this exploratory comparison to the paper after inspection. The interval excludes zero, but ESS is below the preset reporting rule of \MinimumEffectiveN{}, so I treat it as descriptive.
 
-Mean realised-to-forecast variance ratios are \MeanVarianceRatioTrailing{} for trailing variance over the previous \MonthlyDays{} days, \MeanVarianceRatioDvol{} for raw DVOL, \MeanVarianceRatioHar{} for HAR and \MeanVarianceRatioHardvol{} for HAR + DVOL. Each averages individual $V_t/\widehat V_t$ ratios, rather than dividing sample means. A single scalar equal to that mean minimises in-sample QLIKE. It lowers raw DVOL's in-sample mean from \MeanQLIKEDvol{} to \InSampleDvolQLIKE{} and HAR + DVOL's to \InSampleAugmentedQLIKE{}.
+Against HAR + DVOL, rescaled DVOL's ESS is \RescaledESS{}, above the \MinimumEffectiveN{} reporting rule, but its interval includes zero; the blend's \EqualESS{} is just below. Rescaled DVOL minus raw DVOL has mean \RescaledRawMean{} and interval [\RescaledRawLower{}, \RescaledRawUpper{}]. The equal blend minus raw DVOL has mean \EqualRawMean{} and interval [\EqualRawLower{}, \EqualRawUpper{}]. Rescaling barely changes the mean loss; the blend has lower mean loss than HAR + DVOL but higher mean loss than raw DVOL. All four rescaling and blend intervals include zero. The simpler rules therefore leave the cause of the original ranking unresolved.
 
-The completed-label rolling rule reaches \MeanQLIKERescaled{}, so most of the full-sample scaling gain is absent from the rolling forecast. This gap is consistent with changes in optimal scale or rolling estimation noise; it does not identify scale drift. Even after full-sample rescaling, raw DVOL's mean loss of \InSampleDvolQLIKE{} remains below unscaled HAR + DVOL's \MeanQLIKEHardvol{}. These in-sample diagnostics lean against helpful constant upward scaling as the explanation for raw DVOL's advantage; they establish neither conditional calibration nor a causal explanation. QLIKE penalises a forecast too low by a factor $k>\Unit{}$ more than one too high by the same factor.
+QLIKE penalises a forecast too low by a factor $k>\Unit{}$ more than one too high by the same factor. I therefore check scale. Mean realised-to-forecast variance ratios are \MeanVarianceRatioTrailing{} for trailing variance over the previous \MonthlyDays{} days, \MeanVarianceRatioDvol{} for raw DVOL, \MeanVarianceRatioHar{} for HAR and \MeanVarianceRatioHardvol{} for HAR + DVOL. Each averages individual $V_t/\widehat V_t$ ratios, rather than dividing sample means. A single scalar equal to that mean minimises in-sample QLIKE. It lowers raw DVOL's in-sample mean from \MeanQLIKEDvol{} to \InSampleDvolQLIKE{} and HAR + DVOL's to \InSampleAugmentedQLIKE{}.
+
+The completed-label rolling rule reaches \MeanQLIKERescaled{}, so most of the full-sample scaling gain is absent from the rolling forecast. This gap is consistent with changes in optimal scale or rolling estimation noise; it does not identify scale drift. Even after full-sample rescaling, raw DVOL's mean loss of \InSampleDvolQLIKE{} remains below unscaled HAR + DVOL's \MeanQLIKEHardvol{}. These in-sample diagnostics lean against helpful constant upward scaling as the explanation for raw DVOL's advantage; they establish neither conditional calibration nor a causal explanation.
 
 \subsection{Extreme differences pull against the mean}
 
@@ -587,7 +598,7 @@ w=\min\!\left(\Unit{},\frac{\BudgetWeight{}}{\sqrt{\text{forecast variance}}}\ri
 
 \begin{table}[H]
 \centering\small
-\caption{The variance-budget diagnostic. Budget exceeded is the share of origins above the target variance budget.}
+\caption{The variance-budget diagnostic for the original forecasts. Budget exceeded is the share of origins above the target variance budget. Trailing variance, a naive previous-\MonthlyDays{}-day realised-variance forecast with mean QLIKE \MeanQLIKETrailing{}, serves as a reference in this diagnostic. The rescaled and blended forecasts were not evaluated under this diagnostic.}
 \label{tab:budget}
 \begin{tabular}{lrrl}
 \toprule
@@ -658,6 +669,7 @@ The output retains matched forecasts, coefficients, training cutoffs, diagnostic
 
 \begingroup\raggedright
 \nocite{politisromano,deribit}
+\clearpage
 \bibliographystyle{references-exact}
 \bibliography{references}
 \endgroup
