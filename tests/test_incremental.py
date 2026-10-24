@@ -11,7 +11,7 @@ import numpy as np
 
 from implied_calibration.incremental import VarianceCase, analyse_incremental, fit_forecasts, risk_budget, regression_diagnostic
 from implied_calibration.incremental_report import headline_figure
-from implied_calibration.inference import paired_inference, berkowitz_hac
+from implied_calibration.inference import paired_inference, berkowitz_hac, effective_sample_size
 from implied_calibration.inference_study import bootstrap_interval, loss_process, wilson
 from implied_calibration.research_plan import load_plan, stopping_choices
 from implied_calibration.variance_study import DAY_MS, _metric_summary, bootstrap_means
@@ -103,14 +103,22 @@ class IncrementalTests(unittest.TestCase):
         times = np.array([r['origin_ms'] for r in records])
         raw = np.array([r['losses']['dvol'] for r in records])
         augmented = np.array([r['losses']['har_dvol'] for r in records])
+        har = np.array([r['losses']['har'] for r in records])
         difference = raw-augmented
         metric = result['summary']['metrics']['qlike_dvol_minus_har_dvol']
         self.assertFalse(result['formal_claim_eligible'])
         self.assertAlmostEqual(metric['mean'],float(difference.mean()))
-        samples = bootstrap_means(np.column_stack((raw,augmented)),times,spacing_ms=DAY_MS,
+        samples = bootstrap_means(np.column_stack((raw,augmented,har)),times,spacing_ms=DAY_MS,
                                   block_rows=60,resamples=2000,seed=plan['bootstrap_seed'])
         expected_interval = np.quantile(samples[:,0]-samples[:,1],[.025,.975])
         np.testing.assert_allclose(metric['confidence_interval_95'],expected_interval,atol=1e-14)
+        raw_har = result['summary']['metrics']['qlike_dvol_minus_har']
+        self.assertAlmostEqual(raw_har['mean'],float((raw-har).mean()))
+        self.assertAlmostEqual(raw_har['mean'],metric['mean']+
+                               result['summary']['metrics']['qlike_har_dvol_minus_har']['mean'])
+        np.testing.assert_allclose(raw_har['confidence_interval_95'],
+                                   np.quantile(samples[:,0]-samples[:,2],[.025,.975]),atol=1e-14)
+        self.assertEqual(raw_har['effective_sample_size'],effective_sample_size(raw-har,59))
         old_names = ['qlike_'+name for name in plan['models']]+['qlike_har_dvol_minus_har',
                     'qlike_dvol_minus_har','risk_budget_har_dvol_minus_har','qlike_dvol_minus_har_dvol']
         old_values = np.array([[*[r['losses'][name] for name in plan['models']],
