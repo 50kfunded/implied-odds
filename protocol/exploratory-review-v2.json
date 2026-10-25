@@ -1,0 +1,213 @@
+{
+  "schema_version": 2,
+  "kind": "exploratory_review_v2",
+  "declared_date": "2026-10-25",
+  "role": "I fix these additions after inspecting v1 and the independent review, before evaluating the additions. Every historical result remains exploratory.",
+  "parent_release": "v1.0.2",
+  "parent_commit": "cc6abc1640a9a2d6ac96564eae0c3133b0170f05",
+  "inputs": "recordings/historical-variance/manifest.json",
+  "vintage": "I reuse the retained BTC vintage. I do not refresh it for this comparison.",
+  "availability": "I use features available at the origin and only labels with target_end_ms <= feature_cutoff_ms. Every fitted training row precedes the current origin.",
+  "horizon_days": 30,
+  "annual_days": 365,
+  "common_origin_start": "2023-07-01T00:00:00Z",
+  "common_origin_end": "2026-09-18T00:00:00Z",
+  "cohort_reason": "The retained cases cannot supply 730 completed labels in January 2023. The July start also allows 365 completed genuine vintage HAR forecasts for combination weights.",
+  "matching": "I retain every scheduled origin, all model failures and exclusions. Rankings and MCS use the intersection where every declared model succeeds; I report its size and each model's own coverage. I do not compare a restricted-cohort mean with a v1 full-cohort mean.",
+  "training_labels": 730,
+  "window_sensitivities": [
+    365,
+    730,
+    "expanding"
+  ],
+  "window_check_cohort": {
+    "start": "2023-05-30T00:00:00Z",
+    "end": "2026-09-18T00:00:00Z",
+    "minimum_completed_labels": 730,
+    "models": [
+      "har_365",
+      "har_dvol_365",
+      "har_730",
+      "har_dvol_730",
+      "har_expanding",
+      "har_dvol_expanding",
+      "dvol"
+    ],
+    "role": "I separately rebuild the strict matched-window comparison supplied in the review clarification. I do not compare these means with the full v1 cohort."
+  },
+  "expanding_start": "2021-05-01T00:00:00Z",
+  "features_days": [
+    1,
+    7,
+    30
+  ],
+  "positive_floor": 1e-06,
+  "floor_scope": "I apply the floor only to level-OLS HAR, HAR+DVOL and MZ forecasts and retain raw values and hit counts. Positive log-link, smearing, EWMA, GARCH and combination forecasts fail on nonpositive or nonfinite output rather than using this floor.",
+  "window_scope": "The 365, 730 and expanding sensitivities apply to level HAR and HAR+DVOL. Log, QLIKE and MZ fits use 730 completed 30-day labels. EWMA, GARCH and EGARCH use 730 daily midnight-to-midnight log returns available through the feature cutoff. Bates-Granger uses 365 completed genuine HAR365 forecast vintages.",
+  "inspection_history": "I have already seen the reviewer's corrected strict-window means on the May 2023 cohort. The rebuilt window comparison is a replication of an inspected sensitivity, not an unseen test.",
+  "models": [
+    "dvol",
+    "har_365",
+    "har_dvol_365",
+    "har_730",
+    "har_dvol_730",
+    "har_expanding",
+    "har_dvol_expanding",
+    "log_har_smear",
+    "log_har_dvol_smear",
+    "qlike_har",
+    "qlike_har_dvol",
+    "ridge_qlike_har_dvol",
+    "ewma_094",
+    "garch_11",
+    "egarch_111",
+    "bates_granger",
+    "mz_dvol"
+  ],
+  "log_har": {
+    "regression": "OLS log target on intercept and log daily, weekly and monthly RV; the augmented row adds log DVOL variance",
+    "standardisation": "training feature means and standard deviations only",
+    "back_transform": "exp(current fitted log variance) times mean(exp(training log residual))",
+    "interpretation": "Training smearing supplies the in-sample QLIKE-optimal scalar. I do not assume Gaussian residuals or claim conditional unbiasedness."
+  },
+  "qlike": {
+    "link": "exp(intercept plus standardised log features)",
+    "objective": "mean(actual * exp(-linear_predictor) + linear_predictor) + penalty * sum(nonintercept_coefficients_squared) / 2",
+    "penalty": 0.0,
+    "ridge_penalty": 0.01,
+    "optimizer": "scipy L-BFGS-B; analytic gradient; initial intercept log(mean target), other coefficients zero",
+    "maxiter": 1000,
+    "ftol": 1e-10,
+    "gtol": 1e-07,
+    "failure": "I retain nonconvergence or nonpositive/nonfinite forecasts as model failures. I do not replace them with a better-scoring fallback.",
+    "interpretation": "The positive log link and objective differ from level OLS, so this comparison cannot isolate estimation noise alone."
+  },
+  "ewma": {
+    "lambda": 0.94,
+    "return_days": 730,
+    "initialisation_days": 30,
+    "mean": "zero",
+    "forecast": "next daily conditional variance held constant over 30 days, annualised by 365"
+  },
+  "garch": {
+    "return_days": 730,
+    "return_scale": 100,
+    "mean": "zero",
+    "distribution": "normal",
+    "p": 1,
+    "q": 1,
+    "o_egarch": 1,
+    "forecast_days": 30,
+    "garch_method": "analytic",
+    "egarch_method": "simulation",
+    "simulation_paths": 2000,
+    "seed": 424242,
+    "origin_seed": "seed + origin_ms // 86400000; independent second batch adds 10000000",
+    "optimizer_maxiter": 1000,
+    "egarch_monte_carlo_check": "I score the first fixed-seed batch and report its path-mean Monte Carlo standard error and the relative gap to an independent second batch of 2000 paths; I do not choose the lower-loss batch.",
+    "failure": "I retain convergence failures without selecting alternative starts.",
+    "annualisation": "365 * mean(next 30 conditional daily variances in percent-return units) / 100**2; simulation paths are averaged for EGARCH"
+  },
+  "bates_granger": {
+    "components": [
+      "har_365",
+      "dvol"
+    ],
+    "completed_vintages": 365,
+    "weight": "w_HAR = clip((mean(e_dvol^2) - mean(e_har*e_dvol)) / mean((e_har-e_dvol)^2), 0, 1); use 0.5 if denominator <= float64 epsilon times max(mean(e_har^2), mean(e_dvol^2), float64 tiny)",
+    "forecast": "w_HAR * HAR365 + (1 - w_HAR) * raw DVOL",
+    "vintages": "Each past HAR component is reconstructed using only its own completed 365-label window. I estimate the current weight from the latest 365 such forecasts whose targets have ended.",
+    "interpretation": "This is a nonnegative minimum-MSE Bates-Granger-style combination; its fitted weight has estimation risk and its objective differs from QLIKE."
+  },
+  "mz_dvol": {
+    "fit": "OLS actual variance on intercept plus raw DVOL variance over 730 completed labels",
+    "forecast": "max(positive_floor, fitted intercept + fitted slope * current DVOL variance)",
+    "floor_hits": "I report every raw negative prediction and floor hit."
+  },
+  "exploratory_focus": "ridge_qlike_har_dvol minus qlike_har on the matched v2 cohort",
+  "paired_reference": "har_dvol_365",
+  "stationary_bootstrap": {
+    "resamples": 5000,
+    "block_days": 60,
+    "seed": 271828
+  },
+  "dm_hln": {
+    "lags": [
+      29,
+      59
+    ],
+    "horizon_days": 30,
+    "reference": "Student t with n-1 degrees of freedom after HLN correction",
+    "scope": "I report diagnostic p-values, including nested-model and generated-forecast limitations; they do not license significance claims."
+  },
+  "subsampling": {
+    "block_rule": "floor(n^0.7)",
+    "minimum_block": 60,
+    "statistic": "sqrt(block_size) * (block mean - full mean); compare its 2.5% and 97.5% quantiles with sqrt(n) * full mean",
+    "scope": "I test finite-sample calibration before describing this as better calibrated. Fixed block fractions are not treated as an automatic repair."
+  },
+  "mcs": {
+    "size": 0.1,
+    "method": "R",
+    "bootstrap": "stationary",
+    "block_size": 60,
+    "reps": 5000,
+    "seed": 515151,
+    "scope": "I report the surviving set as a diagnostic conditional on this inspected candidate set and dependence assumptions, not as proof of a best model."
+  },
+  "power": {
+    "source": "v1 HAR+DVOL minus HAR loss differences",
+    "block_days": [
+      30,
+      60,
+      180,
+      365
+    ],
+    "sample_sizes": [
+      365,
+      730,
+      1825,
+      2920
+    ],
+    "replications": 1000,
+    "seed": 616161,
+    "effect_sizes": [
+      0.0,
+      -0.014244252570928512
+    ],
+    "effect_rule": "The nonzero value is the inspected v1 point estimate, used only as a conditional planning scenario; I also retain the null.",
+    "method": "resample contiguous circular stationary blocks from the centred empirical series, add the fixed shift and record reference-method rejection",
+    "tested_methods": [
+      "dm_hln_lag59",
+      "subsampling"
+    ],
+    "nominal_size": 0.05,
+    "scope": "Resampling an observed history cannot reveal unseen persistence or forecast future power."
+  },
+  "calibration": {
+    "sample_sizes": [
+      365,
+      1357
+    ],
+    "dgp": [
+      "overlap_30",
+      "overlap_30_plus_slow_365",
+      "overlap_30_plus_clustered_tails"
+    ],
+    "replications": 200,
+    "bootstrap_resamples": 2000,
+    "bootstrap_block_days": 60,
+    "tested_methods": [
+      "stationary_percentile",
+      "dm_hln_lag29",
+      "dm_hln_lag59",
+      "subsampling"
+    ],
+    "seed": 717171,
+    "nominal_size": 0.05
+  },
+  "phases": "I report all 30 phase means, counts and range. A count of favourable phases is a dependent stability display, not 30 independent replications or a binomial test.",
+  "optional_data": "I assess ETH, 5-minute RV and a VIX sanity check separately. I do not download or pool them under this BTC declaration.",
+  "prospective_scope": "I preserve the v1 locks, cohort, missing rule and disabled formal inference. This declaration does not activate a new prospective test.",
+  "reporting": "I publish every declared model, failure, inference diagnostic and planning scenario, whichever way it goes. I do not pick specifications or block lengths by their result."
+}
