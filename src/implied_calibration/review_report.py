@@ -25,6 +25,8 @@ def validate_v1_rebuild(reference, rebuilt) -> dict:
     def compare(a, b, path):
         if type(a) is not type(b):
             raise ValueError('The original v1 rebuild changed type at '+path)
+        if isinstance(a, float) and not (math.isfinite(a) and math.isfinite(b)):
+            raise ValueError('The original v1 rebuild contains a nonfinite value at '+path)
         if isinstance(a, dict):
             if a.keys() != b.keys():
                 raise ValueError('The original v1 rebuild changed keys at '+path)
