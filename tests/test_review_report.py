@@ -20,6 +20,11 @@ class ReviewReportTests(unittest.TestCase):
         result = validate_v1_rebuild(original, tiny)
         self.assertFalse(result['exact_equal'])
         self.assertEqual(result['floating_roundoff_differences'][0]['path'], '$.means[0]')
+        for value in (float('inf'), float('-inf'), float('nan')):
+            with self.assertRaises(ValueError):
+                validate_v1_rebuild({'value': value}, {'value': value})
+            with self.assertRaises(ValueError):
+                validate_v1_rebuild({'value': 1.}, {'value': value})
         for altered in ({**original, 'n': 1356}, {**original, 'hash': 'changed'},
                         {**original, 'means': [.12549, -.01424]}, {**original, 'extra': 1}):
             with self.assertRaises(ValueError):
