@@ -37,7 +37,8 @@ def load_study(path: Path) -> dict:
             or value['dvol_start_ms'] > value['origin_start_ms'] - 2 * DAY_MS
             or value['dvol_end_ms'] < value['origin_end_ms']
             or value['price_resolution'] != '60' or value['dvol_resolution'] != '1D'
-            or value['price_instrument'] != 'BTC-PERPETUAL' or value['dvol_currency'] != 'BTC'
+            or value['dvol_currency'] not in ('BTC', 'ETH')
+            or value['price_instrument'] != value['dvol_currency']+'-PERPETUAL'
             or value['recalibration_completed_origins'] != 365 or value['bootstrap_resamples'] < 2000
             or value['expected_block_days'] < 30 or value['hac_lags_days'] < 29
             or value['minimum_effective_sample_size'] < 60):
@@ -46,16 +47,18 @@ def load_study(path: Path) -> dict:
 
 
 def fetch_dvol(client: PublicClient, start_ms: int, end_ms: int, *, resolution: str = '1D',
-               sleep: Callable[[float], None] = time.sleep, max_pages: int = 512) -> dict:
+               sleep: Callable[[float], None] = time.sleep, max_pages: int = 512,
+               currency: str = 'BTC') -> dict:
     if (type(start_ms) is not int or type(end_ms) is not int or not 0 <= start_ms < end_ms
-            or resolution not in ('1D', '3600') or type(max_pages) is not int or max_pages < 1):
+            or resolution not in ('1D', '3600') or type(max_pages) is not int or max_pages < 1
+            or currency not in ('BTC', 'ETH')):
         raise ValueError('Invalid historical DVOL interval, resolution or page limit')
     cursor = end_ms - 1
     rows = 0
     for page in range(max_pages):
         if page:
             sleep(10.)
-        response = client.request(DVOL, {'currency': 'BTC', 'start_timestamp': start_ms,
+        response = client.request(DVOL, {'currency': currency, 'start_timestamp': start_ms,
                                         'end_timestamp': cursor, 'resolution': resolution})
         result = response.result
         if any(not start_ms <= row[0] <= cursor for row in result['data']):
@@ -110,14 +113,14 @@ def capture_study(output: Path, config_path: Path, *, client_factory=PublicClien
 
     try:
         with FileLease(output / '.capture.lock'):
-            state['dvol'] = run('dvol', lambda c: fetch_dvol(c, config['dvol_start_ms'], config['dvol_end_ms'], sleep=sleep))
+            state['dvol'] = run('dvol', lambda c: fetch_dvol(c, config['dvol_start_ms'], config['dvol_end_ms'], sleep=sleep, currency=config['dvol_currency']))
             sleep(10.)
-            state['prices'] = run('prices', lambda c: fetch_history(c, config['price_start_ms'], config['price_end_ms'], sleep=sleep))
+            state['prices'] = run('prices', lambda c: fetch_history(c, config['price_start_ms'], config['price_end_ms'], sleep=sleep, instrument=config['price_instrument']))
             for day in config['alignment_check_days_ms']:
                 sleep(10.)
-                run('alignment', lambda c, day=day: fetch_dvol(c, day, day + DAY_MS, resolution='3600', sleep=sleep))
+                run('alignment', lambda c, day=day: fetch_dvol(c, day, day + DAY_MS, resolution='3600', sleep=sleep, currency=config['dvol_currency']))
                 sleep(10.)
-                run('alignment', lambda c, day=day: c.request(PRICES, {'instrument_name': 'BTC-PERPETUAL',
+                run('alignment', lambda c, day=day: c.request(PRICES, {'instrument_name': config['price_instrument'],
                     'resolution': '1D', 'start_timestamp': day, 'end_timestamp': day + DAY_MS - 1}))
         files = {p.relative_to(output).as_posix(): {'bytes': p.stat().st_size,
                   'sha256': hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(output.rglob('*.jsonl.gz'))}
@@ -172,7 +175,7 @@ def read_study(manifest_path: Path, config: dict) -> HistoricalInputs:
         body = path.read_bytes()
         if proof != {'bytes': len(body), 'sha256': hashlib.sha256(body).hexdigest()}:
             raise ValueError('Historical input hash or size differs: ' + relative)
-        issues = []
+        issues: list[dict] = []
         for row in read_raw(path, on_issue=issues.append):
             stamp = row.get('fetched_at_ms')
             if (type(stamp) is not int or not manifest['captured_from_ms'] <= stamp <= manifest['captured_until_ms']
@@ -185,12 +188,15 @@ def read_study(manifest_path: Path, config: dict) -> HistoricalInputs:
             endpoint, params = row.get('endpoint'), row.get('params')
             if endpoint not in (DVOL, PRICES) or not isinstance(params, dict):
                 raise ValueError('Unexpected historical endpoint or parameters')
-            result = validate_response(endpoint, row.get('http_status'), row.get('body'))
+            status = row.get('http_status')
+            if status is None:
+                raise ValueError('Expected a retained HTTP response status')
+            result = validate_response(endpoint, status, row.get('body'))
             resolution = params.get('resolution')
             is_dvol = endpoint == DVOL
             expected = {'currency', 'resolution', 'start_timestamp', 'end_timestamp'} if is_dvol else {'instrument_name', 'resolution', 'start_timestamp', 'end_timestamp'}
-            if (set(params) != expected or params.get('currency', 'BTC') != 'BTC'
-                    or params.get('instrument_name', 'BTC-PERPETUAL') != 'BTC-PERPETUAL'
+            if (set(params) != expected or params.get('currency', config['dvol_currency']) != config['dvol_currency']
+                    or params.get('instrument_name', config['price_instrument']) != config['price_instrument']
                     or any(type(params[k]) is not int for k in ('start_timestamp', 'end_timestamp'))
                     or not 0 <= params['start_timestamp'] < params['end_timestamp']):
                 raise ValueError('Unexpected retained historical source or interval')

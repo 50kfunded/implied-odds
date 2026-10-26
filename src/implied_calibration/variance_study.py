@@ -39,7 +39,7 @@ def hourly_variance(prices: dict, start_ms: int, end_ms: int, annual_hours: int)
     values = [prices.get(closed - HOUR_MS) for closed in range(start_ms, end_ms + HOUR_MS, HOUR_MS)]
     if any(value is None for value in values):
         return None, 'missing_prices'
-    closes = np.asarray([value[3] for value in values], dtype=float)
+    closes = np.asarray([value[3] for value in values if value is not None], dtype=float)
     if not np.isfinite(closes).all() or np.any(closes <= 0):
         return None, 'invalid_prices'
     returns = np.diff(np.log(closes))
@@ -64,6 +64,7 @@ def historical_forecast(prices: dict, dvol: dict, origin_ms: int, config: dict,
         reasons.append('trailing_' + reason)
     if reasons:
         return None, reasons
+    assert candle is not None and trailing is not None
     known = opened + DAY_MS
     assert known <= origin_ms
     return VarianceForecast(origin_ms, known, origin_ms, (candle[3] / 100) ** 2, trailing), []
@@ -98,7 +99,8 @@ def build_observations(prices: dict, dvol: dict, config: dict, *, dvol_lag_days:
                         future_start_shift_hours: int = 0) -> tuple[list[VarianceObservation], list[dict]]:
     if future_start_shift_hours not in (0, 1):
         raise ValueError('Undeclared historical outcome alignment sensitivity')
-    rows, excluded = [], []
+    rows: list[VarianceObservation] = []
+    excluded: list[dict] = []
     for origin in range(config['origin_start_ms'], config['origin_end_ms'] + DAY_MS, DAY_MS):
         forecast, reasons = historical_forecast(prices, dvol, origin, config, dvol_lag_days=dvol_lag_days)
         start = origin + future_start_shift_hours * HOUR_MS
@@ -109,6 +111,7 @@ def build_observations(prices: dict, dvol: dict, config: dict, *, dvol_lag_days:
         if reasons:
             excluded.append({'origin_ms': origin, 'reasons': reasons})
             continue
+        assert forecast is not None and actual is not None
         correction = fit_correction(rows, origin, config['recalibration_completed_origins']) if origin >= config['recalibration_start_ms'] else None
         rows.append(VarianceObservation(forecast, start, end, actual, correction))
     return rows, excluded
@@ -180,6 +183,7 @@ def summarise_correction(rows: list[VarianceObservation], config: dict) -> dict:
     names = ['qlike_corrected', 'qlike_dvol', 'qlike_trailing', 'corrected_minus_dvol', 'corrected_minus_trailing', 'factor']
     values = []
     for row in paired:
+        assert row.correction is not None
         corrected = qlike(row.realised_variance, row.forecast.dvol_variance * row.correction['factor'])
         raw = qlike(row.realised_variance, row.forecast.dvol_variance)
         trailing = qlike(row.realised_variance, row.forecast.trailing_variance)

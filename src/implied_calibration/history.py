@@ -17,16 +17,16 @@ ENDPOINT = 'public/get_tradingview_chart_data'
 
 
 def fetch_history(client: PublicClient, start_ms: int, end_ms: int, *,
-                  sleep: Callable[[float], None] = time.sleep) -> dict:
+                  sleep: Callable[[float], None] = time.sleep, instrument: str = 'BTC-PERPETUAL') -> dict:
     if (type(start_ms) is not int or type(end_ms) is not int or not 0 <= start_ms < end_ms
-            or start_ms % HOUR_MS or end_ms % HOUR_MS):
+            or start_ms % HOUR_MS or end_ms % HOUR_MS or instrument not in ('BTC-PERPETUAL', 'ETH-PERPETUAL')):
         raise ValueError('Expected an increasing hour-aligned history interval')
     pages = no_data = 0
     for start in range(start_ms, end_ms, 720 * HOUR_MS):
         if pages:
             sleep(10.)
         stop = min(end_ms, start + 720 * HOUR_MS)
-        result = client.request(ENDPOINT, {'instrument_name': 'BTC-PERPETUAL', 'resolution': '60',
+        result = client.request(ENDPOINT, {'instrument_name': instrument, 'resolution': '60',
                                           'start_timestamp': start, 'end_timestamp': stop - 1}).result
         pages += 1
         no_data += result['status'] == 'no_data'
