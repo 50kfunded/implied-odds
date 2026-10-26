@@ -1,20 +1,21 @@
 # Does DVOL add information beyond HAR?
 
-I'm testing 30-day BTC variance forecasts: raw DVOL's lead over HAR + DVOL is concentrated in 2025–26, rolling rescaling changes little, and the paired intervals leave the ranking uncertain.
+Does option-implied variance improve Bitcoin's 30-day forecasts beyond a heterogeneous autoregressive model? I'm testing that question with retained Deribit data. A declared 17-model comparison changes the point ranking: log-HAR + DVOL scores best, while the focal paired bootstrap interval still includes zero.
 
 DVOL is Deribit's option-implied volatility index; HAR is a heterogeneous autoregressive model of realised variance.
 
-<a href="report/latex/main.pdf"><img src="report/incremental-variance.svg" width="700" alt="Matched BTC forecast losses, descriptive paired intervals and cumulative differences"></a>
+<a href="report/latex/main.pdf"><img src="report/review-variance.svg" width="700" alt="Seventeen matched forecast specifications and uncertainty for the declared QLIKE-fitted comparison"></a>
 
 ```sh
 python scripts/build_research.py
+python scripts/build_review.py
 ```
 
-[![tests](https://github.com/50kfunded/implied-odds/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/50kfunded/implied-odds/actions/workflows/tests.yml) · [Paper](report/latex/main.pdf) · [Results](report/incremental-results.json) · [LaTeX](report/latex/main.tex) · [Latest release](https://github.com/50kfunded/implied-odds/releases/latest) · [All versions DOI](https://doi.org/10.5281/zenodo.23606990)
+[![tests](https://github.com/50kfunded/implied-odds/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/50kfunded/implied-odds/actions/workflows/tests.yml) · [Paper](report/latex/main.pdf) · [V2 results](report/v2-results.md) · [Original results](report/incremental-results.json) · [LaTeX](report/latex/main.tex) · [Latest release](https://github.com/50kfunded/implied-odds/releases/latest) · [All versions DOI](https://doi.org/10.5281/zenodo.23606990)
 
-Across 1,357 matched daily origins, mean QLIKE loss is 0.09611 for raw DVOL, 0.09582 for rolling-rescaled DVOL, 0.09937 for a fixed 50/50 HAR–DVOL variance blend, 0.11123 for HAR + DVOL and 0.12548 for HAR. Lower is better. The paper reports paired intervals, effective sample sizes and annual results. The fixed-weight and scaling additions are exploratory and leave the locked prospective contrast unchanged.
+The original 1,357-origin results are preserved. V2 matches 17 specifications on a later 1,176-origin cohort: log-HAR + DVOL has mean QLIKE 0.09278, raw DVOL 0.09425, QLIKE-fitted HAR + DVOL 0.09485 and QLIKE-fitted HAR 0.11046. The focal fitted difference is -0.01561 with descriptive 95% interval [-0.03517, +0.00359] and effective sample size 56.85. These additions were publicly declared before evaluation, after inspection of v1. They remain exploratory.
 
-Historical findings remain exploratory. An original vendor OHLC check fails on an unused DVOL open; the audited closes match. The prospective year is evidence collection, and bounded local validation doesn't establish continuous operation. The paper explains the remaining data and inference limits.
+The new subsampling candidate fails the synthetic size checks, so I don't replace the bootstrap with it. An original vendor OHLC check fails on an unused DVOL open; the audited closes match. The prospective year remains best-effort evidence collection. The publication workflow is disabled pending a hosted-runner probe and activation; I haven't established continuous operation.
 
 ## Set up
 
@@ -30,8 +31,8 @@ I activate `.venv` before the install and run commands. On Windows PowerShell th
 
 [Methods, collection and provenance](report/research-note.md) · [Declared additions](protocol/exploratory-dvol-v1.json) · [Locked prospective plan](protocol/incremental-variance-v1.json) · [Compile the paper](report/latex/README.md)
 
-The DVOL study is in `src/implied_calibration/incremental.py`, `exploratory_extensions.py` and `incremental_report.py`; tests are in `tests/`. The separate unfinished [SVI study](studies/svi/README.md) has its own marked documentation folder and shares library code.
+The original study is in `incremental.py`, `exploratory_extensions.py` and `incremental_report.py` under `src/implied_calibration/`. V2 is in `review_models.py`, `inference_reference.py` and `review_report.py`; tests are in `tests/`. The [claim map](report/claim-map.md) connects the findings to code and tests. The separate unfinished [SVI study](studies/svi/README.md) has its own marked documentation folder and shares library code.
 
-Next I'd test a declared log-variance HAR specification or an independently audited ETH sample. Neither is part of these results.
+Next I'd declare a prospective comparison of matched positive-variance models, validate public collection, and audit ETH before adding a second asset. The [prospective v2 draft](protocol/prospective-v2-draft.json) is inactive and doesn't replace the original locks.
 
 The code has an [MIT licence](LICENSE). Retained Deribit responses keep their source provenance. [Citation metadata](CITATION.cff).

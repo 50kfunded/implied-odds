@@ -32,9 +32,10 @@ def alignment_checks(inputs: HistoricalInputs, days: list[int]) -> dict:
     for name, day, daily, hourly in intervals:
         aggregate = None
         bars = [hourly.get(day + hour * HOUR_MS) for hour in range(24)]
-        if all(bar is not None for bar in bars):
-            aggregate = [bars[0][0], max(bar[1] for bar in bars),
-                         min(bar[2] for bar in bars), bars[-1][3]]
+        completed = [bar for bar in bars if bar is not None]
+        if len(completed) == 24:
+            aggregate = [completed[0][0], max(bar[1] for bar in completed),
+                         min(bar[2] for bar in completed), completed[-1][3]]
         candle = daily.get(day)
         passed = bool(candle is not None and aggregate is not None and all(
             math.isclose(a, b, rel_tol=1e-8, abs_tol=1e-8) for a, b in zip(candle, aggregate)))
@@ -56,7 +57,9 @@ def read_alignment_audit(manifest_path: Path, inputs: HistoricalInputs, config: 
     if inventory != set(manifest['files']):
         raise ValueError('Alignment audit inventory differs')
     day = config['alignment_check_days_ms'][-1]
-    daily, hourly, requests = [], [], []
+    daily: list = []
+    hourly: list = []
+    requests: list = []
     for relative, proof in sorted(manifest['files'].items()):
         path = (root / relative).resolve()
         if not path.is_relative_to(root):
@@ -64,7 +67,7 @@ def read_alignment_audit(manifest_path: Path, inputs: HistoricalInputs, config: 
         body = path.read_bytes()
         if proof != {'bytes': len(body), 'sha256': hashlib.sha256(body).hexdigest()}:
             raise ValueError('Alignment audit hash or size differs')
-        issues = []
+        issues: list[dict] = []
         for row in read_raw(path, on_issue=issues.append):
             params = row.get('params', {})
             stamp = row.get('fetched_at_ms')

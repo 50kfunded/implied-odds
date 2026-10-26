@@ -60,6 +60,10 @@ jobs:
           selected = [str(folder / name) for name in (
               'incremental.py', 'exploratory_extensions.py', 'research_plan.py', 'inference_study.py',
               'store.py', 'evaluation.py')]
+          selected += [str(folder / name) for name in (
+              'variance_study.py', 'historical_data.py', 'historical_report.py',
+              'incremental_report.py', 'review_models.py', 'inference_reference.py',
+              'review_report.py', 'paper_numbers.py', 'public_variance.py')]
           forward = folder / 'variance_forward.py'
           if forward.is_file():
               selected.append(str(forward))
@@ -71,6 +75,10 @@ jobs:
         run: python scripts/reproduce.py --output results/ci
       - name: rebuild quantitative research results
         run: python scripts/build_research.py --output results/research
+      - name: check manuscript numeric macros
+        run: |
+          python scripts/build_review.py --output results/review-v2
+          python scripts/build_paper_numbers.py --summary results/research/summary.json --v2-summary results/review-v2/summary.json --check
       - name: install LaTeX and PDF renderer
         run: |
           sudo apt-get update
@@ -84,11 +92,13 @@ jobs:
           pdftoppm -f 1 -singlefile -r 120 -png main.pdf paper-preview
           python -c "from pypdf import PdfReader; assert len(PdfReader('main.pdf').pages) == 6"
       - name: retain static research artifacts
+        if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: research-python-3.12
           path: |
             results/ci/
             results/research/
+            results/review-v2/
           if-no-files-found: error
           retention-days: 30

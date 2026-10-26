@@ -22,6 +22,28 @@ class HistoricalDataTests(OfflineTest):
         self.root = Path(directory.name)
         self.config = load_study(Path(__file__).resolve().parents[1] / 'protocol/historical-variance.json')
 
+    def test_eth_configuration_requires_matching_asset_and_pagination_currency(self):
+        config = {**self.config, 'dvol_currency': 'ETH', 'price_instrument': 'ETH-PERPETUAL'}
+        path = self.root/'eth-study.json'
+        path.write_text(json.dumps(config))
+        self.assertEqual(load_study(path)['dvol_currency'], 'ETH')
+        path.write_text(json.dumps({**config, 'price_instrument': 'BTC-PERPETUAL'}))
+        with self.assertRaises(ValueError):
+            load_study(path)
+        client = Mock()
+        client.request.return_value.result = {'data': [], 'continuation': None}
+        fetch_dvol(client, DAY_MS, 3*DAY_MS, currency='ETH')
+        self.assertEqual(client.request.call_args.args[1]['currency'], 'ETH')
+
+    def test_eth_reader_rejects_btc_recordings_even_with_a_matching_config_hash(self):
+        path = self.sample()
+        config = {**self.config, 'dvol_currency': 'ETH', 'price_instrument': 'ETH-PERPETUAL'}
+        manifest = json.loads(path.read_text())
+        manifest['config_hash'] = digest(config)
+        path.write_text(json.dumps(manifest))
+        with self.assertRaisesRegex(ValueError, 'source'):
+            read_study(path, config)
+
     def test_dvol_schema_rejects_keys_types_order_and_ohlc(self):
         good = {'data': [[DAY_MS, 60., 62., 58., 61.]], 'continuation': None}
         self.assertEqual(validate_response(DVOL, 200, envelope(good)), good)

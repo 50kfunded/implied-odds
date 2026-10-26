@@ -235,8 +235,10 @@ in PowerShell. I keep the equivalent CDF example commands in the pipeline sectio
 ## Frozen forecasts and scoring
 
 I've fixed the [protocol](../../protocol/protocol.json) before the first eligible decision.
-The first eligible expiry is 26 October 2026 at 08:00 UTC; its seven-day target is
-19 October at 08:00 UTC. I keep the earlier capture as engineering evidence.
+The locked calendar starts with 26 October 2026 at 08:00 UTC. Its implied seven-day
+slot was 19 October at 08:00 UTC, when this daily expiry wasn't listed, so that
+forecast was unavailable. Its 24-hour slot was 25 October at 08:00 UTC. I keep the
+earlier capture as engineering evidence.
 The [lock](../../protocol/protocol.lock.json) records the canonical protocol hash,
 creation timestamp and the commit containing its settings. The loader checks a
 reachable commit containing both matching files before that first target.
@@ -319,7 +321,8 @@ I've fixed the remaining choices in [baselines.json](../../protocol/baselines.js
 with its own [committed lock](../../protocol/baselines.lock.json) tied to the original
 protocol hash. I haven't changed the original protocol or lock. I use the same
 first expiry, 26 October 2026 at 08:00 UTC. Both locks must have a reachable Git
-witness before the first seven-day target on 19 October at 08:00 UTC.
+witness before the locked calendar's implied seven-day slot on 19 October at
+08:00 UTC. That slot didn't make the unlisted daily expiry available.
 I can't add missing baselines to an already frozen SVI forecast.
 
 Every model uses the same official BTC delivery price and selected snapshot's
@@ -532,9 +535,11 @@ I stop after the current cycle with:
 .venv/bin/python -m implied_calibration.cli collect-stop --output data/live
 ```
 
-The first eligible expiry is still 26 October. The 18 October metadata doesn't list
-it yet. The earliest listed eligible seven-day target is 23 October at 08:00 UTC,
-for 30 October delivery, subject to the same acceptance checks. I don't invent
+The locked first expiry is still 26 October. The 18 October metadata doesn't list
+it yet. Deribit's [contract introduction policy](https://support.deribit.com/hc/en-us/articles/25944688876957-Contract-Introduction-Policy)
+gives newly listed BTC daily options a four-day maturity, so the implied 19 October
+seven-day slot for that Monday daily was unavailable. The listed 30 October expiry
+had a seven-day slot on 23 October at 08:00 UTC, subject to the same acceptance checks. I don't invent
 missing historical forecasts or move the locked date to create quicker results.
 The original 14-outcome bootstrap block and ESS minimum also stay fixed. A different
 noise-aware gate, block length or tail interval would be separate sensitivity work.

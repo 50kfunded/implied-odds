@@ -48,7 +48,10 @@ def headline_figure(result: dict, output: Path) -> None:
         comparisons += [('dvol_rescaled','har_dvol','Rescaled DVOL minus (HAR + DVOL)','qlike_dvol_rescaled_minus_har_dvol'),
                         ('har_dvol_equal','har_dvol','50/50 blend minus (HAR + DVOL)','qlike_har_dvol_equal_minus_har_dvol')]
     for i,(model,base,label,metric_name) in enumerate(comparisons):
-        metric = result['summary']['metrics'].get(metric_name) or extensions['summary']['metrics'][metric_name]
+        metric = result['summary']['metrics'].get(metric_name)
+        if metric is None:
+            assert extensions is not None
+            metric = extensions['summary']['metrics'][metric_name]
         interval = metric['confidence_interval_95']
         color = f'C{i}'
         if interval is not None:

@@ -69,7 +69,7 @@ EXECUTE {end.bib}
 % Fixed wording or parameter in the source paper.
 \newcommand{\PercentScale}{100}
 % Fixed wording or parameter in the source paper.
-\newcommand{\PaperDate}{24 October 2026}
+\newcommand{\PaperDate}{26 October 2026}
 % $.n; format ,d
 \newcommand{\MatchedOrigins}{1{,}357}
 % $.plan.historical_origin_start_ms; UTC year
@@ -148,7 +148,7 @@ EXECUTE {end.bib}
 \newcommand{\LeaveYearCMean}{-0.01072}
 % $.concentration.har_dvol.leave_one_year_out.2026JSON object key
 \newcommand{\LeaveYearDYear}{2026}
-% $.concentration.har_dvol.leave_one_year_out.2026.n; format d
+% $.concentration.har_dvol.leave_one_year_out.2026.n; format ,d
 \newcommand{\LeaveYearDOrigins}{1{,}096}
 % $.concentration.har_dvol.leave_one_year_out.2026.mean; format .5f
 \newcommand{\LeaveYearDMean}{-0.02065}
@@ -262,7 +262,7 @@ EXECUTE {end.bib}
 \newcommand{\NullScenarioCUpperPercent}{21.7}
 % $.inference_simulations.rows[4].gate_pass_rate * 100; format .1f
 \newcommand{\NullScenarioCGatePercent}{0.0}
-% $.inference_simulations.rows[6].n; format d
+% $.inference_simulations.rows[6].n; format ,d
 \newcommand{\NullScenarioDN}{1{,}357}
 % $.inference_simulations.rows[6].ungated_rejection_rate * 100; format .1f
 \newcommand{\NullScenarioDRejectionPercent}{10.0}
@@ -272,7 +272,7 @@ EXECUTE {end.bib}
 \newcommand{\NullScenarioDUpperPercent}{14.9}
 % $.inference_simulations.rows[6].gate_pass_rate * 100; format .1f
 \newcommand{\NullScenarioDGatePercent}{1.5}
-% $.inference_simulations.rows[8].n; format d
+% $.inference_simulations.rows[8].n; format ,d
 \newcommand{\NullScenarioEN}{1{,}357}
 % $.inference_simulations.rows[8].ungated_rejection_rate * 100; format .1f
 \newcommand{\NullScenarioERejectionPercent}{45.0}
@@ -282,7 +282,7 @@ EXECUTE {end.bib}
 \newcommand{\NullScenarioEUpperPercent}{51.9}
 % $.inference_simulations.rows[8].gate_pass_rate * 100; format .1f
 \newcommand{\NullScenarioEGatePercent}{0.0}
-% $.inference_simulations.rows[10].n; format d
+% $.inference_simulations.rows[10].n; format ,d
 \newcommand{\NullScenarioFN}{1{,}357}
 % $.inference_simulations.rows[10].ungated_rejection_rate * 100; format .1f
 \newcommand{\NullScenarioFRejectionPercent}{8.5}
@@ -463,12 +463,63 @@ EXECUTE {end.bib}
 % $.summary.metrics.qlike_dvol_minus_har.effective_sample_size; format .2f
 \newcommand{\RawHarESS}{47.79}
 
+% v2.$.benchmarks.summary.n; format ,d
+\newcommand{\VTwoN}{1{,}176}
+% v2.len($.specification.models); format d
+\newcommand{\VTwoModels}{17}
+% v2.$.window_check.n; format ,d
+\newcommand{\VTwoWindowN}{1{,}208}
+% v2.$.benchmarks.summary.metrics.qlike_dvol.mean; format .5f
+\newcommand{\VTwoRaw}{0.09425}
+% v2.$.benchmarks.summary.metrics.qlike_log_har_smear.mean; format .5f
+\newcommand{\VTwoLog}{0.10888}
+% v2.$.benchmarks.summary.metrics.qlike_log_har_dvol_smear.mean; format .5f
+\newcommand{\VTwoLogAug}{0.09278}
+% v2.$.benchmarks.summary.metrics.qlike_qlike_har.mean; format .5f
+\newcommand{\VTwoQHar}{0.11046}
+% v2.$.benchmarks.summary.metrics.qlike_qlike_har_dvol.mean; format .5f
+\newcommand{\VTwoQAug}{0.09485}
+% v2.$.benchmarks.summary.metrics.focus_qlike_har_dvol_minus_qlike_har.mean; format .5f
+\newcommand{\VTwoFocal}{-0.01561}
+% v2.$.benchmarks.summary.metrics.focus_qlike_har_dvol_minus_qlike_har.confidence_interval_95[0]; format +.5f
+\newcommand{\VTwoLower}{-0.03517}
+% v2.$.benchmarks.summary.metrics.focus_qlike_har_dvol_minus_qlike_har.confidence_interval_95[1]; format +.5f
+\newcommand{\VTwoUpper}{+0.00359}
+% v2.$.benchmarks.summary.metrics.focus_qlike_har_dvol_minus_qlike_har.effective_sample_size; format .2f
+\newcommand{\VTwoESS}{56.85}
+% v2.$.focal_inference_references[0].subsampling.confidence_interval_95[0]; format +.5f
+\newcommand{\VTwoSubLower}{-0.03368}
+% v2.$.focal_inference_references[0].subsampling.confidence_interval_95[1]; format +.5f
+\newcommand{\VTwoSubUpper}{-0.00158}
+% v2.len($.mcs.included); format d
+\newcommand{\VTwoMCSSize}{11}
+% Fixed completed-label count in the public v2 declaration.
+\newcommand{\VTwoLabels}{730}
+% Verified public declaration commit before v2 evaluation.
+\newcommand{\VTwoCommit}{0615ec0}
+% Verified public focal-contrast amendment before v2 evaluation.
+\newcommand{\VTwoAmendment}{ad08a14}
+% Source bibliography.
+\newcommand{\DuanYear}{1983}
+% Source bibliography.
+\newcommand{\DuanDOI}{10.1080/01621459.1983.10478017}
+% Source bibliography.
+\newcommand{\HLNYear}{1997}
+% Source bibliography.
+\newcommand{\HLNDOI}{10.1016/S0169-2070(96)00719-4}
+% Source bibliography.
+\newcommand{\SubsampleYear}{1992}
+% Source bibliography.
+\newcommand{\MCSYear}{2011}
+% Source bibliography.
+\newcommand{\MCSDOI}{10.3982/ECTA5771}
+
 \begin{document}
 
 \begin{center}{\LARGE\bfseries Does DVOL add information beyond HAR?\par}\end{center}
 \begin{center}\small A retrospective BTC variance forecast study | \PaperAuthor{} | \PaperDate{}\end{center}
 
-\textbf{Abstract.} I test whether Bitcoin (BTC) DVOL, Deribit's option-implied volatility index, adds information beyond a heterogeneous autoregressive (HAR) model for direct \HorizonDays{}-day variance forecasts, using \MatchedOrigins{} daily origins from \EvaluationStartYear{} to \EvaluationEndYear{}. The two DVOL-only forecasts, raw (\MeanQLIKEDvol{}) and rolling-rescaled (\MeanQLIKERescaled{}), have lower mean quasi-likelihood (QLIKE) loss than HAR + DVOL (\MeanQLIKEHardvol{}) and HAR (\MeanQLIKEHar{}), but all reported paired QLIKE intervals against HAR + DVOL include zero. Raw DVOL's advantage over HAR + DVOL is concentrated in \LeaveYearCYear{}--\LeaveYearDYear{}; \LeaveYearCYear{} accounts for \RawGainYearShare{}\% of its net loss advantage. A fixed \BlendPercent{}/\BlendPercent{} HAR--DVOL blend trails raw DVOL and has lower mean loss than HAR + DVOL. HAR + DVOL lowers HAR's mean QLIKE by \MeanLossReductionPercent{}\%, but the effective sample sizes (ESS) of the original comparisons, \RawPairedESS{} and \PairedLossEffectiveN{}, are below the preset reporting rule of \MinimumEffectiveN{}. Among the reported paired QLIKE comparisons, only raw DVOL minus HAR has an interval excluding zero ([\RawHarLower{}, \RawHarUpper{}]); I highlighted it after inspection, and its ESS of \RawHarESS{} is below the reporting rule. The variance-budget diagnostic shows no clear gain, and the prospective year remains evidence collection without a formal significance test.
+\textbf{Abstract.} Does option-implied variance improve Bitcoin's direct \HorizonDays{}-day variance forecasts beyond a heterogeneous autoregressive (HAR) benchmark? I first compare HAR, HAR plus Deribit's option-implied volatility index (DVOL) and raw DVOL on \MatchedOrigins{} historical origins, then evaluate a declared set of \VTwoModels{} specifications on a separate \VTwoN{}-origin common cohort. Longer estimation windows lower HAR + DVOL's mean quasi-likelihood (QLIKE) loss. Log-HAR plus DVOL with training-only smearing has the lowest point loss in the broader comparison, while the focal QLIKE-fitted HAR + DVOL versus QLIKE-fitted HAR bootstrap interval includes zero. The data do not separate estimation noise, model misspecification and changes in forecast scale. Inference remains a limitation: the declared subsampling alternative fails the synthetic size checks, and the model confidence set does not establish a winner. The next step is a separately declared prospective comparison of matched positive-variance models; the existing year remains best-effort evidence collection without a formal significance test.
 
 \begin{figure}[!htbp]
 \centering
@@ -482,7 +533,7 @@ EXECUTE {end.bib}
 Does option-implied variance add forecasting information beyond daily, weekly and monthly realised variance? I compare a direct \HorizonDays{}-day HAR forecast with HAR + DVOL, which adds the previous completed daily DVOL variance. Raw DVOL provides a reference forecast.
 
 \begin{samepage}
-Among the original forecasts, raw DVOL has lower mean QLIKE than HAR + DVOL, with an interval including zero. Its paired interval against HAR excludes zero, but I highlighted that comparison after inspection and its ESS falls below the reporting rule. Rolling rescaling changes little; the equal blend narrows the regression's mean-loss gap but trails raw DVOL.
+Raw DVOL's original paired interval against HAR excludes zero, but its effective sample size (ESS) is below the reporting rule and I highlighted it after inspection. Rolling rescaling and the equal blend leave the ranking uncertain.
 \end{samepage}
 
 Prior work asks whether option-implied volatility adds information beyond historical volatility. \citet{christensenprabhala} find incremental information in implied volatility for the S\&P \SPIndex{} index using non-overlapping observations; their setting differs from the overlapping BTC targets here. \citet{corsi} combines realised-volatility components across time horizons in the HAR model, which I adapt to a direct variance target. \citet{patton} studies how imperfect volatility proxies affect forecast rankings and motivates care in choosing the loss function.
@@ -614,6 +665,15 @@ HAR + DVOL & \DecisionHardvolWeight{} & \DecisionHardvolBudgetError{} & \Decisio
 
 HAR + DVOL has a higher mean squared variance-budget error than HAR: the paired difference is \RiskLossMean{}, with interval [\RiskLossLower{}, \RiskLossUpper{}]. The interval includes zero, so this diagnostic leaves the benefit uncertain.
 
+
+\subsection{The ranking depends on the specification}
+
+After inspecting v1 and the review, I publicly declared v2 in commit \texttt{\VTwoCommit{}} and amended its focal contrast in \texttt{\VTwoAmendment{}} before evaluation. A strict window check uses \VTwoWindowN{} common origins; the broader \VTwoModels{}-model comparison uses a later \VTwoN{}-origin cohort so every model has sufficient completed training labels. Its means are not directly comparable with Table~\ref{tab:forecasts}.
+
+The additions include log-HAR, positive log-link QLIKE fits with and without ridge shrinkage, longer and expanding windows, EWMA, GARCH, EGARCH, a constrained Bates--Granger-style combination, and Mincer--Zarnowitz-corrected DVOL. Log and QLIKE fits use \VTwoLabels{} completed labels. Training-only residual smearing back-transforms log fits \citep{duan}; it does not establish conditional unbiasedness. Combination weights use completed reconstructed past-only HAR forecasts, not fitted values or original unrevised vintages. The \href{https://github.com/50kfunded/implied-odds/blob/main/protocol/exploratory-review-v2.json}{declaration} fixes all settings and failure rules.
+
+Log-HAR + DVOL has mean QLIKE \VTwoLogAug{}, versus \VTwoLog{} for log-HAR and \VTwoRaw{} for raw DVOL. QLIKE-fitted HAR + DVOL scores \VTwoQAug{} and QLIKE-fitted HAR scores \VTwoQHar{}: their focal difference is \VTwoFocal{}, bootstrap interval [\VTwoLower{}, \VTwoUpper{}], ESS \VTwoESS{}. Longer-window results and all model rows appear in the \href{https://github.com/50kfunded/implied-odds/blob/main/report/v2-results.md}{complete results}. These exploratory changes show sensitivity to specification; they do not identify estimation noise as the cause of the original ranking.
+
 \section{Inference limits}
 \label{sec:inference}
 
@@ -641,15 +701,18 @@ $n$ & Synthetic loss process & \shortstack{Ungated\\rejection} & \ConfidencePerc
 
 At $n=\SimulationShortN{}$, ungated null rejection ranges from \ShortNullMinimumRejectionPercent{}\% to \ShortNullMaximumRejectionPercent{}\%, against nominal \NominalRejectionPercent{}\%. The ESS rule passes zero of \SimulationReplications{} replications under every one-year null and alternative. The Wilson \ConfidencePercent{}\% upper bound is around \GatePassUpperPercent{}\% for the probability of passing the rule in those scenarios. The rule therefore prevents a formal significance test in every declared one-year replication. At $n=\MatchedOrigins{}$, some conditional estimates use only one to four passing replications, with wide Monte Carlo intervals.
 
+
+The v2 reference calculations add the Harvey--Leybourne--Newbold (HLN) correction to the Diebold--Mariano statistic \citep{hln} and a declared overlapping-block subsampling candidate \citep{subsampling}. On the original cohort, raw DVOL minus HAR has HLN reference p-values near the review's values, but its subsampling interval includes zero. The focal v2 subsampling interval [\VTwoSubLower{}, \VTwoSubUpper{}] excludes zero while its bootstrap interval includes zero. The candidate subsampling rule fails the synthetic null-size checks, so that disagreement provides no basis for selecting it. All rejection rates, conditional block-resampled power curves and Monte Carlo intervals are retained in the results. They describe assumptions fitted to an inspected loss series, not the power of a future market sample. The exploratory model confidence set \citep{mcs} retains \VTwoMCSSize{} models; inclusion does not establish equal accuracy.
+
 \section{Limitations}
 
-\paragraph{Research choices.} I added the historical comparisons after inspecting the data. Chronological training does not remove that exposure to research choices. All historical findings and generated-forecast diagnostics are exploratory; the intervals are descriptive, and additional diagnostics are not primary discoveries. The mean QLIKE ranking establishes no formal superiority. I chose to report the raw DVOL minus HAR comparison after inspection; the raw DVOL minus (HAR + DVOL), rescaling and fixed-blend comparisons also follow inspection. A one-parameter rolling fit still has estimation risk because its overlapping labels are dependent. The added intervals do not turn these mechanism checks into confirmatory tests.
+\paragraph{Research choices.} I added the historical comparisons, including v2, after inspecting the data. V2 was declared before its evaluation on that same inspected history. Chronological training does not remove that exposure to research choices. All historical findings and generated-forecast diagnostics are exploratory; the intervals are descriptive, and additional diagnostics are not primary discoveries. The mean QLIKE ranking establishes no formal superiority. I chose to report the raw DVOL minus HAR comparison after inspection; the raw DVOL minus (HAR + DVOL), rescaling and fixed-blend comparisons also follow inspection. A one-parameter rolling fit still has estimation risk because its overlapping labels are dependent. The added intervals do not turn these mechanism checks into confirmatory tests.
 
 \paragraph{Data.} The original source check compares open, high, low and close (OHLC) fields. It fails because one unused DVOL open differs. All three audited DVOL closes match, but those dates cover little of the full history. I cannot verify the original unrevised data vintages from these historical downloads. One perpetual contract supplies a proxy for spot-index returns, so the study covers one asset and venue.
 
 \paragraph{Scope.} I evaluate variance forecasts and a variance-budget diagnostic. The diagnostic assumes constant fractional exposure; it does not model a fixed-unit portfolio, rebalancing, funding or profit. I have not established that the rule minimises squared variance-budget error. I make no claims about net trading returns, a causal variance premium or an executable edge. The cumulative figure tracks QLIKE differences, rather than portfolio returns.
 
-\paragraph{Inference.} The non-overlapping phase samples can still be dependent because volatility and rolling parameter estimates persist. These samples show concentration; they do not select a crisis window or identify an ex-ante regime rule. ESS estimates dependence-adjusted information rather than counting independent episodes. The synthetic stress tests approximate loss dependence, not the full rolling HAR estimation pipeline. None of the declared one-year replications passes the ESS rule, but zero observed passes does not mean the true probability is zero; the Wilson bound quantifies that uncertainty.
+\paragraph{Inference.} The non-overlapping phase samples can still be dependent because volatility and rolling parameter estimates persist. All starting phases reuse the same history; favourable counts are a dependent stability display, with no binomial interpretation or ex-ante regime rule. ESS estimates dependence-adjusted information rather than counting independent episodes. The synthetic stress tests approximate loss dependence, not the full rolling HAR estimation pipeline. None of the declared one-year replications passes the ESS rule, but zero observed passes does not mean the true probability is zero; the Wilson bound quantifies that uncertainty.
 
 \section{Prospective protocol}
 
@@ -662,15 +725,10 @@ Each new forecast requires matching hourly and daily DVOL closes and completion 
 \appendix
 \section{Reproduction}
 
-The numerical results rebuild offline from the retained public recordings with Python \PythonVersion{}; the README lists the pinned dependencies:
-\begin{quote}
-\texttt{python scripts/build\_research.py}
-\end{quote}
-The output retains matched forecasts, coefficients, training cutoffs, diagnostics, simulation rates and plan hashes. The manuscript compiles separately from its checked LaTeX source, bibliography and figure PDF. Collection details, provenance and operational limits are documented in the \href{https://github.com/50kfunded/implied-odds/blob/main/report/research-note.md}{DVOL methods note}.
+The README lists the exact Python environment and offline commands: \texttt{python scripts/build\_research.py} rebuilds v1; \texttt{python scripts/build\_review.py} rebuilds v2 and checks that the v1 summary is unchanged. Numeric manuscript macros are generated from the two summary JSON files and checked in CI. The methods note holds collection details and operational limits; the \href{https://github.com/50kfunded/implied-odds/blob/main/report/claim-map.md}{claim map} links evidence to code and tests.
 
 \begingroup\raggedright
 \nocite{politisromano,deribit}
-\clearpage
 \bibliographystyle{references-exact}
 \bibliography{references}
 \endgroup

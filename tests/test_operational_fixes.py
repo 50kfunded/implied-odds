@@ -90,6 +90,25 @@ class CleaningCacheTests(DatabaseFixture):
             self.assertEqual(first, self.cached())
         self.assertEqual(inversion.call_count, 28)
 
+    def test_prediction_cleaning_does_not_grow_with_unrelated_old_snapshots(self):
+        selected = self.seed_chain()
+        baseline = self.root/'before-history.sqlite'
+        with closing(sqlite3.connect(baseline)) as connection:
+            self.store.connection.backup(connection)
+        arguments = (locked_fixture(), EXPIRY-DAY, EXPIRY-DAY, COMMIT)
+        with patch('implied_calibration.cleaning.implied_vol', wraps=implied_vol) as inversion:
+            before = freeze_predictions(baseline, *arguments, expiries=[EXPIRY])
+            before_calls = inversion.call_count
+        for i in range(20):
+            self.seed_chain(EXPIRY-DAY-(i+1)*1000)
+        with patch('implied_calibration.cleaning.implied_vol', wraps=implied_vol) as inversion:
+            after = freeze_predictions(self.store.path, *arguments, expiries=[EXPIRY])
+            self.assertEqual(inversion.call_count, before_calls)
+        self.assertEqual(before['predictions'], after['predictions'])
+        self.assertEqual(next(row['snapshot_id'] for row in after['predictions'] if row['lead_ms'] == DAY), selected)
+        details = self.store.connection.execute('EXPLAIN QUERY PLAN SELECT * FROM quotes WHERE snapshot_id=?', (selected,)).fetchall()
+        self.assertTrue(any('quotes_snapshot' in str(tuple(row)) for row in details))
+
 
 class OperationalRecoveryTests(DatabaseFixture):
     def config(self):

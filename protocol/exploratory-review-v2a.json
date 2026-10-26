@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "kind": "exploratory_review_v2_pre_evaluation_amendment",
+  "declared_date": "2026-10-25",
+  "parent_spec_sha256": "6f3e02c650d366fdbfbc7f81a2035a45b6dced030ad6f76acdb1049825ee1419",
+  "parent_public_commit": "0615ec0253fcbd2cc38c46200cef653fd755082b",
+  "exploratory_focus": "qlike_har_dvol minus qlike_har on the matched v2 cohort",
+  "reason": "I match the link, objective, completed training labels and zero penalty on both sides so the focal comparison adds only the DVOL feature. The ridge-augmented row remains a secondary model and cannot identify incremental DVOL information against an unpenalised baseline.",
+  "timing": "I publish this correction before any v2 empirical evaluation. The original declaration remains in history.",
+  "other_choices": "I preserve every model, cohort, simulation setting and reporting rule in the parent declaration. Every historical comparison remains exploratory."
+}

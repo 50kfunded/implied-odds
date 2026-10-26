@@ -1,0 +1,27 @@
+{
+  "schema_version": 2,
+  "kind": "prospective_variance_v2_draft",
+  "status": "draft_not_activated",
+  "created_date": "2026-10-25",
+  "role": "I preserve v1 as timestamped evidence collection. This separate draft cannot change a missed v1 origin or its terminal rule.",
+  "proposed_first_origin": "2026-11-01T01:00:00Z",
+  "proposed_origins": 365,
+  "freeze_window_utc": [
+    "00:10",
+    "00:50"
+  ],
+  "publication_deadline_utc": "00:50",
+  "activation": "I need a final model set, committed implementation, offline tests, runner API validation and a public plan witness before 2026-11-01T00:10:00Z. Otherwise I choose a later first origin in a new declaration before freezing any v2 forecast.",
+  "formal_inference_enabled": false,
+  "primary_contrast_candidate": "qlike_har_dvol minus qlike_har",
+  "missing_days": {
+    "never_backfill": true,
+    "minimum_coverage_fraction": 0.95,
+    "maximum_consecutive_missed_origins": 3,
+    "meaning": "These are operational reporting thresholds, not a power guarantee or an inference repair. I report every omission and its timing; volatility-dependent missingness can bias a complete-case analysis."
+  },
+  "analysis": "I fix a terminal date in the activated declaration. I retain individual scores and coverage throughout, without an outcome-driven extension or a formal significance test.",
+  "power_requirement_for_a_later_confirmatory_plan": "I need a calibrated inference method and a precision or power target justified across declared persistence and effect scenarios. A five-year heuristic or an ESS threshold alone is insufficient.",
+  "v1_first_maturity": "2026-11-20T01:00:00Z",
+  "pre_outcome_limit": "Changes before the first mature v1 target are easier to document, but partial target paths are already observable. A new prospective specification must be fixed before its own first forecast."
+}
