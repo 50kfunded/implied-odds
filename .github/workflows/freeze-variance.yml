@@ -1,0 +1,229 @@
+name: public variance evidence
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: I validate runner access before enabling scheduled publication.
+        type: choice
+        options: [preflight, freeze]
+        default: preflight
+  schedule:
+    - cron: '13,23,33 0 * * *'
+    - cron: '17 12 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-variance-evidence
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'preflight'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version-file: '.python-version'
+          cache: pip
+          cache-dependency-path: requirements-research.txt
+      - run: python -m pip install -r requirements-research.txt -e '.[research,dev]'
+      - run: python scripts/freeze_variance.py preflight
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: runner-preflight-${{ github.run_id }}
+          path: results/runner-preflight/
+          retention-days: 30
+  freeze:
+    if: vars.VARIANCE_FORWARD_ENABLED == 'true' && github.ref == 'refs/heads/main' && (github.event.schedule == '13,23,33 0 * * *' || inputs.mode == 'freeze')
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: write
+      actions: read
+    defaults:
+      run:
+        working-directory: code
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          path: code
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version-file: 'code/.python-version'
+          cache: pip
+          cache-dependency-path: code/requirements-research.txt
+      - run: python -m pip install -r requirements-research.txt -e '.[research,dev]'
+      - name: restore canonical public state
+        run: |
+          gh auth setup-git
+          mkdir -p ../public-state
+          cd ../public-state
+          git init
+          git remote add origin https://github.com/50kfunded/implied-odds.git
+          if git ls-remote --exit-code --heads origin forecast-evidence; then
+            git fetch --depth=1 origin forecast-evidence
+            git checkout -b forecast-evidence FETCH_HEAD
+          else
+            git checkout --orphan forecast-evidence
+          fi
+          cd ../code
+          python scripts/freeze_variance.py restore
+      - name: freeze within the existing v1 deadline
+        run: |
+          for attempt in 1 2 3; do
+            if python scripts/freeze_variance.py freeze; then exit 0; fi
+            sleep 20
+          done
+          exit 1
+      - name: prepare immutable forecast bundle
+        run: |
+          python scripts/freeze_variance.py bundle --state results/forecast-bundle
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        id: forecast_artifact
+        with:
+          name: variance-forecast-${{ github.run_id }}-${{ github.run_attempt }}
+          path: code/results/forecast-bundle/
+          retention-days: 90
+          if-no-files-found: error
+      - name: retain the GitHub server witness
+        env:
+          ARTIFACT_ID: ${{ steps.forecast_artifact.outputs.artifact-id }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          gh api "repos/50kfunded/implied-odds/actions/artifacts/$ARTIFACT_ID" > results/server-artifact.json
+          python scripts/freeze_variance.py receipt --metadata results/server-artifact.json --run-id "$RUN_ID" --attempt "$RUN_ATTEMPT"
+      - name: publish the forecast and server receipt first
+        env:
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          python scripts/freeze_variance.py export
+          cd ../public-state
+          git config user.name 50kfunded
+          git config user.email 328319197+50kfunded@users.noreply.github.com
+          git add --all
+          git status --short
+          python ../code/scripts/freeze_variance.py verify-staged --state .
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'freeze daily variance evidence'
+          git push origin HEAD:refs/heads/forecast-evidence
+      - name: score completed targets after public witnessing
+        env:
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          python scripts/freeze_variance.py score
+          python scripts/freeze_variance.py observe --run-id "$RUN_ID" --attempt "$RUN_ATTEMPT"
+          python scripts/freeze_variance.py export
+          cd ../public-state
+          git add --all
+          git status --short
+          python ../code/scripts/freeze_variance.py verify-staged --state .
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'score settled variance evidence'
+          git push origin HEAD:refs/heads/forecast-evidence
+      - name: retain failed-run diagnostics
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: variance-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            code/data/variance-forward/status.json
+            code/data/variance-forward/captures/
+            code/results/server-artifact.json
+          retention-days: 30
+          if-no-files-found: warn
+      - name: publish failed-attempt evidence
+        if: failure()
+        env:
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          gh auth setup-git
+          mkdir -p ../failure-state
+          cd ../failure-state
+          git init
+          git remote add origin https://github.com/50kfunded/implied-odds.git
+          if git ls-remote --exit-code --heads origin forecast-evidence; then
+            git fetch --depth=1 origin forecast-evidence
+            git checkout -b forecast-evidence FETCH_HEAD
+          else
+            git checkout --orphan forecast-evidence
+          fi
+          cd ../code
+          python scripts/freeze_variance.py failure --state ../failure-state --run-id "$RUN_ID" --attempt "$RUN_ATTEMPT"
+          cd ../failure-state
+          git config user.name 50kfunded
+          git config user.email 328319197+50kfunded@users.noreply.github.com
+          git add -- failures
+          if [ -d captures ]; then git add -- captures; fi
+          if [ -d failed-captures ]; then git add -- failed-captures; fi
+          git status --short
+          python ../code/scripts/freeze_variance.py verify-staged --state .
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'retain failed variance attempt'
+          git push origin HEAD:refs/heads/forecast-evidence
+  settlement:
+    if: vars.VARIANCE_FORWARD_ENABLED == 'true' && github.event.schedule == '17 12 * * *'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          path: code
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: forecast-evidence
+          path: public-state
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version-file: 'code/.python-version'
+      - run: python -m pip install -r code/requirements-research.txt -e ./code
+      - name: refresh and score independently of today's freeze
+        env:
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          gh auth setup-git
+          cd code
+          python scripts/freeze_variance.py restore
+          python scripts/freeze_variance.py refresh-score
+          python scripts/freeze_variance.py observe --run-id "$RUN_ID" --attempt "$RUN_ATTEMPT"
+          python scripts/freeze_variance.py export
+          cd ../public-state
+          git config user.name 50kfunded
+          git config user.email 328319197+50kfunded@users.noreply.github.com
+          git add --all
+          git status --short
+          python ../code/scripts/freeze_variance.py verify-staged --state .
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'refresh and score settled variance evidence'
+          git push origin HEAD:refs/heads/forecast-evidence
+      - run: python code/scripts/freeze_variance.py watchdog --state public-state
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: failure()
+        with:
+          name: variance-settlement-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          path: code/data/variance-forward/captures/
+          retention-days: 30
