@@ -37,10 +37,18 @@ def write_immutable(path: Path, payload: dict) -> dict:
         if digest(old) != claimed or old != payload:
             raise ValueError('Refusing to change an immutable prospective record')
         return record
-    with path.open('x',encoding='utf-8',newline='\n') as handle:
-        handle.write(json.dumps(record,indent=2,sort_keys=True,allow_nan=False)+'\n')
-        handle.flush()
-        os.fsync(handle.fileno())
+    temporary = path.with_name('.'+path.name+'.'+uuid4().hex+'.tmp')
+    try:
+        with temporary.open('x',encoding='utf-8',newline='\n') as handle:
+            handle.write(json.dumps(record,indent=2,sort_keys=True,allow_nan=False)+'\n')
+            handle.flush()
+            os.fsync(handle.fileno())
+        try:
+            os.link(temporary,path)
+        except FileExistsError:
+            return write_immutable(path,payload)
+    finally:
+        temporary.unlink(missing_ok=True)
     return record
 
 
@@ -94,7 +102,8 @@ def recover_forecast_receipt(directory: Path, record: dict, plan: dict, now_ms) 
     publish_forecast(directory,{k:v for k,v in record.items() if k != 'content_hash'},plan,now_ms)
 
 
-def verify_source_proof(record: dict, directory: Path, expected_seed_hash: str) -> None:
+def verify_source_proof(record: dict, directory: Path, expected_seed_hash: str,
+                        verified_files: dict | None = None) -> None:
     proof = record['source_proof']
     files = proof.get('raw_files')
     close = proof.get('daily_close')
@@ -109,8 +118,14 @@ def verify_source_proof(record: dict, directory: Path, expected_seed_hash: str) 
         raise ValueError('Detected an invalid frozen source proof')
     for relative, expected in files.items():
         path = (directory/relative).resolve()
-        if (not path.is_relative_to(directory.resolve()) or not path.is_file()
-                or hashlib.sha256(path.read_bytes()).hexdigest() != expected):
+        if not path.is_relative_to(directory.resolve()) or not path.is_file():
+            raise ValueError('Detected a missing or changed frozen raw source')
+        actual = verified_files.get(path) if verified_files is not None else None
+        if actual is None:
+            actual = hashlib.sha256(path.read_bytes()).hexdigest()
+            if verified_files is not None:
+                verified_files[path] = actual
+        if actual != expected:
             raise ValueError('Detected a missing or changed frozen raw source')
 
 
@@ -144,6 +159,7 @@ def forward_summary(directory: Path, plan: dict, now: int, guard: dict) -> dict:
     if len(by_origin) != len(forecasts):
         raise ValueError('Detected duplicate prospective origins')
     future = plan['future']
+    verified_files: dict = {}
     for forecast in forecasts:
         origin = forecast['origin_ms']
         if (forecast['plan_hash'] != digest(plan) or not future['origin_start_ms'] <= origin <= future['origin_end_ms']
@@ -151,7 +167,7 @@ def forward_summary(directory: Path, plan: dict, now: int, guard: dict) -> dict:
                 or not origin-future['freeze_start_before_origin_ms'] <= forecast['frozen_at_ms'] <= origin-future['freeze_end_before_origin_ms']
                 or forecast['training']['latest_target_end_ms'] > forecast['feature_cutoff_ms']):
             raise ValueError('Detected an invalid prospective freeze or training cutoff')
-        verify_source_proof(forecast,directory,expected_seed_hash)
+        verify_source_proof(forecast,directory,expected_seed_hash,verified_files)
     if len({r['origin_ms'] for r in scores}) != len(scores):
         raise ValueError('Detected duplicate prospective scores')
     durable_scores = []
@@ -250,7 +266,8 @@ class VarianceForwardJob:
         self.writer.append(record)
         self.ingest(record)
 
-    def cycle(self) -> dict:
+    def cycle(self, *, include_summary: bool = True, score_outcomes: bool = True,
+              freeze_forecasts: bool = True) -> dict:
         now = self.now_ms()
         cutoff = now//DAY_MS*DAY_MS
         self.writer = RawWriter(self.directory/'captures'/f'{now}-{uuid4().hex}'/'raw')
@@ -268,12 +285,12 @@ class VarianceForwardJob:
         origin = cutoff+HOUR_MS
         future = self.plan['future']
         path = self.directory/'forecasts'/f'{origin}.json'
-        if (path.exists() and not (self.directory/'receipts'/path.name).exists()
+        if (freeze_forecasts and path.exists() and not (self.directory/'receipts'/path.name).exists()
                 and origin-future['freeze_start_before_origin_ms'] <= now <= origin-future['freeze_end_before_origin_ms']):
             record = read_immutable(path)
             verify_source_proof(record,self.directory,self.seed_hash)
             recover_forecast_receipt(self.directory,record,self.plan,self.now_ms)
-        if (future['origin_start_ms'] <= origin <= future['origin_end_ms'] and not path.exists()
+        if (freeze_forecasts and future['origin_start_ms'] <= origin <= future['origin_end_ms'] and not path.exists()
                 and origin-future['freeze_start_before_origin_ms'] <= now <= origin-future['freeze_end_before_origin_ms']):
             features = features_at(self.prices,self.dvol,cutoff)
             if features is None:
@@ -289,6 +306,17 @@ class VarianceForwardJob:
             cases = build_cases(self.prices,self.dvol,max(self.first_cutoff,cutoff-430*DAY_MS),cutoff,target_shift_hours=1)
             payload = freeze_record(cases,features,self.plan,origin,now,proof,completed_now_ms=self.now_ms)
             publish_forecast(self.directory,payload,self.plan,self.now_ms)
+        if not score_outcomes:
+            return {'status':'freeze_cycle_completed','origin_ms':origin,'forecast_exists':path.exists()}
+        self.score_existing()
+        if not include_summary:
+            return {'status':'score_cycle_completed','origin_ms':origin}
+        result = forward_summary(self.directory,self.plan,self.now_ms(),self.guard)
+        write_status(self.directory/'scoreboard.json',result)
+        return result
+
+    def score_existing(self) -> None:
+        now = self.now_ms()
         for forecast_path in sorted((self.directory/'forecasts').glob('*.json')):
             forecast = read_immutable(forecast_path)
             receipt_path = self.directory/'receipts'/forecast_path.name
@@ -314,9 +342,6 @@ class VarianceForwardJob:
                 'scored_at_ms':scored_at,'actual':actual,'losses':losses,'decisions':decisions})
             write_immutable(self.directory/'score-receipts'/forecast_path.name,
                             {'origin_ms':forecast['origin_ms'],'score_hash':score['content_hash'],'durable_at_ms':self.now_ms()})
-        result = forward_summary(self.directory,self.plan,self.now_ms(),self.guard)
-        write_status(self.directory/'scoreboard.json',result)
-        return result
 
     def run(self, seconds: int) -> dict:
         from .cli import provenance
