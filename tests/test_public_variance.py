@@ -214,7 +214,7 @@ class PublicVarianceTests(unittest.TestCase):
             original = Path.read_bytes
             reads = []
             def counted(path):
-                if path == capture:
+                if path.resolve() == capture.resolve():
                     reads.append(path)
                 return original(path)
             with patch.object(Path, 'read_bytes', counted):

@@ -7,13 +7,24 @@ import numpy as np
 
 from implied_calibration.inference_reference import empirical_power, dm_hln, stationary_samples
 from implied_calibration.review_models import load_review_spec
-from implied_calibration.review_report import benchmark_summary, model_confidence_set, phase_summary
+from implied_calibration.review_report import benchmark_summary, model_confidence_set, phase_summary, validate_v1_rebuild
 from implied_calibration.inference import effective_sample_size
 from implied_calibration.variance_study import bootstrap_means
 from test_review_models import ROOT
 
 
 class ReviewReportTests(unittest.TestCase):
+    def test_v1_guard_reports_only_tiny_roundoff_and_rejects_material_or_structural_drift(self):
+        original = {'n': 1357, 'hash': 'fixed', 'means': [.12548, -.01424]}
+        tiny = {**original, 'means': [.12548+1e-15, -.01424]}
+        result = validate_v1_rebuild(original, tiny)
+        self.assertFalse(result['exact_equal'])
+        self.assertEqual(result['floating_roundoff_differences'][0]['path'], '$.means[0]')
+        for altered in ({**original, 'n': 1356}, {**original, 'hash': 'changed'},
+                        {**original, 'means': [.12549, -.01424]}, {**original, 'extra': 1}):
+            with self.assertRaises(ValueError):
+                validate_v1_rebuild(original, altered)
+
     def test_focal_comparison_uses_joint_draws_and_the_matching_qlike_baseline(self):
         rng = np.random.default_rng(8)
         losses = np.abs(rng.normal(size=(120, 3)))
