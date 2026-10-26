@@ -92,6 +92,7 @@ jobs:
           pdftoppm -f 1 -singlefile -r 120 -png main.pdf paper-preview
           python -c "from pypdf import PdfReader; assert len(PdfReader('main.pdf').pages) == 6"
       - name: retain static research artifacts
+        if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: research-python-3.12
