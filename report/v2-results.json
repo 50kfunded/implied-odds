@@ -1,0 +1,2220 @@
+{
+  "benchmarks": {
+    "coverage": {
+      "bates_granger": 1176,
+      "dvol": 1176,
+      "egarch_111": 1176,
+      "ewma_094": 1176,
+      "garch_11": 1176,
+      "har_365": 1176,
+      "har_730": 1176,
+      "har_dvol_365": 1176,
+      "har_dvol_730": 1176,
+      "har_dvol_expanding": 1176,
+      "har_expanding": 1176,
+      "log_har_dvol_smear": 1176,
+      "log_har_smear": 1176,
+      "mz_dvol": 1176,
+      "qlike_har": 1176,
+      "qlike_har_dvol": 1176,
+      "ridge_qlike_har_dvol": 1176
+    },
+    "egarch_monte_carlo": {
+      "maximum_absolute_independent_batch_relative_gap": 0.024740310860685753,
+      "maximum_standard_error": 0.0035203737279017495
+    },
+    "failures": [],
+    "floor_hits": {
+      "bates_granger": 0,
+      "dvol": 0,
+      "egarch_111": 0,
+      "ewma_094": 0,
+      "garch_11": 0,
+      "har_365": 0,
+      "har_730": 0,
+      "har_dvol_365": 0,
+      "har_dvol_730": 0,
+      "har_dvol_expanding": 0,
+      "har_expanding": 0,
+      "log_har_dvol_smear": 0,
+      "log_har_smear": 0,
+      "mz_dvol": 0,
+      "qlike_har": 0,
+      "qlike_har_dvol": 0,
+      "ridge_qlike_har_dvol": 0
+    },
+    "n_scheduled": 1176,
+    "raw_prediction_minimum": {
+      "bates_granger": null,
+      "dvol": null,
+      "egarch_111": null,
+      "ewma_094": null,
+      "garch_11": null,
+      "har_365": 0.11226818519223271,
+      "har_730": 0.15677627238699857,
+      "har_dvol_365": 0.08133752629673074,
+      "har_dvol_730": 0.12134550245922684,
+      "har_dvol_expanding": 0.1480922121746924,
+      "har_expanding": 0.1796671674064088,
+      "log_har_dvol_smear": null,
+      "log_har_smear": null,
+      "mz_dvol": 0.13383940953155382,
+      "qlike_har": null,
+      "qlike_har_dvol": null,
+      "ridge_qlike_har_dvol": null
+    },
+    "summary": {
+      "calendar_gaps": 0,
+      "expected_block_days": 60,
+      "expected_block_rows": 60,
+      "hac_lags_rows": 59,
+      "metrics": {
+        "bates_granger_minus_reference": {
+          "confidence_interval_95": [
+            -0.03559234500926462,
+            0.006668037236041341
+          ],
+          "effective_sample_size": 50.0895157805479,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.011590864850965705,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": -0.013212146866967324,
+          "median": -0.001259183691161762
+        },
+        "dvol_minus_reference": {
+          "confidence_interval_95": [
+            -0.04389477455384355,
+            0.010339931487086007
+          ],
+          "effective_sample_size": 45.013671235094236,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.014912860536218875,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": -0.01615989194412436,
+          "median": -0.0026923912343127833
+        },
+        "egarch_111_minus_reference": {
+          "confidence_interval_95": [
+            -0.019294925825088297,
+            0.1039099836905313
+          ],
+          "effective_sample_size": 28.074127480275926,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.029751372476218993,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.03860223970235459,
+          "median": 0.015401235986306869
+        },
+        "ewma_094_minus_reference": {
+          "confidence_interval_95": [
+            0.04983365125089028,
+            0.14254430153940026
+          ],
+          "effective_sample_size": 92.43330754141307,
+          "ess_gate_passed": true,
+          "hac_standard_error": 0.025151625629554433,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.09747009723626004,
+          "median": 0.02818754467370268
+        },
+        "focus_qlike_har_dvol_minus_qlike_har": {
+          "confidence_interval_95": [
+            -0.0351680185374558,
+            0.003589738726981705
+          ],
+          "effective_sample_size": 56.85459164537876,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.009831574823355893,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": -0.015606545136526706,
+          "median": -0.01242101652586783
+        },
+        "garch_11_minus_reference": {
+          "confidence_interval_95": [
+            -0.021512304886117252,
+            0.09647289506611419
+          ],
+          "effective_sample_size": 22.0465145162444,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.027812821296820125,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.03300345375636564,
+          "median": 0.011709598487051977
+        },
+        "har_365_minus_reference": {
+          "confidence_interval_95": [
+            -0.00733596223708515,
+            0.039292659953466993
+          ],
+          "effective_sample_size": 45.295249019497895,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.012127913966034281,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.015214054192121304,
+          "median": 0.00932529973903834
+        },
+        "har_730_minus_reference": {
+          "confidence_interval_95": [
+            -0.031321756925071276,
+            0.03437905929529736
+          ],
+          "effective_sample_size": 53.40712244948548,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.016648698675854008,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.003242601936826228,
+          "median": 0.007408957906268672
+        },
+        "har_dvol_365_minus_reference": {
+          "confidence_interval_95": [
+            0.0,
+            0.0
+          ],
+          "effective_sample_size": 0.0,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.0,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.0,
+          "median": 0.0
+        },
+        "har_dvol_730_minus_reference": {
+          "confidence_interval_95": [
+            -0.03470501069188599,
+            0.010881596452828213
+          ],
+          "effective_sample_size": 53.229929410833584,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.011681631454778563,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": -0.010160742272483233,
+          "median": 0.00021391353502500654
+        },
+        "har_dvol_expanding_minus_reference": {
+          "confidence_interval_95": [
+            -0.04024931346724208,
+            0.007081797699089478
+          ],
+          "effective_sample_size": 51.933111794776096,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.012836419947708478,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": -0.01517087988099683,
+          "median": -0.0003530298985480393
+        },
+        "har_expanding_minus_reference": {
+          "confidence_interval_95": [
+            -0.01845277677826616,
+            0.0705692785850168
+          ],
+          "effective_sample_size": 45.77769591464555,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.022981124966263786,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.026298102713106557,
+          "median": 0.035930197946379056
+        },
+        "log_har_dvol_smear_minus_reference": {
+          "confidence_interval_95": [
+            -0.03586685737585735,
+            -0.0011974381087612462
+          ],
+          "effective_sample_size": 47.98009287039897,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.009570467745018294,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": -0.017628813894882824,
+          "median": -0.005329181368930312
+        },
+        "log_har_smear_minus_reference": {
+          "confidence_interval_95": [
+            -0.030107935108279405,
+            0.02495495484474344
+          ],
+          "effective_sample_size": 58.671256993941775,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.014449330612811074,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": -0.0015222704730612562,
+          "median": 0.003892751417377188
+        },
+        "mz_dvol_minus_reference": {
+          "confidence_interval_95": [
+            -0.03890091765950813,
+            0.010505087190628808
+          ],
+          "effective_sample_size": 48.53596133719009,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.0127493511274323,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": -0.013146801277870948,
+          "median": -0.000810807412350293
+        },
+        "qlike_bates_granger": {
+          "confidence_interval_95": [
+            0.07232877642302804,
+            0.12383596718671619
+          ],
+          "effective_sample_size": 63.91418752950793,
+          "ess_gate_passed": true,
+          "hac_standard_error": 0.013784018615606006,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.09719450188387323,
+          "median": 0.05497293799672387
+        },
+        "qlike_dvol": {
+          "confidence_interval_95": [
+            0.0764172319586789,
+            0.11402948726427216
+          ],
+          "effective_sample_size": 79.65783371013723,
+          "ess_gate_passed": true,
+          "hac_standard_error": 0.01051627926459672,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.0942467568067162,
+          "median": 0.0640986491472812
+        },
+        "qlike_egarch_111": {
+          "confidence_interval_95": [
+            0.09852042435075163,
+            0.21026687490203566
+          ],
+          "effective_sample_size": 23.647150427408274,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.026965610617185474,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.14900888845319515,
+          "median": 0.09638198093652722
+        },
+        "qlike_ewma_094": {
+          "confidence_interval_95": [
+            0.15577558626418003,
+            0.2649526485139509
+          ],
+          "effective_sample_size": 80.27283169501747,
+          "ess_gate_passed": true,
+          "hac_standard_error": 0.031377079221029544,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.2078767459871006,
+          "median": 0.09868757833830366
+        },
+        "qlike_garch_11": {
+          "confidence_interval_95": [
+            0.09613659341686728,
+            0.20588336252183612
+          ],
+          "effective_sample_size": 24.1746826392782,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.02621062492512315,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.1434101025072062,
+          "median": 0.08917662156766015
+        },
+        "qlike_har_365": {
+          "confidence_interval_95": [
+            0.09196239123907755,
+            0.1605039970775512
+          ],
+          "effective_sample_size": 56.4890264888059,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.01846053863989765,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.12562070294296185,
+          "median": 0.07066552114590624
+        },
+        "qlike_har_730": {
+          "confidence_interval_95": [
+            0.08668608408089186,
+            0.1439117427402025
+          ],
+          "effective_sample_size": 61.73893545203768,
+          "ess_gate_passed": true,
+          "hac_standard_error": 0.014904758575867306,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.11364925068766679,
+          "median": 0.06850320702570675
+        },
+        "qlike_har_dvol_365": {
+          "confidence_interval_95": [
+            0.07954582735022793,
+            0.14570762376102828
+          ],
+          "effective_sample_size": 60.93489297209364,
+          "ess_gate_passed": true,
+          "hac_standard_error": 0.01846928722370035,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.11040664875084055,
+          "median": 0.05437240773300858
+        },
+        "qlike_har_dvol_730": {
+          "confidence_interval_95": [
+            0.07641258819326334,
+            0.1267093218990808
+          ],
+          "effective_sample_size": 62.59205364903781,
+          "ess_gate_passed": true,
+          "hac_standard_error": 0.014474683119989007,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.10024590647835734,
+          "median": 0.05050616558550064
+        },
+        "qlike_har_dvol_expanding": {
+          "confidence_interval_95": [
+            0.07258810807701224,
+            0.11866029491399185
+          ],
+          "effective_sample_size": 66.2930900335634,
+          "ess_gate_passed": true,
+          "hac_standard_error": 0.012168658217317625,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.09523576886984374,
+          "median": 0.06041314850842189
+        },
+        "qlike_har_dvol_minus_reference": {
+          "confidence_interval_95": [
+            -0.034016921215007746,
+            0.0007227695189861622
+          ],
+          "effective_sample_size": 47.4298223629316,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.009461547739572801,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": -0.015556079175407215,
+          "median": -0.0049419747472707765
+        },
+        "qlike_har_expanding": {
+          "confidence_interval_95": [
+            0.09792807338706545,
+            0.17946601958167707
+          ],
+          "effective_sample_size": 48.89646215374915,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.019691137056571727,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.13670475146394712,
+          "median": 0.1007849580338534
+        },
+        "qlike_har_minus_reference": {
+          "confidence_interval_95": [
+            -0.029674576585993696,
+            0.02738995989255174
+          ],
+          "effective_sample_size": 57.125080590170896,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.014899614935592049,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 5.046596111949079e-05,
+          "median": 0.004654929604605104
+        },
+        "qlike_log_har_dvol_smear": {
+          "confidence_interval_95": [
+            0.0704928654357803,
+            0.11936882574879583
+          ],
+          "effective_sample_size": 68.72546878022246,
+          "ess_gate_passed": true,
+          "hac_standard_error": 0.013764475581510196,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.09277783485595772,
+          "median": 0.049903807933896094
+        },
+        "qlike_log_har_smear": {
+          "confidence_interval_95": [
+            0.08492033964464296,
+            0.13392539072839887
+          ],
+          "effective_sample_size": 76.51369268893528,
+          "ess_gate_passed": true,
+          "hac_standard_error": 0.01249369717375802,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.10888437827777932,
+          "median": 0.0640955492509808
+        },
+        "qlike_mz_dvol": {
+          "confidence_interval_95": [
+            0.07357679553335926,
+            0.12346292165989796
+          ],
+          "effective_sample_size": 62.00731471367343,
+          "ess_gate_passed": true,
+          "hac_standard_error": 0.014134946742646785,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.09725984747296963,
+          "median": 0.05130159906064222
+        },
+        "qlike_qlike_har": {
+          "confidence_interval_95": [
+            0.08589588364375185,
+            0.13657726119020625
+          ],
+          "effective_sample_size": 72.64363202682831,
+          "ess_gate_passed": true,
+          "hac_standard_error": 0.01300455041159301,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.11045711471196004,
+          "median": 0.06443834230303777
+        },
+        "qlike_qlike_har_dvol": {
+          "confidence_interval_95": [
+            0.0719322127745403,
+            0.1209961111231849
+          ],
+          "effective_sample_size": 67.47380244513336,
+          "ess_gate_passed": true,
+          "hac_standard_error": 0.013978737376590581,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.09485056957543335,
+          "median": 0.050101400417637026
+        },
+        "qlike_ridge_qlike_har_dvol": {
+          "confidence_interval_95": [
+            0.07208823696365697,
+            0.12086438639837489
+          ],
+          "effective_sample_size": 67.609349929629,
+          "ess_gate_passed": true,
+          "hac_standard_error": 0.01384244727209803,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": 0.09477537660947548,
+          "median": 0.050144265208678235
+        },
+        "ridge_qlike_har_dvol_minus_reference": {
+          "confidence_interval_95": [
+            -0.03448470426584402,
+            0.0007207349944760766
+          ],
+          "effective_sample_size": 47.98605830281388,
+          "ess_gate_passed": false,
+          "hac_standard_error": 0.009533144443176248,
+          "interval_role": "descriptive_stationary_bootstrap",
+          "mean": -0.015631272141365088,
+          "median": -0.004770168931891229
+        }
+      },
+      "minimum_effective_sample_size": 60,
+      "n": 1176,
+      "resamples": 5000,
+      "seed": 271828,
+      "spacing_days": 1,
+      "status": "descriptive"
+    }
+  },
+  "declaration": {
+    "amendment_hash": "d59e51f56a6d60638231091c21bd70d6f3e18ff6ecc9b432099e08cd0599906e",
+    "parent_spec_hash": "6f3e02c650d366fdbfbc7f81a2035a45b6dced030ad6f76acdb1049825ee1419",
+    "role": "publicly_declared_after_v1_inspection",
+    "witness_commits": {
+      "exploratory-review-v2.json": "0615ec0253fcbd2cc38c46200cef653fd755082b",
+      "exploratory-review-v2a.json": "ad08a142096ebfa85172c6d0fba4a64355c38c83"
+    }
+  },
+  "empirical_power": {
+    "limit": "The inspected effect and dependence are uncertain. Neither this resampling nor the normal approximation predicts the years needed in a future market.",
+    "normal_plugin": {
+      "assumed_long_run_variance": 0.15159965596246852,
+      "n365_80pct_detectable_effect": 0.0570961090106779,
+      "n365_standard_error": 0.020379929420506964,
+      "years_for_80pct_power": 16.06695933090077,
+      "years_for_absolute_z2": 8.188154169613206
+    },
+    "role": "conditional_planning_from_inspected_empirical_losses",
+    "rows": [
+      {
+        "expected_block_days": 30,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.08840506686305154,
+              0.12661041882356588
+            ],
+            "rejection_rate": 0.106
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.13952453255948705,
+              0.18507000969371934
+            ],
+            "rejection_rate": 0.161
+          }
+        },
+        "n": 365,
+        "population_shift": 0.0,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 30,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.16120869057645773,
+              0.20920982078641312
+            ],
+            "rejection_rate": 0.184
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.2241530989836914,
+              0.27776028025908617
+            ],
+            "rejection_rate": 0.25
+          }
+        },
+        "n": 365,
+        "population_shift": -0.014244252570928512,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 30,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.07561389956796885,
+              0.11150873535624412
+            ],
+            "rejection_rate": 0.092
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.10592623063520473,
+              0.14694383822896162
+            ],
+            "rejection_rate": 0.125
+          }
+        },
+        "n": 730,
+        "population_shift": 0.0,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 30,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.23569393157936605,
+              0.2901276054597582
+            ],
+            "rejection_rate": 0.262
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.2646576946068598,
+              0.3209342369231311
+            ],
+            "rejection_rate": 0.292
+          }
+        },
+        "n": 730,
+        "population_shift": -0.014244252570928512,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 30,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.04866418011998064,
+              0.07868806031336564
+            ],
+            "rejection_rate": 0.062
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.06384721576082919,
+              0.09737491488400823
+            ],
+            "rejection_rate": 0.079
+          }
+        },
+        "n": 1825,
+        "population_shift": 0.0,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 30,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.4273392207850265,
+              0.48898222692776017
+            ],
+            "rejection_rate": 0.458
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.4154564661655095,
+              0.47695682375093046
+            ],
+            "rejection_rate": 0.446
+          }
+        },
+        "n": 1825,
+        "population_shift": -0.014244252570928512,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 30,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.06655195342021952,
+              0.10064721667370458
+            ],
+            "rejection_rate": 0.082
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.09024119856255189,
+              0.12875898009012332
+            ],
+            "rejection_rate": 0.108
+          }
+        },
+        "n": 2920,
+        "population_shift": 0.0,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 30,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.6229619706570872,
+              0.681867041246333
+            ],
+            "rejection_rate": 0.653
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.5804136555818767,
+              0.6407368040343301
+            ],
+            "rejection_rate": 0.611
+          }
+        },
+        "n": 2920,
+        "population_shift": -0.014244252570928512,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 60,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.12080112670494819,
+              0.1639464858876804
+            ],
+            "rejection_rate": 0.141
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.15931725722829052,
+              0.2071165611685226
+            ],
+            "rejection_rate": 0.182
+          }
+        },
+        "n": 365,
+        "population_shift": 0.0,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 60,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.19065343629137976,
+              0.2415278160453867
+            ],
+            "rejection_rate": 0.215
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.23954672321443168,
+              0.29424419975680804
+            ],
+            "rejection_rate": 0.266
+          }
+        },
+        "n": 365,
+        "population_shift": -0.014244252570928512,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 60,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.08932287430802001,
+              0.12768495786162629
+            ],
+            "rejection_rate": 0.107
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.11986857462597704,
+              0.1628866914836227
+            ],
+            "rejection_rate": 0.14
+          }
+        },
+        "n": 730,
+        "population_shift": 0.0,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 60,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.19160700894892252,
+              0.24256658987087282
+            ],
+            "rejection_rate": 0.216
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.2107233759531616,
+              0.26329715252721153
+            ],
+            "rejection_rate": 0.236
+          }
+        },
+        "n": 730,
+        "population_shift": -0.014244252570928512,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 60,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.0683588136777643,
+              0.10282504938221758
+            ],
+            "rejection_rate": 0.084
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.10685291068700914,
+              0.14800950466018614
+            ],
+            "rejection_rate": 0.126
+          }
+        },
+        "n": 1825,
+        "population_shift": 0.0,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 60,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.3602454063696288,
+              0.4205964804971933
+            ],
+            "rejection_rate": 0.39
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.3622102251883648,
+              0.42261635464451514
+            ],
+            "rejection_rate": 0.392
+          }
+        },
+        "n": 1825,
+        "population_shift": -0.014244252570928512,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 60,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.06384721576082919,
+              0.09737491488400823
+            ],
+            "rejection_rate": 0.079
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.10407414325107295,
+              0.1448112326470356
+            ],
+            "rejection_rate": 0.123
+          }
+        },
+        "n": 2920,
+        "population_shift": 0.0,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 60,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.5491604008010915,
+              0.6102273178412196
+            ],
+            "rejection_rate": 0.58
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.5100164673887266,
+              0.5716697384154579
+            ],
+            "rejection_rate": 0.541
+          }
+        },
+        "n": 2920,
+        "population_shift": -0.014244252570928512,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 180,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.11149250620200898,
+              0.15333164156033072
+            ],
+            "rejection_rate": 0.131
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.14140399765906392,
+              0.18717523756020027
+            ],
+            "rejection_rate": 0.163
+          }
+        },
+        "n": 365,
+        "population_shift": 0.0,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 180,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.1877940523073313,
+              0.2384101605803485
+            ],
+            "rejection_rate": 0.212
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.23088201740604794,
+              0.28497778721793177
+            ],
+            "rejection_rate": 0.257
+          }
+        },
+        "n": 365,
+        "population_shift": -0.014244252570928512,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 180,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.07288824391300744,
+              0.10825735156211885
+            ],
+            "rejection_rate": 0.089
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.10129926060130913,
+              0.14160907584771276
+            ],
+            "rejection_rate": 0.12
+          }
+        },
+        "n": 730,
+        "population_shift": 0.0,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 180,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.14704962548581355,
+              0.193483688631624
+            ],
+            "rejection_rate": 0.169
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.14987640210972414,
+              0.19663395145680002
+            ],
+            "rejection_rate": 0.172
+          }
+        },
+        "n": 730,
+        "population_shift": -0.014244252570928512,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 180,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.023592927958426907,
+              0.04598126446708159
+            ],
+            "rejection_rate": 0.033
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.06294716759073615,
+              0.09628261657107237
+            ],
+            "rejection_rate": 0.078
+          }
+        },
+        "n": 1825,
+        "population_shift": 0.0,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 180,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.3142286235426158,
+              0.3729729786218485
+            ],
+            "rejection_rate": 0.343
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.345526294232981,
+              0.40543039538840775
+            ],
+            "rejection_rate": 0.375
+          }
+        },
+        "n": 1825,
+        "population_shift": -0.014244252570928512,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 180,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.024431348663226313,
+              0.04713519024531107
+            ],
+            "rejection_rate": 0.034
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.05310191960662385,
+              0.08421205324186688
+            ],
+            "rejection_rate": 0.067
+          }
+        },
+        "n": 2920,
+        "population_shift": 0.0,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 180,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.5070132970793998,
+              0.5686958692756982
+            ],
+            "rejection_rate": 0.538
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.5471483343234702,
+              0.6082546913527831
+            ],
+            "rejection_rate": 0.578
+          }
+        },
+        "n": 2920,
+        "population_shift": -0.014244252570928512,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 365,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.11707313063299474,
+              0.1597050960275183
+            ],
+            "rejection_rate": 0.137
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.14234418773548693,
+              0.18822739396680613
+            ],
+            "rejection_rate": 0.164
+          }
+        },
+        "n": 365,
+        "population_shift": 0.0,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 365,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.19446904537483753,
+              0.24568159289404448
+            ],
+            "rejection_rate": 0.219
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.23569393157936605,
+              0.2901276054597582
+            ],
+            "rejection_rate": 0.262
+          }
+        },
+        "n": 365,
+        "population_shift": -0.014244252570928512,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 365,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.05310191960662385,
+              0.08421205324186688
+            ],
+            "rejection_rate": 0.067
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.06926331853965456,
+              0.10391289100335621
+            ],
+            "rejection_rate": 0.085
+          }
+        },
+        "n": 730,
+        "population_shift": 0.0,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 365,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.13108250256297901,
+              0.17558092134296735
+            ],
+            "rejection_rate": 0.152
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.12453493622851891,
+              0.16818206229622523
+            ],
+            "rejection_rate": 0.145
+          }
+        },
+        "n": 730,
+        "population_shift": -0.014244252570928512,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 365,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.00835757513042392,
+              0.02336203411753566
+            ],
+            "rejection_rate": 0.014
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.02527226301711295,
+              0.04828662237445333
+            ],
+            "rejection_rate": 0.035
+          }
+        },
+        "n": 1825,
+        "population_shift": 0.0,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 365,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.28502093895360764,
+              0.34241026871999
+            ],
+            "rejection_rate": 0.313
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.32399373843890167,
+              0.3831313285558515
+            ],
+            "rejection_rate": 0.353
+          }
+        },
+        "n": 1825,
+        "population_shift": -0.014244252570928512,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 365,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.009110978804081668,
+              0.024600976926906798
+            ],
+            "rejection_rate": 0.015
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.03207865341171336,
+              0.057419003844084014
+            ],
+            "rejection_rate": 0.043
+          }
+        },
+        "n": 2920,
+        "population_shift": 0.0,
+        "replications": 1000
+      },
+      {
+        "expected_block_days": 365,
+        "methods": {
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.47903749580454597,
+              0.5408859690257428
+            ],
+            "rejection_rate": 0.51
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.605710772604704,
+              0.665248349087225
+            ],
+            "rejection_rate": 0.636
+          }
+        },
+        "n": 2920,
+        "population_shift": -0.014244252570928512,
+        "replications": 1000
+      }
+    ],
+    "settings": {
+      "block_days": [
+        30,
+        60,
+        180,
+        365
+      ],
+      "effect_rule": "The nonzero value is the inspected v1 point estimate, used only as a conditional planning scenario; I also retain the null.",
+      "effect_sizes": [
+        0.0,
+        -0.014244252570928512
+      ],
+      "method": "resample contiguous circular stationary blocks from the centred empirical series, add the fixed shift and record reference-method rejection",
+      "nominal_size": 0.05,
+      "replications": 1000,
+      "sample_sizes": [
+        365,
+        730,
+        1825,
+        2920
+      ],
+      "scope": "Resampling an observed history cannot reveal unseen persistence or forecast future power.",
+      "seed": 616161,
+      "source": "v1 HAR+DVOL minus HAR loss differences",
+      "tested_methods": [
+        "dm_hln_lag59",
+        "subsampling"
+      ]
+    }
+  },
+  "focal_inference_references": [
+    {
+      "contrast": "qlike_har_dvol_minus_qlike_har",
+      "dm_hln": {
+        "29": {
+          "hac_standard_error": 0.009248137104180966,
+          "hln_factor": 0.9749148732759523,
+          "horizon": 30,
+          "lags": 29,
+          "limit": "HLN is a reference correction; persistent losses, nested models and generated forecasts can invalidate its nominal size.",
+          "mean": -0.015606545136526706,
+          "n": 1176,
+          "p_value": 0.10019563892841848,
+          "reference": "Student_t_n_minus_1",
+          "statistic": -1.6452019258206965,
+          "status": "descriptive"
+        },
+        "59": {
+          "hac_standard_error": 0.009831574823355893,
+          "hln_factor": 0.9749148732759523,
+          "horizon": 30,
+          "lags": 59,
+          "limit": "HLN is a reference correction; persistent losses, nested models and generated forecasts can invalidate its nominal size.",
+          "mean": -0.015606545136526706,
+          "n": 1176,
+          "p_value": 0.12199507203134903,
+          "reference": "Student_t_n_minus_1",
+          "statistic": -1.5475702771347961,
+          "status": "descriptive"
+        }
+      },
+      "ess_lag59": 56.85459164537876,
+      "mean": -0.015606545136526706,
+      "n": 1176,
+      "subsampling": {
+        "block": 141,
+        "confidence_interval_95": [
+          -0.03367741460317872,
+          -0.0015751595972809031
+        ],
+        "limit": "Subsampling is a candidate diagnostic. Its asymptotic assumptions and finite-sample calibration are not guaranteed by choosing a block rule.",
+        "mean": -0.015606545136526706,
+        "method": "overlapping_contiguous_blocks_root_n_mean",
+        "n": 1176,
+        "n_blocks": 1036,
+        "p_value": 0.0019286403085824494,
+        "status": "descriptive"
+      }
+    }
+  ],
+  "formal_claim_eligible": false,
+  "implementation_sha256": {
+    "inference_reference.py": "2db1361805d778f0510cba67f8566d3fd4d606414cd66070391e3def110f2aa0",
+    "review_models.py": "5713d3cd3edb55b0e2db8e0f5c597721d400458fc408e3499bc230571a36352c",
+    "review_report.py": "6a6f899635567f0485eaeeed685cc112fb2e8655224dee9b26eb3b10b19e629a"
+  },
+  "inference_calibration": {
+    "role": "synthetic_calibration_not_market_size",
+    "rows": [
+      {
+        "dgp": "overlap_30",
+        "methods": {
+          "dm_hln_lag29": {
+            "monte_carlo_interval_95": [
+              0.05768744886219316,
+              0.13776571876716542
+            ],
+            "rejection_rate": 0.09
+          },
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.04597491718438201,
+              0.12004361023629456
+            ],
+            "rejection_rate": 0.075
+          },
+          "stationary_percentile": {
+            "monte_carlo_interval_95": [
+              0.08611974475712644,
+              0.17801425002582347
+            ],
+            "rejection_rate": 0.125
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.11996855328217307,
+              0.2226578153905955
+            ],
+            "rejection_rate": 0.165
+          }
+        },
+        "n": 365,
+        "replications": 200
+      },
+      {
+        "dgp": "overlap_30_plus_slow_365",
+        "methods": {
+          "dm_hln_lag29": {
+            "monte_carlo_interval_95": [
+              0.3971856415700402,
+              0.5341335312763685
+            ],
+            "rejection_rate": 0.465
+          },
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.3826406840224836,
+              0.5192438486152432
+            ],
+            "rejection_rate": 0.45
+          },
+          "stationary_percentile": {
+            "monte_carlo_interval_95": [
+              0.44610849192745716,
+              0.5833261482812249
+            ],
+            "rejection_rate": 0.515
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.4857330241280342,
+              0.6221939899704665
+            ],
+            "rejection_rate": 0.555
+          }
+        },
+        "n": 365,
+        "replications": 200
+      },
+      {
+        "dgp": "overlap_30_plus_clustered_tails",
+        "methods": {
+          "dm_hln_lag29": {
+            "monte_carlo_interval_95": [
+              0.07377244460125303,
+              0.1609269099730149
+            ],
+            "rejection_rate": 0.11
+          },
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.06970748792681017,
+              0.1551803199112304
+            ],
+            "rejection_rate": 0.105
+          },
+          "stationary_percentile": {
+            "monte_carlo_interval_95": [
+              0.12860515066273331,
+              0.23364431148248993
+            ],
+            "rejection_rate": 0.175
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.15045200926098115,
+              0.2608551865653788
+            ],
+            "rejection_rate": 0.2
+          }
+        },
+        "n": 365,
+        "replications": 200
+      },
+      {
+        "dgp": "overlap_30",
+        "methods": {
+          "dm_hln_lag29": {
+            "monte_carlo_interval_95": [
+              0.08197992706375512,
+              0.17234252098296743
+            ],
+            "rejection_rate": 0.12
+          },
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.06567044866909588,
+              0.1494058124327174
+            ],
+            "rejection_rate": 0.1
+          },
+          "stationary_percentile": {
+            "monte_carlo_interval_95": [
+              0.07377244460125303,
+              0.1609269099730149
+            ],
+            "rejection_rate": 0.11
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.11139636927689314,
+              0.21160690592342077
+            ],
+            "rejection_rate": 0.155
+          }
+        },
+        "n": 1357,
+        "replications": 200
+      },
+      {
+        "dgp": "overlap_30_plus_slow_365",
+        "methods": {
+          "dm_hln_lag29": {
+            "monte_carlo_interval_95": [
+              0.4510378507281424,
+              0.588208336216767
+            ],
+            "rejection_rate": 0.52
+          },
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.411791663783233,
+              0.5489621492718576
+            ],
+            "rejection_rate": 0.48
+          },
+          "stationary_percentile": {
+            "monte_carlo_interval_95": [
+              0.3826406840224836,
+              0.5192438486152432
+            ],
+            "rejection_rate": 0.45
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.3826406840224836,
+              0.5192438486152432
+            ],
+            "rejection_rate": 0.45
+          }
+        },
+        "n": 1357,
+        "replications": 200
+      },
+      {
+        "dgp": "overlap_30_plus_clustered_tails",
+        "methods": {
+          "dm_hln_lag29": {
+            "monte_carlo_interval_95": [
+              0.08611974475712644,
+              0.17801425002582347
+            ],
+            "rejection_rate": 0.125
+          },
+          "dm_hln_lag59": {
+            "monte_carlo_interval_95": [
+              0.05768744886219316,
+              0.13776571876716542
+            ],
+            "rejection_rate": 0.09
+          },
+          "stationary_percentile": {
+            "monte_carlo_interval_95": [
+              0.08197992706375512,
+              0.17234252098296743
+            ],
+            "rejection_rate": 0.12
+          },
+          "subsampling": {
+            "monte_carlo_interval_95": [
+              0.0902820227966932,
+              0.18366351872248407
+            ],
+            "rejection_rate": 0.13
+          }
+        },
+        "n": 1357,
+        "replications": 200
+      }
+    ],
+    "settings": {
+      "bootstrap_block_days": 60,
+      "bootstrap_resamples": 2000,
+      "dgp": [
+        "overlap_30",
+        "overlap_30_plus_slow_365",
+        "overlap_30_plus_clustered_tails"
+      ],
+      "nominal_size": 0.05,
+      "replications": 200,
+      "sample_sizes": [
+        365,
+        1357
+      ],
+      "seed": 717171,
+      "tested_methods": [
+        "stationary_percentile",
+        "dm_hln_lag29",
+        "dm_hln_lag59",
+        "subsampling"
+      ]
+    }
+  },
+  "input_manifest_hash": "05d4b3bdd266406b0e0e9018503fe97a545bf7162932bc0a51b57411b667a52b",
+  "kind": "exploratory_review_v2_results",
+  "mcs": {
+    "excluded": [
+      "har_365",
+      "har_730",
+      "har_expanding",
+      "log_har_smear",
+      "qlike_har",
+      "ewma_094"
+    ],
+    "included": [
+      "dvol",
+      "har_dvol_365",
+      "har_dvol_730",
+      "har_dvol_expanding",
+      "log_har_dvol_smear",
+      "qlike_har_dvol",
+      "ridge_qlike_har_dvol",
+      "garch_11",
+      "egarch_111",
+      "bates_granger",
+      "mz_dvol"
+    ],
+    "n": 1176,
+    "pvalues": {
+      "bates_granger": 0.9756,
+      "dvol": 0.9756,
+      "egarch_111": 0.1796,
+      "ewma_094": 0.0,
+      "garch_11": 0.236,
+      "har_365": 0.0856,
+      "har_730": 0.0724,
+      "har_dvol_365": 0.3678,
+      "har_dvol_730": 0.8042,
+      "har_dvol_expanding": 0.9756,
+      "har_expanding": 0.035,
+      "log_har_dvol_smear": 1.0,
+      "log_har_smear": 0.0074,
+      "mz_dvol": 0.9756,
+      "qlike_har": 0.0054,
+      "qlike_har_dvol": 0.6856,
+      "ridge_qlike_har_dvol": 0.8036
+    },
+    "scope": "I report the surviving set as a diagnostic conditional on this inspected candidate set and dependence assumptions, not as proof of a best model.",
+    "settings": {
+      "block_size": 60,
+      "bootstrap": "stationary",
+      "method": "R",
+      "reps": 5000,
+      "scope": "I report the surviving set as a diagnostic conditional on this inspected candidate set and dependence assumptions, not as proof of a best model.",
+      "seed": 515151,
+      "size": 0.1
+    },
+    "status": "exploratory"
+  },
+  "phases": {
+    "comparisons": {
+      "dvol_minus_har": {
+        "maximum": -0.0066797523646403,
+        "median": -0.03189506393204939,
+        "minimum": -0.04972787779885469,
+        "n_negative": 30,
+        "phase_counts": [
+          46,
+          46,
+          46,
+          46,
+          46,
+          46,
+          46,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45
+        ],
+        "phase_means": [
+          -0.04972787779885469,
+          -0.04750714851429896,
+          -0.03366433684304613,
+          -0.03805933063789668,
+          -0.03502473238293256,
+          -0.03335543852383688,
+          -0.026802608923317095,
+          -0.020309759196080964,
+          -0.02223439755886738,
+          -0.024281269312296815,
+          -0.021147239244199808,
+          -0.024175220326914056,
+          -0.021954123151586947,
+          -0.018586158851164387,
+          -0.007464943364078495,
+          -0.0066797523646403,
+          -0.014530309674883115,
+          -0.033399517601776466,
+          -0.03862216498920407,
+          -0.03246177601717109,
+          -0.031730559776640424,
+          -0.027739812654743377,
+          -0.02251347025889985,
+          -0.0315189463021154,
+          -0.03428641539051077,
+          -0.03205956808745836,
+          -0.03486854576548141,
+          -0.03899705491653676,
+          -0.03512352943465726,
+          -0.04103818669698022
+        ]
+      },
+      "dvol_minus_har_dvol": {
+        "maximum": 0.002212237138134765,
+        "median": -0.015657357850990844,
+        "minimum": -0.026107989833648773,
+        "n_negative": 29,
+        "phase_counts": [
+          46,
+          46,
+          46,
+          46,
+          46,
+          46,
+          46,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45
+        ],
+        "phase_means": [
+          -0.022177255284000143,
+          -0.016847973216629362,
+          -0.009071195197625252,
+          -0.01346599374306957,
+          -0.015013552420330596,
+          -0.01693613560973031,
+          -0.008407469945575525,
+          -0.009556014929606138,
+          -0.017180203318482558,
+          -0.02031363068396122,
+          -0.02549397123213965,
+          -0.01960593415980221,
+          -0.01921536182796533,
+          -0.01561330716674712,
+          -0.001430279509563699,
+          0.002212237138134765,
+          -0.0084156558854523,
+          -0.015098788944500865,
+          -0.019599366444274794,
+          -0.026107989833648773,
+          -0.022068587330127634,
+          -0.017579205465965607,
+          -0.01046408780237289,
+          -0.01570140853523457,
+          -0.012861529657608534,
+          -0.014079640922399706,
+          -0.016320307598476566,
+          -0.01956124241960529,
+          -0.013141664614394285,
+          -0.014810259321186726
+        ]
+      },
+      "har_dvol_minus_har": {
+        "maximum": 0.004346731987939839,
+        "median": -0.016118420340493704,
+        "minimum": -0.030659175297669598,
+        "n_negative": 29,
+        "phase_counts": [
+          46,
+          46,
+          46,
+          46,
+          46,
+          46,
+          46,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45,
+          45
+        ],
+        "phase_means": [
+          -0.02755062251485452,
+          -0.030659175297669598,
+          -0.024593141645420875,
+          -0.024593336894827122,
+          -0.02001117996260196,
+          -0.016419302914106575,
+          -0.018395138977741567,
+          -0.01075374426647483,
+          -0.005054194240384821,
+          -0.003967638628335594,
+          0.004346731987939839,
+          -0.00456928616711185,
+          -0.002738761323621618,
+          -0.0029728516844172628,
+          -0.006034663854514793,
+          -0.00889198950277506,
+          -0.006114653789430813,
+          -0.018300728657275597,
+          -0.019022798544929283,
+          -0.006353786183522312,
+          -0.009661972446512795,
+          -0.01016060718877776,
+          -0.012049382456526963,
+          -0.015817537766880836,
+          -0.02142488573290224,
+          -0.017979927165058647,
+          -0.01854823816700484,
+          -0.01943581249693147,
+          -0.021981864820262983,
+          -0.02622792737579349
+        ]
+      }
+    },
+    "scope": "All phases reuse the same history. Favourable counts are a dependent stability display; no binomial test or independence claim applies."
+  },
+  "specification": {
+    "annual_days": 365,
+    "availability": "I use features available at the origin and only labels with target_end_ms <= feature_cutoff_ms. Every fitted training row precedes the current origin.",
+    "bates_granger": {
+      "completed_vintages": 365,
+      "components": [
+        "har_365",
+        "dvol"
+      ],
+      "forecast": "w_HAR * HAR365 + (1 - w_HAR) * raw DVOL",
+      "interpretation": "This is a nonnegative minimum-MSE Bates-Granger-style combination; its fitted weight has estimation risk and its objective differs from QLIKE.",
+      "vintages": "Each past HAR component is reconstructed using only its own completed 365-label window. I estimate the current weight from the latest 365 such forecasts whose targets have ended.",
+      "weight": "w_HAR = clip((mean(e_dvol^2) - mean(e_har*e_dvol)) / mean((e_har-e_dvol)^2), 0, 1); use 0.5 if denominator <= float64 epsilon times max(mean(e_har^2), mean(e_dvol^2), float64 tiny)"
+    },
+    "calibration": {
+      "bootstrap_block_days": 60,
+      "bootstrap_resamples": 2000,
+      "dgp": [
+        "overlap_30",
+        "overlap_30_plus_slow_365",
+        "overlap_30_plus_clustered_tails"
+      ],
+      "nominal_size": 0.05,
+      "replications": 200,
+      "sample_sizes": [
+        365,
+        1357
+      ],
+      "seed": 717171,
+      "tested_methods": [
+        "stationary_percentile",
+        "dm_hln_lag29",
+        "dm_hln_lag59",
+        "subsampling"
+      ]
+    },
+    "cohort_reason": "The retained cases cannot supply 730 completed labels in January 2023. The July start also allows 365 completed genuine vintage HAR forecasts for combination weights.",
+    "common_origin_end": "2026-09-18T00:00:00Z",
+    "common_origin_start": "2023-07-01T00:00:00Z",
+    "declared_date": "2026-10-25",
+    "dm_hln": {
+      "horizon_days": 30,
+      "lags": [
+        29,
+        59
+      ],
+      "reference": "Student t with n-1 degrees of freedom after HLN correction",
+      "scope": "I report diagnostic p-values, including nested-model and generated-forecast limitations; they do not license significance claims."
+    },
+    "ewma": {
+      "forecast": "next daily conditional variance held constant over 30 days, annualised by 365",
+      "initialisation_days": 30,
+      "lambda": 0.94,
+      "mean": "zero",
+      "return_days": 730
+    },
+    "expanding_start": "2021-05-01T00:00:00Z",
+    "exploratory_focus": "qlike_har_dvol minus qlike_har on the matched v2 cohort",
+    "features_days": [
+      1,
+      7,
+      30
+    ],
+    "floor_scope": "I apply the floor only to level-OLS HAR, HAR+DVOL and MZ forecasts and retain raw values and hit counts. Positive log-link, smearing, EWMA, GARCH and combination forecasts fail on nonpositive or nonfinite output rather than using this floor.",
+    "garch": {
+      "annualisation": "365 * mean(next 30 conditional daily variances in percent-return units) / 100**2; simulation paths are averaged for EGARCH",
+      "distribution": "normal",
+      "egarch_method": "simulation",
+      "egarch_monte_carlo_check": "I score the first fixed-seed batch and report its path-mean Monte Carlo standard error and the relative gap to an independent second batch of 2000 paths; I do not choose the lower-loss batch.",
+      "failure": "I retain convergence failures without selecting alternative starts.",
+      "forecast_days": 30,
+      "garch_method": "analytic",
+      "mean": "zero",
+      "o_egarch": 1,
+      "optimizer_maxiter": 1000,
+      "origin_seed": "seed + origin_ms // 86400000; independent second batch adds 10000000",
+      "p": 1,
+      "q": 1,
+      "return_days": 730,
+      "return_scale": 100,
+      "seed": 424242,
+      "simulation_paths": 2000
+    },
+    "horizon_days": 30,
+    "inputs": "recordings/historical-variance/manifest.json",
+    "inspection_history": "I have already seen the reviewer's corrected strict-window means on the May 2023 cohort. The rebuilt window comparison is a replication of an inspected sensitivity, not an unseen test.",
+    "kind": "exploratory_review_v2",
+    "log_har": {
+      "back_transform": "exp(current fitted log variance) times mean(exp(training log residual))",
+      "interpretation": "Training smearing supplies the in-sample QLIKE-optimal scalar. I do not assume Gaussian residuals or claim conditional unbiasedness.",
+      "regression": "OLS log target on intercept and log daily, weekly and monthly RV; the augmented row adds log DVOL variance",
+      "standardisation": "training feature means and standard deviations only"
+    },
+    "matching": "I retain every scheduled origin, all model failures and exclusions. Rankings and MCS use the intersection where every declared model succeeds; I report its size and each model's own coverage. I do not compare a restricted-cohort mean with a v1 full-cohort mean.",
+    "mcs": {
+      "block_size": 60,
+      "bootstrap": "stationary",
+      "method": "R",
+      "reps": 5000,
+      "scope": "I report the surviving set as a diagnostic conditional on this inspected candidate set and dependence assumptions, not as proof of a best model.",
+      "seed": 515151,
+      "size": 0.1
+    },
+    "models": [
+      "dvol",
+      "har_365",
+      "har_dvol_365",
+      "har_730",
+      "har_dvol_730",
+      "har_expanding",
+      "har_dvol_expanding",
+      "log_har_smear",
+      "log_har_dvol_smear",
+      "qlike_har",
+      "qlike_har_dvol",
+      "ridge_qlike_har_dvol",
+      "ewma_094",
+      "garch_11",
+      "egarch_111",
+      "bates_granger",
+      "mz_dvol"
+    ],
+    "mz_dvol": {
+      "fit": "OLS actual variance on intercept plus raw DVOL variance over 730 completed labels",
+      "floor_hits": "I report every raw negative prediction and floor hit.",
+      "forecast": "max(positive_floor, fitted intercept + fitted slope * current DVOL variance)"
+    },
+    "optional_data": "I assess ETH, 5-minute RV and a VIX sanity check separately. I do not download or pool them under this BTC declaration.",
+    "paired_reference": "har_dvol_365",
+    "parent_commit": "cc6abc1640a9a2d6ac96564eae0c3133b0170f05",
+    "parent_release": "v1.0.2",
+    "phases": "I report all 30 phase means, counts and range. A count of favourable phases is a dependent stability display, not 30 independent replications or a binomial test.",
+    "positive_floor": 1e-06,
+    "power": {
+      "block_days": [
+        30,
+        60,
+        180,
+        365
+      ],
+      "effect_rule": "The nonzero value is the inspected v1 point estimate, used only as a conditional planning scenario; I also retain the null.",
+      "effect_sizes": [
+        0.0,
+        -0.014244252570928512
+      ],
+      "method": "resample contiguous circular stationary blocks from the centred empirical series, add the fixed shift and record reference-method rejection",
+      "nominal_size": 0.05,
+      "replications": 1000,
+      "sample_sizes": [
+        365,
+        730,
+        1825,
+        2920
+      ],
+      "scope": "Resampling an observed history cannot reveal unseen persistence or forecast future power.",
+      "seed": 616161,
+      "source": "v1 HAR+DVOL minus HAR loss differences",
+      "tested_methods": [
+        "dm_hln_lag59",
+        "subsampling"
+      ]
+    },
+    "prospective_scope": "I preserve the v1 locks, cohort, missing rule and disabled formal inference. This declaration does not activate a new prospective test.",
+    "qlike": {
+      "failure": "I retain nonconvergence or nonpositive/nonfinite forecasts as model failures. I do not replace them with a better-scoring fallback.",
+      "ftol": 1e-10,
+      "gtol": 1e-07,
+      "interpretation": "The positive log link and objective differ from level OLS, so this comparison cannot isolate estimation noise alone.",
+      "link": "exp(intercept plus standardised log features)",
+      "maxiter": 1000,
+      "objective": "mean(actual * exp(-linear_predictor) + linear_predictor) + penalty * sum(nonintercept_coefficients_squared) / 2",
+      "optimizer": "scipy L-BFGS-B; analytic gradient; initial intercept log(mean target), other coefficients zero",
+      "penalty": 0.0,
+      "ridge_penalty": 0.01
+    },
+    "reporting": "I publish every declared model, failure, inference diagnostic and planning scenario, whichever way it goes. I do not pick specifications or block lengths by their result.",
+    "role": "I fix these additions after inspecting v1 and the independent review, before evaluating the additions. Every historical result remains exploratory.",
+    "schema_version": 2,
+    "stationary_bootstrap": {
+      "block_days": 60,
+      "resamples": 5000,
+      "seed": 271828
+    },
+    "subsampling": {
+      "block_rule": "floor(n^0.7)",
+      "minimum_block": 60,
+      "scope": "I test finite-sample calibration before describing this as better calibrated. Fixed block fractions are not treated as an automatic repair.",
+      "statistic": "sqrt(block_size) * (block mean - full mean); compare its 2.5% and 97.5% quantiles with sqrt(n) * full mean"
+    },
+    "training_labels": 730,
+    "vintage": "I reuse the retained BTC vintage. I do not refresh it for this comparison.",
+    "window_check_cohort": {
+      "end": "2026-09-18T00:00:00Z",
+      "minimum_completed_labels": 730,
+      "models": [
+        "har_365",
+        "har_dvol_365",
+        "har_730",
+        "har_dvol_730",
+        "har_expanding",
+        "har_dvol_expanding",
+        "dvol"
+      ],
+      "role": "I separately rebuild the strict matched-window comparison supplied in the review clarification. I do not compare these means with the full v1 cohort.",
+      "start": "2023-05-30T00:00:00Z"
+    },
+    "window_scope": "The 365, 730 and expanding sensitivities apply to level HAR and HAR+DVOL. Log, QLIKE and MZ fits use 730 completed 30-day labels. EWMA, GARCH and EGARCH use 730 daily midnight-to-midnight log returns available through the feature cutoff. Bates-Granger uses 365 completed genuine HAR365 forecast vintages.",
+    "window_sensitivities": [
+      365,
+      730,
+      "expanding"
+    ]
+  },
+  "v1_inference_references": [
+    {
+      "contrast": "dvol_minus_har",
+      "dm_hln": {
+        "29": {
+          "hac_standard_error": 0.012225597953554757,
+          "hln_factor": 0.978260800175415,
+          "horizon": 30,
+          "lags": 29,
+          "limit": "HLN is a reference correction; persistent losses, nested models and generated forecasts can invalidate its nominal size.",
+          "mean": -0.029372166712507267,
+          "n": 1357,
+          "p_value": 0.01890169858027403,
+          "reference": "Student_t_n_minus_1",
+          "statistic": -2.3502849856688073,
+          "status": "descriptive"
+        },
+        "59": {
+          "hac_standard_error": 0.014060576690729147,
+          "hln_factor": 0.978260800175415,
+          "horizon": 30,
+          "lags": 59,
+          "limit": "HLN is a reference correction; persistent losses, nested models and generated forecasts can invalidate its nominal size.",
+          "mean": -0.029372166712507267,
+          "n": 1357,
+          "p_value": 0.04118989733193366,
+          "reference": "Student_t_n_minus_1",
+          "statistic": -2.0435605127070353,
+          "status": "descriptive"
+        }
+      },
+      "ess_lag59": 47.7942528828482,
+      "mean": -0.029372166712507267,
+      "n": 1357,
+      "subsampling": {
+        "block": 155,
+        "confidence_interval_95": [
+          -0.045907585127988836,
+          0.005298269539163444
+        ],
+        "limit": "Subsampling is a candidate diagnostic. Its asymptotic assumptions and finite-sample calibration are not guaranteed by choosing a block rule.",
+        "mean": -0.029372166712507267,
+        "method": "overlapping_contiguous_blocks_root_n_mean",
+        "n": 1357,
+        "n_blocks": 1203,
+        "p_value": 0.15448504983388706,
+        "status": "descriptive"
+      }
+    },
+    {
+      "contrast": "har_dvol_minus_har",
+      "dm_hln": {
+        "29": {
+          "hac_standard_error": 0.008989863794304963,
+          "hln_factor": 0.978260800175415,
+          "horizon": 30,
+          "lags": 29,
+          "limit": "HLN is a reference correction; persistent losses, nested models and generated forecasts can invalidate its nominal size.",
+          "mean": -0.014244252570928512,
+          "n": 1357,
+          "p_value": 0.12136671783251439,
+          "reference": "Student_t_n_minus_1",
+          "statistic": -1.5500339311886726,
+          "status": "descriptive"
+        },
+        "59": {
+          "hac_standard_error": 0.010569615381672306,
+          "hln_factor": 0.978260800175415,
+          "horizon": 30,
+          "lags": 59,
+          "limit": "HLN is a reference correction; persistent losses, nested models and generated forecasts can invalidate its nominal size.",
+          "mean": -0.014244252570928512,
+          "n": 1357,
+          "p_value": 0.18760466939553352,
+          "reference": "Student_t_n_minus_1",
+          "statistic": -1.318363385492702,
+          "status": "descriptive"
+        }
+      },
+      "ess_lag59": 51.705763992540874,
+      "mean": -0.014244252570928512,
+      "n": 1357,
+      "subsampling": {
+        "block": 155,
+        "confidence_interval_95": [
+          -0.033243041102013246,
+          0.0100536863530572
+        ],
+        "limit": "Subsampling is a candidate diagnostic. Its asymptotic assumptions and finite-sample calibration are not guaranteed by choosing a block rule.",
+        "mean": -0.014244252570928512,
+        "method": "overlapping_contiguous_blocks_root_n_mean",
+        "n": 1357,
+        "n_blocks": 1203,
+        "p_value": 0.31727574750830567,
+        "status": "descriptive"
+      }
+    },
+    {
+      "contrast": "dvol_minus_har_dvol",
+      "dm_hln": {
+        "29": {
+          "hac_standard_error": 0.012235111686225816,
+          "hln_factor": 0.978260800175415,
+          "horizon": 30,
+          "lags": 29,
+          "limit": "HLN is a reference correction; persistent losses, nested models and generated forecasts can invalidate its nominal size.",
+          "mean": -0.015127914141578757,
+          "n": 1357,
+          "p_value": 0.22666037356317772,
+          "reference": "Student_t_n_minus_1",
+          "statistic": -1.209555398647194,
+          "status": "descriptive"
+        },
+        "59": {
+          "hac_standard_error": 0.01319135657386241,
+          "hln_factor": 0.978260800175415,
+          "horizon": 30,
+          "lags": 59,
+          "limit": "HLN is a reference correction; persistent losses, nested models and generated forecasts can invalidate its nominal size.",
+          "mean": -0.015127914141578757,
+          "n": 1357,
+          "p_value": 0.2621144592757995,
+          "reference": "Student_t_n_minus_1",
+          "statistic": -1.1218744114952441,
+          "status": "descriptive"
+        }
+      },
+      "ess_lag59": 53.44287542263496,
+      "mean": -0.015127914141578757,
+      "n": 1357,
+      "subsampling": {
+        "block": 155,
+        "confidence_interval_95": [
+          -0.034313134324837076,
+          0.011558371690712029
+        ],
+        "limit": "Subsampling is a candidate diagnostic. Its asymptotic assumptions and finite-sample calibration are not guaranteed by choosing a block rule.",
+        "mean": -0.015127914141578757,
+        "method": "overlapping_contiguous_blocks_root_n_mean",
+        "n": 1357,
+        "n_blocks": 1203,
+        "p_value": 0.16943521594684385,
+        "status": "descriptive"
+      }
+    }
+  ],
+  "v1_summary_unchanged": true,
+  "window_check": {
+    "first_origin_ms": 1685404800000,
+    "last_origin_ms": 1789689600000,
+    "means": {
+      "dvol": 0.09467756732402381,
+      "har_365": 0.1254384254507413,
+      "har_730": 0.11740922066681712,
+      "har_dvol_365": 0.10987389264683128,
+      "har_dvol_730": 0.10247856085380873,
+      "har_dvol_expanding": 0.09763163976144726,
+      "har_expanding": 0.14068752992968536
+    },
+    "n": 1208,
+    "training_count_range": {
+      "har_365": [
+        365,
+        365
+      ],
+      "har_730": [
+        730,
+        730
+      ],
+      "har_dvol_365": [
+        365,
+        365
+      ],
+      "har_dvol_730": [
+        730,
+        730
+      ],
+      "har_dvol_expanding": [
+        730,
+        1937
+      ],
+      "har_expanding": [
+        730,
+        1937
+      ]
+    }
+  }
+}
