@@ -2,16 +2,16 @@ cff-version: 1.2.0
 message: "If this work is useful, I'd like it cited using this metadata."
 type: software
 title: "implied-odds: Does DVOL add information beyond HAR?"
-version: 1.0.2
+version: 1.1.0
 doi: 10.5281/zenodo.23606990
-date-released: 2026-10-24
+date-released: 2026-10-26
 authors:
   - family-names: Singh
     given-names: Yuvraj
 repository-code: "https://github.com/50kfunded/implied-odds"
 url: "https://github.com/50kfunded/implied-odds"
 license: MIT
-abstract: "I'm comparing matched BTC variance forecasts from HAR, DVOL, rolling rescaling and a fixed equal-weight variance blend. The historical comparisons are exploratory."
+abstract: "I'm comparing 17 matched BTC variance forecast specifications, including log-HAR and positive QLIKE fits. The point ranking changes with specification, and the focal paired bootstrap interval includes zero. These historical comparisons remain exploratory."
 keywords:
   - volatility forecasting
   - bitcoin
