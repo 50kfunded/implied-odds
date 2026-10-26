@@ -3,6 +3,7 @@
 import csv
 import hashlib
 import json
+import math
 from pathlib import Path
 import time
 
@@ -16,6 +17,33 @@ from .research_plan import load_plan
 from .review_models import benchmark_records, load_review_spec, utc_ms, window_forecasts
 from .store import digest
 from .variance_study import DAY_MS, _metric_summary, qlike
+
+
+def validate_v1_rebuild(reference, rebuilt) -> dict:
+    """Require exact structure and permit only reported floating-point round-off."""
+    differences = []
+    def compare(a, b, path):
+        if type(a) is not type(b):
+            raise ValueError('The original v1 rebuild changed type at '+path)
+        if isinstance(a, dict):
+            if a.keys() != b.keys():
+                raise ValueError('The original v1 rebuild changed keys at '+path)
+            for key in a:
+                compare(a[key], b[key], path+'.'+key)
+        elif isinstance(a, list):
+            if len(a) != len(b):
+                raise ValueError('The original v1 rebuild changed length at '+path)
+            for i, (left, right) in enumerate(zip(a, b)):
+                compare(left, right, path+'['+str(i)+']')
+        elif a != b:
+            if (isinstance(a, float) and math.isfinite(a) and math.isfinite(b)
+                    and math.isclose(a, b, rel_tol=1e-12, abs_tol=1e-14)):
+                differences.append({'path': path, 'reference': a, 'rebuilt': b, 'absolute_difference': abs(a-b)})
+            else:
+                raise ValueError('The original v1 numerical rebuild changed at '+path+': '+repr(a)+' versus '+repr(b))
+    compare(reference, rebuilt, '$')
+    return {'exact_equal': not differences, 'relative_tolerance': 1e-12, 'absolute_tolerance': 1e-14,
+            'floating_roundoff_differences': differences}
 
 
 def window_check(cases: list, plan: dict, spec: dict) -> dict:
@@ -203,8 +231,7 @@ def write_review_report(root: Path, output: Path, *, progress=print) -> dict:
     v1 = write_incremental_report(root, output/'v1-rebuild')
     original = json.loads((root/'report/incremental-results.json').read_text(encoding='utf-8'))
     rebuilt = json.loads((output/'v1-rebuild/summary.json').read_text(encoding='utf-8'))
-    if original != rebuilt:
-        raise ValueError('The original v1 numerical rebuild changed')
+    v1_validation = validate_v1_rebuild(original, rebuilt)
     historical = load_study(root/'protocol/historical-variance.json')
     inputs = read_study(root/spec['inputs'], historical)
     plan = load_plan(root/'protocol/incremental-variance-v1.json')
@@ -215,6 +242,7 @@ def write_review_report(root: Path, output: Path, *, progress=print) -> dict:
     summary = benchmark_summary(common, spec, plan)
     result = {'kind': 'exploratory_review_v2_results', 'formal_claim_eligible': False, 'specification': spec,
               'declaration': declaration, 'input_manifest_hash': digest(inputs.manifest), 'v1_summary_unchanged': True,
+              'v1_rebuild_validation': v1_validation,
               'window_check': {k: v for k, v in windows.items() if k != 'records'},
               'benchmarks': {**{k: v for k, v in benchmarks.items() if k not in ('records', 'common_records')}, 'summary': summary},
               'v1_inference_references': reference_table(v1['records'], [('dvol', 'har'), ('har_dvol', 'har'), ('dvol', 'har_dvol')], spec),
