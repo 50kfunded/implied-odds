@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   unittest:
     name: tests / ${{ matrix.os }} / Python ${{ matrix.python }}
@@ -63,7 +67,9 @@ jobs:
           selected += [str(folder / name) for name in (
               'variance_study.py', 'historical_data.py', 'historical_report.py',
               'incremental_report.py', 'review_models.py', 'inference_reference.py',
-              'review_report.py', 'paper_numbers.py', 'public_variance.py')]
+              'review_report.py', 'paper_numbers.py', 'public_variance.py',
+              'relative_variance.py', 'relative_report.py', 'progressive_evidence.py',
+              'progressive_report.py', 'qlike_attribution.py', 'frequency_audit.py')]
           forward = folder / 'variance_forward.py'
           if forward.is_file():
               selected.append(str(forward))
@@ -79,6 +85,10 @@ jobs:
         run: |
           python scripts/build_review.py --output results/review-v2
           python scripts/build_paper_numbers.py --summary results/research/summary.json --v2-summary results/review-v2/summary.json --check
+      - name: rebuild matched BTC and ETH extension
+        run: python scripts/build_relative.py --output results/eth-relative
+      - name: check partial-settlement and BTC ETH follow-up numbers
+        run: python scripts/build_followup.py --output results/followup --check
       - name: install LaTeX and PDF renderer
         run: |
           sudo apt-get update
@@ -100,5 +110,7 @@ jobs:
             results/ci/
             results/research/
             results/review-v2/
+            results/eth-relative/
+            results/followup/
           if-no-files-found: error
           retention-days: 30
