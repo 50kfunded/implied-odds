@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "kind": "local_pre_evaluation_declaration",
+  "sha256": "f6196a110915b969c26760cd205511e519d795839ff92259c05730e746cccc6e",
+  "source_config_hashes": {
+    "BTC": "d1e4ed0dae175029ee6f1402471d0708cfcc87ae6f9f64fa2970e9a149b2fd17",
+    "ETH": "6c08b15ff228cd79000fbf5fee12e735cb64bb675025e267c80fd52b5426b4dd"
+  },
+  "independent_timestamp": false
+}

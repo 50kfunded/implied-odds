@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "kind": "exploratory_eth_relative_variance",
+  "declared_date": "2026-10-27",
+  "parent_commit": "9c1f6fd73ae59f9cd30f112bc146ae34bb879bbf",
+  "question": "Does the option-implied ETH/BTC variance ratio improve a direct forecast of subsequent relative variance beyond a HAR model of realised variance ratios?",
+  "role": "I choose this question after inspecting the BTC results and reading the literature, before downloading or scoring ETH. Historical walk-forward results remain exploratory. This is a local declaration, not an independently timestamped preregistration.",
+  "assets": ["BTC", "ETH"],
+  "inputs": {
+    "BTC": "recordings/relative-variance-2026-10-27/btc/manifest.json",
+    "ETH": "recordings/relative-variance-2026-10-27/eth/manifest.json"
+  },
+  "source_configs": {
+    "BTC": "protocol/relative-variance-btc-source.json",
+    "ETH": "protocol/relative-variance-eth-source.json"
+  },
+  "case_start": "2021-05-01T00:00:00Z",
+  "evaluation_start": "2023-07-01T00:00:00Z",
+  "evaluation_end": "2026-09-26T00:00:00Z",
+  "horizon_days": 30,
+  "training_completed_labels": 730,
+  "availability": "I use previous completed daily DVOL closes and hourly perpetual closes available through midnight UTC. Training rows precede the origin and have target_end_ms <= origin_ms. Both assets use the same completed training origins. No imputation or replacement forecasts.",
+  "target": "log(next_30_day_ETH_annualised_variance / next_30_day_BTC_annualised_variance), using the same 720 hourly returns for both assets",
+  "ratio_features": "log(ETH/BTC realised variance) over trailing 1, 7 and 30 days; the additional feature is log((ETH_DVOL/100)^2 / (BTC_DVOL/100)^2)",
+  "ratio_models": ["completed_mean", "trailing_ratio", "raw_dvol_ratio", "calibrated_dvol_ratio", "ratio_har", "ratio_har_dvol"],
+  "ratio_specifications": {
+    "completed_mean": "mean of the latest 730 completed log-ratio targets",
+    "trailing_ratio": "current log ratio of trailing 30-day realised variances",
+    "raw_dvol_ratio": "current log ratio of DVOL variances",
+    "calibrated_dvol_ratio": "current raw DVOL log ratio plus mean(training log-ratio target minus training DVOL log ratio), from the same 730 completed origins",
+    "ratio_har": "OLS log-ratio target on intercept and three log-ratio realised features, standardised on the 730 training rows",
+    "ratio_har_dvol": "same OLS fit and rows, adding the DVOL log-ratio feature"
+  },
+  "primary_loss": "squared error of the direct log variance ratio; lower is better",
+  "primary_comparison": "ratio_har_dvol minus ratio_har",
+  "secondary_comparisons": ["raw_dvol_ratio minus ratio_har", "raw_dvol_ratio minus completed_mean", "calibrated_dvol_ratio minus raw_dvol_ratio"],
+  "marginal_models": ["dvol", "log_har", "log_har_dvol"],
+  "marginal_specification": "For each asset, reuse v2 log-HAR OLS with training-residual smearing and 730 completed targets; the augmented model adds log DVOL variance. Report QLIKE on identical origins and log_har_dvol minus log_har for each asset and their paired ETH-minus-BTC difference.",
+  "inference": {
+    "expected_block_days": 60,
+    "sensitivity_block_days": [30, 90, 180],
+    "bootstrap_resamples": 5000,
+    "bootstrap_seed": 803271,
+    "hac_lags_days": 59,
+    "minimum_effective_sample_size": 60,
+    "method": "I reuse the stationary paired bootstrap and ESS estimator. All assets and comparisons share resampled dates. Calendar gaps withhold intervals. The earlier size failures still apply; intervals remain descriptive even if ESS exceeds 60.",
+    "asset_dependence": "I report synchronous loss and return correlations. Two correlated assets are not two independent replications. I do not stack them into an independent-observation test."
+  },
+  "fixed_diagnostics": ["calendar-year means and counts", "all 30 nonoverlap phase means without an independence test", "top 1 and 5 percent absolute loss-difference contributions", "first half versus second half split by scheduled origin count", "same models with DVOL features lagged one day", "same models with the future target shifted one hour", "per-asset QLIKE replication on the original v2 cohort", "BTC source revisions and old-vintage versus new-vintage log-HAR forecast losses"],
+  "decision": "For a forecast log variance ratio z, w_ETH = 1/(1+exp(z/2)) and w_BTC = 1-w_ETH equalise forecast standalone variance contributions. Squared log realised standalone-contribution imbalance equals the primary loss. This excludes covariance risk contributions, trading returns, costs and portfolio optimality.",
+  "validation": "I require complete matched hourly returns, positive finite variance and DVOL, hashed retained responses, a strict common training cohort, source-asset checks, independent target reconstruction, future-data perturbation tests and daily/hourly close alignment checks. I report unused OHLC discrepancies separately. Neither earlier locks nor the published BTC paper is replaced.",
+  "novelty": "Relative implied-volatility charts and ETH forecasting already exist. I test a new question within this project; I make no claim to a first result in the literature.",
+  "reporting": "I retain every declared row and failed check, including a null or reversed result. No extra models, episode cutoffs or window tuning follow the ranking under this declaration.",
+  "scope": "Perpetual hourly-return variance is a proxy for option-index risk. Historical data retrieved now may be revised; this is neither a prospective test nor evidence of an executable options edge."
+}
