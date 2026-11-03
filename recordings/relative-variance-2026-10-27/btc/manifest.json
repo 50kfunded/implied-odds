@@ -1,0 +1,25 @@
+{
+  "capture_attempts": 77,
+  "captured_from_ms": 1793141174669,
+  "captured_until_ms": 1793142695114,
+  "config_hash": "d1e4ed0dae175029ee6f1402471d0708cfcc87ae6f9f64fa2970e9a149b2fd17",
+  "failed_attempts": 0,
+  "files": {
+    "alignment/raw/2026-10-27.jsonl.gz": {
+      "bytes": 3180,
+      "sha256": "d85b034ac498d0395770a765dbd7432e688bec8e186db61bcc76becbf2d4576e"
+    },
+    "dvol/raw/2026-10-27.jsonl.gz": {
+      "bytes": 28084,
+      "sha256": "6c34e8775978fc62d0620bd3455da2dd411e68631d14dc93b5b069de67aa796a"
+    },
+    "prices/raw/2026-10-27.jsonl.gz": {
+      "bytes": 1280995,
+      "sha256": "a0995cb7217b47390311efa9cc4b6bf0a3abcdf299a08537c6793590223afb27"
+    }
+  },
+  "git_commit": "c58e532102b8034f43f9c4942bc1c731beb915b3",
+  "kind": "historical_dvol_variance_inputs",
+  "schema_version": 1,
+  "vintage": "I retrieve a separate historical vintage on 27 October 2026. The original BTC recordings remain unchanged."
+}
