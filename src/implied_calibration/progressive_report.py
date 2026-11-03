@@ -227,7 +227,8 @@ def write_progressive_report(root: Path, output: Path, *, check: bool = False, p
         raise ValueError('Declared experiment differs from implemented settings')
     result = {'kind': 'synthetic_partial_settlement_verification', 'live_test': False,
               'worldwide_novelty_established': False, 'specification': spec,
-              'specification_sha256': hashlib.sha256(spec_path.read_bytes()).hexdigest(),
+              # Git checkouts can use CRLF; the specification witness uses UTF-8 LF.
+              'specification_sha256': hashlib.sha256(spec_path.read_bytes().replace(b'\r\n', b'\n')).hexdigest(),
               'exact_checks': [exact_tree(h, markov=m) for m in (False, True) for h in (2, 3, 4)],
               'early_witness': early_witness(),
               'simulations': simulation_experiment(replications=spec['replications'], seed=spec['seed'])}
