@@ -1,12 +1,15 @@
 import itertools
 import math
+from pathlib import Path
+from tempfile import TemporaryDirectory
 import unittest
 
 import numpy as np
 
 from implied_calibration.progressive_evidence import (CashLedger, horizon_means,
                                                        qlike_mean_bound, simulate_cash)
-from implied_calibration.progressive_report import check_numeric_tree, early_witness, exact_tree, simulation_experiment
+from implied_calibration.progressive_report import (check_numeric_tree, early_witness, exact_tree,
+                                                     simulation_experiment, write_progressive_report)
 from implied_calibration.variance_study import qlike
 
 
@@ -154,6 +157,18 @@ class ProgressiveEvidenceTests(unittest.TestCase):
         for changed in ({'count': 5, 'mean': 1.}, {'count': 4, 'mean': 1.01}, {'count': 4}):
             with self.assertRaises(ValueError):
                 check_numeric_tree(changed, {'count': 4, 'mean': 1.})
+
+    def test_fresh_windows_checkout_preserves_the_specification_witness(self):
+        source = Path(__file__).resolve().parents[1]
+        with TemporaryDirectory() as folder:
+            root = Path(folder)
+            for name in ('protocol/progressive-evidence-v1.json', 'report/progressive-results.json',
+                         'report/progressive-evidence.md'):
+                target = root/name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes((source/name).read_bytes().replace(b'\r\n', b'\n').replace(b'\n', b'\r\n'))
+            result = write_progressive_report(root, root/'output', check=True)
+            self.assertEqual(len(result['exact_checks']), 6)
 
 
 if __name__ == '__main__':
