@@ -1,0 +1,25 @@
+{
+  "kind": "retained_public_five_minute_responses",
+  "source": "https://www.deribit.com/api/v2/public/get_tradingview_chart_data",
+  "capture_date": "2026-10-28",
+  "integration_date": "2026-11-03",
+  "start_ms": 1617234900000,
+  "end_exclusive_ms": 1793059200000,
+  "bar_minutes": 5,
+  "files": {
+    "BTC": {
+      "file": "btc-5min.jsonl.gz",
+      "sha256": "354053658feee825cfbd3806bb4fdc6212ddbcd34a4e3c1c236e842ab257e861",
+      "bytes": 12941909,
+      "responses": 292
+    },
+    "ETH": {
+      "file": "eth-5min.jsonl.gz",
+      "sha256": "60660b833ca1d252c83e1f2a0e3d56f7882acc856914cbce0a7a8e661bf468db",
+      "bytes": 12500204,
+      "responses": 292
+    }
+  },
+  "role": "exploratory target-resolution and refitting audit; pilot outcomes already inspected",
+  "original_response_bytes_preserved_as_utf8_text": true
+}

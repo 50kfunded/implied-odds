@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "kind": "exploratory_eth_relative_variance_pre_evaluation_amendment",
+  "declared_date": "2026-10-27",
+  "parent_spec_sha256": "f6196a110915b969c26760cd205511e519d795839ff92259c05730e746cccc6e",
+  "timing": "I declare these diagnostics while the fresh captures are running, before examining any ETH evaluation outcome or forecast ranking.",
+  "reason": "The primary ratio question removes a common multiplicative volatility level. I also need to show how the marginal forecasts divide their log errors between common and relative components.",
+  "diagnostic": "For each of the three declared marginal models, e_BTC = log(actual_BTC / forecast_BTC), e_ETH = log(actual_ETH / forecast_ETH), c = (e_ETH + e_BTC)/2 and r = e_ETH - e_BTC. Report mean(c^2), mean(r^2), correlation(e_BTC,e_ETH), and verify mean(c^2) + mean(r^2)/4 = (mean(e_BTC^2)+mean(e_ETH^2))/2. Compare log-HAR + DVOL with log-HAR for both components using the same paired bootstrap dates.",
+  "limit": "These are squared log-error diagnostics for the existing marginal forecasts. They differ from QLIKE and do not identify a causal market factor. A ratio of conditional variance means need not equal the conditional mean log ratio.",
+  "unchanged": "I preserve the six direct ratio models, three marginal models, primary comparison, cohort, training and inference choices. Both declarations remain local exploratory choices without an independent timestamp."
+}

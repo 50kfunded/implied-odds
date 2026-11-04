@@ -1,0 +1,436 @@
+{
+  "kind": "synthetic_partial_settlement_verification",
+  "live_test": false,
+  "worldwide_novelty_established": false,
+  "specification": {
+    "kind": "exploratory_partial_settlement_method",
+    "research_origin": "2026-10-28",
+    "integration_date": "2026-11-03",
+    "declaration_role": "retained specification of already inspected simulations, not a preregistration",
+    "live_test_enabled": false,
+    "original_prospective_locks_changed": false,
+    "null": "At each purchase, conditional on full origin information, the expected total nonnegative claim payoff is at most one",
+    "target": "next 30 observations averaged; increment divided by 30 and by the origin-known positive mean bound",
+    "staking_order": "observe history, reserve stake, observe next increment, credit eligible claims once",
+    "fractions": [
+      0.008333333333333333,
+      0.016666666666666666,
+      0.03333333333333333,
+      0.1,
+      0.25,
+      0.5,
+      1.0
+    ],
+    "mixture": "equal initial capital; average current account cash before taking a running maximum",
+    "horizon": 30,
+    "periods": 365,
+    "replications": 10000,
+    "seed": 5261028,
+    "evidence_threshold": 20,
+    "comparators": [
+      "completion-only identical fraction mixture",
+      "phase zero nonoverlap with fraction 0.5",
+      "phase zero nonoverlap with fraction 1.0"
+    ],
+    "gamma_shape": 0.3,
+    "markov_transition": [
+      [
+        0.98,
+        0.02
+      ],
+      [
+        0.03,
+        0.97
+      ]
+    ],
+    "markov_daily_means": [
+      0.3,
+      2.2
+    ],
+    "markov_initial_probabilities": [
+      0.6,
+      0.4
+    ],
+    "alternative_mean_multiplier": 1.5,
+    "report_all_declared_scenarios": true
+  },
+  "specification_sha256": "84074ec95b870b9b09dcbc06fa4ad111e02b195635650caeca14314d07dd0efe",
+  "exact_checks": [
+    {
+      "horizon": 2,
+      "periods": 12,
+      "paths": 4096,
+      "dependent_markov": false,
+      "maximum_expected_stopped_cash": 1.0,
+      "expected_terminal_cash": 0.7368379453509958,
+      "naive_product_expectation": 6.767578125,
+      "naive_product_threshold_20_crossing": 0.083251953125
+    },
+    {
+      "horizon": 3,
+      "periods": 12,
+      "paths": 4096,
+      "dependent_markov": false,
+      "maximum_expected_stopped_cash": 1.0,
+      "expected_terminal_cash": 0.5833448659376632,
+      "naive_product_expectation": 7.583871022371262,
+      "naive_product_threshold_20_crossing": 0.101318359375
+    },
+    {
+      "horizon": 4,
+      "periods": 12,
+      "paths": 4096,
+      "dependent_markov": false,
+      "maximum_expected_stopped_cash": 1.0,
+      "expected_terminal_cash": 0.48297459528167114,
+      "naive_product_expectation": 6.4651336669921875,
+      "naive_product_threshold_20_crossing": 0.090087890625
+    },
+    {
+      "horizon": 2,
+      "periods": 12,
+      "paths": 4096,
+      "dependent_markov": true,
+      "maximum_expected_stopped_cash": 1.0,
+      "expected_terminal_cash": 0.757112743483796
+    },
+    {
+      "horizon": 3,
+      "periods": 12,
+      "paths": 4096,
+      "dependent_markov": true,
+      "maximum_expected_stopped_cash": 1.0,
+      "expected_terminal_cash": 0.615180011788228
+    },
+    {
+      "horizon": 4,
+      "periods": 12,
+      "paths": 4096,
+      "dependent_markov": true,
+      "maximum_expected_stopped_cash": 1.0,
+      "expected_terminal_cash": 0.5216589865649583
+    }
+  ],
+  "early_witness": {
+    "horizon": 30,
+    "baseline": 0.01,
+    "event_day": 11,
+    "event_target_average": 21.0,
+    "extra_increment": 629.6999999999999,
+    "null_event_probability": 0.04716531681753216,
+    "null_expected_target_average": 1.0,
+    "alternative_event_probability": 0.5,
+    "candidate": 1.718281828459045,
+    "comparator": 0.6321205588285577,
+    "mean_bound": 1.0,
+    "progressive": [
+      0.0003333333333333333,
+      0.0006666666666666666,
+      0.001,
+      0.0013333333333333333,
+      0.0016666666666666668,
+      0.002,
+      0.0023333333333333335,
+      0.0026666666666666666,
+      0.003,
+      0.003333333333333333,
+      20.993666666666666,
+      20.993999999999996,
+      20.99433333333333,
+      20.994666666666664,
+      20.994999999999997,
+      20.99533333333333,
+      20.99566666666666,
+      20.995999999999995,
+      20.99633333333333,
+      20.996666666666663,
+      20.996999999999996,
+      20.997333333333327,
+      20.99766666666666,
+      20.997999999999994,
+      20.998333333333328,
+      20.99866666666666,
+      20.99899999999999,
+      20.999333333333325,
+      20.99966666666666,
+      20.999999999999993
+    ],
+    "completion_only": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      20.999999999999993
+    ],
+    "progressive_first_crossing": 11,
+    "completion_first_crossing": 30,
+    "scope": "one stake at origin zero; purpose-built mathematical witness, not a market simulation"
+  },
+  "simulations": [
+    {
+      "dgp": "iid_null",
+      "replications": 10000,
+      "periods": 365,
+      "horizon": 30,
+      "progressive": {
+        "count": 17,
+        "rate": 0.0017,
+        "monte_carlo_wilson_95": [
+          0.0010617073611205118,
+          0.0027209854150957833
+        ],
+        "mean_terminal_cash": 0.4511255899854632,
+        "individual_fraction_rates": [
+          0.0,
+          0.0,
+          0.0,
+          0.0018,
+          0.0039,
+          0.005,
+          0.0058
+        ]
+      },
+      "completion_only": {
+        "count": 0,
+        "rate": 0.0,
+        "monte_carlo_wilson_95": [
+          0.0,
+          0.00038399837067659557
+        ],
+        "mean_terminal_cash": 0.345256252390856,
+        "individual_fraction_rates": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0013
+        ]
+      },
+      "preselected_phase_zero": {
+        "0.5": {
+          "count": 0,
+          "rate": 0.0,
+          "monte_carlo_wilson_95": [
+            0.0,
+            0.00038399837067659557
+          ]
+        },
+        "1.0": {
+          "count": 13,
+          "rate": 0.0013,
+          "monte_carlo_wilson_95": [
+            0.0007599118725796529,
+            0.0022230881023331834
+          ]
+        }
+      }
+    },
+    {
+      "dgp": "iid_alt1.5",
+      "replications": 10000,
+      "periods": 365,
+      "horizon": 30,
+      "progressive": {
+        "count": 8783,
+        "rate": 0.8783,
+        "monte_carlo_wilson_95": [
+          0.8717464304847544,
+          0.8845630363479915
+        ],
+        "mean_terminal_cash": 690.6092322749624,
+        "individual_fraction_rates": [
+          0.0,
+          0.0259,
+          0.4548,
+          0.8705,
+          0.9199,
+          0.9289,
+          0.9313
+        ]
+      },
+      "completion_only": {
+        "count": 3521,
+        "rate": 0.3521,
+        "monte_carlo_wilson_95": [
+          0.34279714163712305,
+          0.36151644508092307
+        ],
+        "mean_terminal_cash": 5.892140147686268,
+        "individual_fraction_rates": [
+          0.0,
+          0.0,
+          0.0157,
+          0.1462,
+          0.1815,
+          0.2135,
+          0.8591
+        ]
+      },
+      "preselected_phase_zero": {
+        "0.5": {
+          "count": 2107,
+          "rate": 0.2107,
+          "monte_carlo_wilson_95": [
+            0.2028190080198224,
+            0.2188031734374511
+          ]
+        },
+        "1.0": {
+          "count": 8591,
+          "rate": 0.8591,
+          "monte_carlo_wilson_95": [
+            0.8521429465272456,
+            0.8657812658429342
+          ]
+        }
+      }
+    },
+    {
+      "dgp": "markov_null",
+      "replications": 10000,
+      "periods": 365,
+      "horizon": 30,
+      "progressive": {
+        "count": 91,
+        "rate": 0.0091,
+        "monte_carlo_wilson_95": [
+          0.007418178537780261,
+          0.011158831062550018
+        ],
+        "mean_terminal_cash": 0.43665842501613844,
+        "individual_fraction_rates": [
+          0.0,
+          0.0,
+          0.0026,
+          0.0144,
+          0.0163,
+          0.0147,
+          0.0138
+        ]
+      },
+      "completion_only": {
+        "count": 13,
+        "rate": 0.0013,
+        "monte_carlo_wilson_95": [
+          0.0007599118725796529,
+          0.0022230881023331834
+        ],
+        "mean_terminal_cash": 0.34465407761056316,
+        "individual_fraction_rates": [
+          0.0,
+          0.0,
+          0.0,
+          0.0006,
+          0.0007,
+          0.0009,
+          0.0206
+        ]
+      },
+      "preselected_phase_zero": {
+        "0.5": {
+          "count": 15,
+          "rate": 0.0015,
+          "monte_carlo_wilson_95": [
+            0.000909261825593123,
+            0.0024735845499714425
+          ]
+        },
+        "1.0": {
+          "count": 206,
+          "rate": 0.0206,
+          "monte_carlo_wilson_95": [
+            0.017994590372836756,
+            0.02357358726496796
+          ]
+        }
+      }
+    },
+    {
+      "dgp": "markov_alt1.5",
+      "replications": 10000,
+      "periods": 365,
+      "horizon": 30,
+      "progressive": {
+        "count": 3458,
+        "rate": 0.3458,
+        "monte_carlo_wilson_95": [
+          0.33653866944352323,
+          0.35517975565399335
+        ],
+        "mean_terminal_cash": 1392.7567067215282,
+        "individual_fraction_rates": [
+          0.0018,
+          0.0987,
+          0.2895,
+          0.4114,
+          0.3989,
+          0.3772,
+          0.3615
+        ]
+      },
+      "completion_only": {
+        "count": 1841,
+        "rate": 0.1841,
+        "monte_carlo_wilson_95": [
+          0.1766256463812982,
+          0.19181696378929528
+        ],
+        "mean_terminal_cash": 6.11326081972483,
+        "individual_fraction_rates": [
+          0.0,
+          0.0144,
+          0.087,
+          0.161,
+          0.1554,
+          0.1571,
+          0.3947
+        ]
+      },
+      "preselected_phase_zero": {
+        "0.5": {
+          "count": 2037,
+          "rate": 0.2037,
+          "monte_carlo_wilson_95": [
+            0.19592074987210759,
+            0.21170680756235535
+          ]
+        },
+        "1.0": {
+          "count": 3947,
+          "rate": 0.3947,
+          "monte_carlo_wilson_95": [
+            0.3851621565209572,
+            0.4043187135359072
+          ]
+        }
+      }
+    }
+  ]
+}
